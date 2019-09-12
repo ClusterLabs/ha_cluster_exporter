@@ -109,7 +109,8 @@ type perNodeMetrics struct {
 	ResourcesRunning int
 }
 
-func parseMetrics(status *crmMon) *clusterMetrics {
+// this historically from hawk-apiserver and parse some generic metrics
+func parseGenericMetrics(status *crmMon) *clusterMetrics {
 	ret := &clusterMetrics{}
 
 	ret.Node.Configured = status.Summary.Nodes.Number
@@ -199,9 +200,24 @@ func parseMetrics(status *crmMon) *clusterMetrics {
 
 var (
 	// simple gauge metric
-	clusterNodeConf = prometheus.NewGauge(prometheus.GaugeOpts{
+	clusterNodesConf = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "cluster_nodes_configured",
 		Help: "Number of nodes configured in ha cluster",
+	})
+
+	clusterNodesOnline = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_nodes_online",
+		Help: "Number of nodes online in ha cluster",
+	})
+
+	clusterNodesStandby = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_nodes_standby",
+		Help: "Number of nodes standby in ha cluster",
+	})
+
+	clusterNodesStandbyOnFail = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_nodes_stanby_onfail",
+		Help: "Number of nodes standby onfail in ha cluster",
 	})
 
 	// a gauge metric with label
@@ -212,10 +228,20 @@ var (
 		}, []string{"type", "method"})
 )
 
+// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_maintenance %v\n", metrics.Node.Maintenance))
+// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_pending %v\n", metrics.Node.Pending))
+// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_unclean %v\n", metrics.Node.Unclean))
+// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_shutdown %v\n", metrics.Node.Shutdown))
+// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_expected_up %v\n", metrics.Node.ExpectedUp))
+// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_dc %v\n", metrics.Node.DC))
+
 func init() {
 	// Metrics have to be registered to be exposed:
-	prometheus.MustRegister(clusterNodeConf)
+	prometheus.MustRegister(clusterNodesConf)
 	prometheus.MustRegister(clusterNodes)
+	prometheus.MustRegister(clusterNodesOnline)
+	prometheus.MustRegister(clusterNodesStandby)
+	prometheus.MustRegister(clusterNodesStandbyOnFail)
 }
 
 var addr = flag.String("listen-address", ":9002", "The address to listen on for HTTP requests.")
@@ -234,9 +260,13 @@ func main() {
 		panic(err)
 	}
 
-	metrics := parseMetrics(&status)
+	metrics := parseGenericMetrics(&status)
 	// add metrics
-	clusterNodeConf.Set(float64(metrics.Node.Configured))
+	clusterNodesConf.Set(float64(metrics.Node.Configured))
+	clusterNodesOnline.Set(float64(metrics.Node.Online))
+	clusterNodesStandby.Set(float64(metrics.Node.Standby))
+	clusterNodesStandbyOnFail.Set(float64(metrics.Node.StandbyOnFail))
+
 	clusterNodes.WithLabelValues("type", "member").Add(float64(metrics.Node.TypeMember))
 	clusterNodes.WithLabelValues("type", "ping").Add(float64(metrics.Node.TypePing))
 	clusterNodes.WithLabelValues("type", "remote").Add(float64(metrics.Node.TypeRemote))
@@ -248,17 +278,6 @@ func main() {
 }
 
 // TODO: implement this
-
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_configured %v\n", metrics.Node.Configured))
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_online %v\n", metrics.Node.Online))
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_standby %v\n", metrics.Node.Standby))
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_standby_onfail %v\n", metrics.Node.StandbyOnFail))
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_maintenance %v\n", metrics.Node.Maintenance))
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_pending %v\n", metrics.Node.Pending))
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_unclean %v\n", metrics.Node.Unclean))
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_shutdown %v\n", metrics.Node.Shutdown))
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_expected_up %v\n", metrics.Node.ExpectedUp))
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_dc %v\n", metrics.Node.DC))
 
 // 	// sort the keys to get consistent output
 // 	keys := make([]string, len(metrics.PerNode))
