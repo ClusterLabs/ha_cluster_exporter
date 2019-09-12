@@ -1,16 +1,16 @@
 package main
 
 import (
-	"net/http"
-
-	log "github.com/Sirupsen/logrus"
+	"flag"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"log"
+	"net/http"
 )
 
+var addr = flag.String("listen-address", ":9002", "The address to listen on for HTTP requests.")
+
 func main() {
-	//This section will start the HTTP server and expose
-	//any metrics on the /metrics endpoint.
+	flag.Parse()
 	http.Handle("/metrics", promhttp.Handler())
-	log.Info("Beginning to serve on port :9002")
-	log.Fatal(http.ListenAndServe(":9002", nil))
+	log.Fatal(http.ListenAndServe(*addr, nil))
 }
