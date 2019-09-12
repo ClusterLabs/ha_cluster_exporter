@@ -247,12 +247,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }
 
-// HandleMetrics is the handler for metrics
-// requests, and outputs metrics in the
-// Prometheus text format (as text/plain).
-// func HandleMetrics(w http.ResponseWriter) bool {
-
-// 	metrics := parseMetrics(&status)
+// TODO: implement this
 
 // 	io.WriteString(w, fmt.Sprintf("cluster_nodes_configured %v\n", metrics.Node.Configured))
 // 	io.WriteString(w, fmt.Sprintf("cluster_nodes_online %v\n", metrics.Node.Online))
@@ -290,6 +285,3 @@ func main() {
 // 	io.WriteString(w, fmt.Sprintf("cluster_resources_managed %v\n", metrics.Resource.Managed))
 // 	io.WriteString(w, fmt.Sprintf("cluster_resources_failed %v\n", metrics.Resource.Failed))
 // 	io.WriteString(w, fmt.Sprintf("cluster_resources_failure_ignored %v\n", metrics.Resource.FailureIgnored))
-
-// 	return true
-// }
