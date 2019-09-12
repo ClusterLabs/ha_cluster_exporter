@@ -201,7 +201,7 @@ var (
 	// simple gauge metric
 	clusterNodeConf = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "cluster_nodes_configured",
-		Help: "Number of nodes configured in ha cluster.",
+		Help: "Number of nodes configured in ha cluster",
 	})
 
 	// a gauge metric with label
@@ -209,7 +209,7 @@ var (
 		prometheus.GaugeOpts{
 			Name: "cluster_nodes",
 			Help: "cluster nodes metrics",
-		}, []string{"type"})
+		}, []string{"type", "method"})
 )
 
 func init() {
@@ -237,10 +237,10 @@ func main() {
 	metrics := parseMetrics(&status)
 	// add metrics
 	clusterNodeConf.Set(float64(metrics.Node.Configured))
-	clusterNodes.WithLabelValues("type", "member").Set(float64(metrics.Node.TypeMember))
-	clusterNodes.WithLabelValues("type", "ping").Set(float64(metrics.Node.TypePing))
-	clusterNodes.WithLabelValues("type", "remote").Set(float64(metrics.Node.TypeRemote))
-	clusterNodes.WithLabelValues("type", "unknown").Set(float64(metrics.Node.TypeUnknown))
+	clusterNodes.WithLabelValues("type", "member").Add(float64(metrics.Node.TypeMember))
+	clusterNodes.WithLabelValues("type", "ping").Add(float64(metrics.Node.TypePing))
+	clusterNodes.WithLabelValues("type", "remote").Add(float64(metrics.Node.TypeRemote))
+	clusterNodes.WithLabelValues("type", "unknown").Add(float64(metrics.Node.TypeUnknown))
 
 	// serve metrics
 	http.Handle("/metrics", promhttp.Handler())
