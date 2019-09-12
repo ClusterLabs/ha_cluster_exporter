@@ -198,16 +198,24 @@ func parseMetrics(status *crmMon) *clusterMetrics {
 }
 
 var (
+	// simple gauge metric
 	clusterNodeConf = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "cluster_nodes_configured",
 		Help: "Number of nodes configured in ha cluster.",
 	})
-	// add metrics here
+
+	// a gauge metric with label
+	clusterNodes = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cluster_nodes",
+			Help: "cluster nodes metrics",
+		}, []string{"type"})
 )
 
 func init() {
 	// Metrics have to be registered to be exposed:
 	prometheus.MustRegister(clusterNodeConf)
+	prometheus.MustRegister(clusterNodes)
 }
 
 var addr = flag.String("listen-address", ":9002", "The address to listen on for HTTP requests.")
@@ -227,7 +235,12 @@ func main() {
 	}
 
 	metrics := parseMetrics(&status)
+	// add metrics
 	clusterNodeConf.Set(float64(metrics.Node.Configured))
+	clusterNodes.WithLabelValues("type", "member").Set(float64(metrics.Node.TypeMember))
+	clusterNodes.WithLabelValues("type", "ping").Set(float64(metrics.Node.TypePing))
+	clusterNodes.WithLabelValues("type", "remote").Set(float64(metrics.Node.TypeRemote))
+	clusterNodes.WithLabelValues("type", "unknown").Set(float64(metrics.Node.TypeUnknown))
 
 	// serve metrics
 	http.Handle("/metrics", promhttp.Handler())
@@ -251,10 +264,7 @@ func main() {
 // 	io.WriteString(w, fmt.Sprintf("cluster_nodes_shutdown %v\n", metrics.Node.Shutdown))
 // 	io.WriteString(w, fmt.Sprintf("cluster_nodes_expected_up %v\n", metrics.Node.ExpectedUp))
 // 	io.WriteString(w, fmt.Sprintf("cluster_nodes_dc %v\n", metrics.Node.DC))
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes{type=\"member\"} %v\n", metrics.Node.TypeMember))
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes{type=\"ping\"} %v\n", metrics.Node.TypePing))
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes{type=\"remote\"} %v\n", metrics.Node.TypeRemote))
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes{type=\"unknown\"} %v\n", metrics.Node.TypeUnknown))
+
 // 	// sort the keys to get consistent output
 // 	keys := make([]string, len(metrics.PerNode))
 // 	i := 0
