@@ -20,12 +20,10 @@ type crmMon struct {
 }
 
 type summary struct {
-	Nodes     nodesConfigured     `xml:"nodes_configured"`
+	Nodes struct {
+		Number int `xml:"number,attr"`
+	} `xml:"nodes_configured"`
 	Resources resourcesConfigured `xml:"resources_configured"`
-}
-
-type nodesConfigured struct {
-	Number int `xml:"number,attr"`
 }
 
 type resourcesConfigured struct {
@@ -69,42 +67,38 @@ type resource struct {
 }
 
 type clusterMetrics struct {
-	Node     nodeMetrics
-	Resource resourceMetrics
-	PerNode  map[string]perNodeMetrics
-}
-
-type nodeMetrics struct {
-	Configured    int
-	Online        int
-	Standby       int
-	StandbyOnFail int
-	Maintenance   int
-	Pending       int
-	Unclean       int
-	Shutdown      int
-	ExpectedUp    int
-	DC            int
-	TypeMember    int
-	TypePing      int
-	TypeRemote    int
-	TypeUnknown   int
-}
-
-type resourceMetrics struct {
-	Configured     int
-	Unique         int
-	Disabled       int
-	Stopped        int
-	Started        int
-	Slave          int
-	Master         int
-	Active         int
-	Orphaned       int
-	Blocked        int
-	Managed        int
-	Failed         int
-	FailureIgnored int
+	Node struct {
+		Configured    int
+		Online        int
+		Standby       int
+		StandbyOnFail int
+		Maintenance   int
+		Pending       int
+		Unclean       int
+		Shutdown      int
+		ExpectedUp    int
+		DC            int
+		TypeMember    int
+		TypePing      int
+		TypeRemote    int
+		TypeUnknown   int
+	}
+	Resource struct {
+		Configured     int
+		Unique         int
+		Disabled       int
+		Stopped        int
+		Started        int
+		Slave          int
+		Master         int
+		Active         int
+		Orphaned       int
+		Blocked        int
+		Managed        int
+		Failed         int
+		FailureIgnored int
+	}
+	PerNode map[string]perNodeMetrics
 }
 
 type perNodeMetrics struct {
@@ -261,6 +255,7 @@ var (
 		Name: "cluster_resources_unique",
 		Help: "Number of uniques resources in ha cluster",
 	})
+
 	clusterResourcesDisabled = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "cluster_resources_disabled",
 		Help: "Number resources disabled in ha cluster",
@@ -286,12 +281,14 @@ func init() {
 	prometheus.MustRegister(clusterNodesOnline)
 	prometheus.MustRegister(clusterNodesStandby)
 	prometheus.MustRegister(clusterNodesStandbyOnFail)
+	prometheus.MustRegister(clusterNodesMaintenance)
 	prometheus.MustRegister(clusterNodesPending)
-	prometheus.MustRegister(clusterNodesExpectedUp)
 	prometheus.MustRegister(clusterNodesUnclean)
 	prometheus.MustRegister(clusterNodesShutdown)
-	prometheus.MustRegister(clusterResourcesUnique)
+	prometheus.MustRegister(clusterNodesExpectedUp)
+	prometheus.MustRegister(clusterNodesDC)
 	prometheus.MustRegister(clusterResourcesConf)
+	prometheus.MustRegister(clusterResourcesUnique)
 	prometheus.MustRegister(clusterResourcesDisabled)
 
 	// metrics with labels
@@ -368,5 +365,6 @@ func main() {
 
 	// serve metrics
 	http.Handle("/metrics", promhttp.Handler())
+	fmt.Println("[INFO]: Serving metrics on port:", *portNumber)
 	log.Fatal(http.ListenAndServe(*portNumber, nil))
 }
