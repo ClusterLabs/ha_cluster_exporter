@@ -220,15 +220,19 @@ var (
 		Help: "Number of nodes standby onfail in ha cluster",
 	})
 
+	clusterNodesMaintenance = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_nodes_maintenance",
+		Help: "Number of nodes in maintainance in ha cluster",
+	})
+
 	// a gauge metric with label
 	clusterNodes = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cluster_nodes",
 			Help: "cluster nodes metrics",
-		}, []string{"type", "method"})
+		}, []string{"type"})
 )
 
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_maintenance %v\n", metrics.Node.Maintenance))
 // 	io.WriteString(w, fmt.Sprintf("cluster_nodes_pending %v\n", metrics.Node.Pending))
 // 	io.WriteString(w, fmt.Sprintf("cluster_nodes_unclean %v\n", metrics.Node.Unclean))
 // 	io.WriteString(w, fmt.Sprintf("cluster_nodes_shutdown %v\n", metrics.Node.Shutdown))
@@ -266,11 +270,12 @@ func main() {
 	clusterNodesOnline.Set(float64(metrics.Node.Online))
 	clusterNodesStandby.Set(float64(metrics.Node.Standby))
 	clusterNodesStandbyOnFail.Set(float64(metrics.Node.StandbyOnFail))
+	clusterNodesMaintenance.Set(float64(metrics.Node.Maintenance))
 
-	clusterNodes.WithLabelValues("type", "member").Add(float64(metrics.Node.TypeMember))
-	clusterNodes.WithLabelValues("type", "ping").Add(float64(metrics.Node.TypePing))
-	clusterNodes.WithLabelValues("type", "remote").Add(float64(metrics.Node.TypeRemote))
-	clusterNodes.WithLabelValues("type", "unknown").Add(float64(metrics.Node.TypeUnknown))
+	clusterNodes.WithLabelValues("member").Add(float64(metrics.Node.TypeMember))
+	clusterNodes.WithLabelValues("ping").Add(float64(metrics.Node.TypePing))
+	clusterNodes.WithLabelValues("remote").Add(float64(metrics.Node.TypeRemote))
+	clusterNodes.WithLabelValues("unknown").Add(float64(metrics.Node.TypeUnknown))
 
 	// serve metrics
 	http.Handle("/metrics", promhttp.Handler())
