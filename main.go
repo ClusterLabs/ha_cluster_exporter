@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/xml"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os/exec"
@@ -254,6 +255,7 @@ func main() {
 	flag.Parse()
 	// get cluster status xml
 	monxml, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
+	fmt.Println("[ERROR]: crm_mon command was not executed correctly. Did you have crm_mon installed ?")
 	if err != nil {
 		panic(err)
 	}
