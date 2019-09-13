@@ -252,6 +252,20 @@ var (
 		Help: "Number of nodes dc in ha cluster",
 	})
 
+	clusterResourcesConf = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_resources_configured",
+		Help: "Number of configured resources in ha cluster",
+	})
+
+	clusterResourcesUnique = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_resources_unique",
+		Help: "Number of uniques resources in ha cluster",
+	})
+	clusterResourcesDisabled = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_resources_disabled",
+		Help: "Number resources disabled in ha cluster",
+	})
+
 	// a gauge metric with label
 	clusterNodes = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -276,10 +290,26 @@ func init() {
 	prometheus.MustRegister(clusterNodesExpectedUp)
 	prometheus.MustRegister(clusterNodesUnclean)
 	prometheus.MustRegister(clusterNodesShutdown)
-	prometheus.MustRegister(clusterNodesDC)
+	prometheus.MustRegister(clusterResourcesUnique)
+	prometheus.MustRegister(clusterResourcesConf)
+	prometheus.MustRegister(clusterResourcesDisabled)
+
 	// metrics with labels
 	prometheus.MustRegister(clusterNodes)
 	prometheus.MustRegister(clusterResourcesRunning)
+
+	// TODO: add this metrics
+	// 	io.WriteString(w, fmt.Sprintf("cluster_resources_active %v\n", metrics.Resource.Active))
+	// 	io.WriteString(w, fmt.Sprintf("cluster_resources_orphaned %v\n", metrics.Resource.Orphaned))
+	// 	io.WriteString(w, fmt.Sprintf("cluster_resources_blocked %v\n", metrics.Resource.Blocked))
+	// 	io.WriteString(w, fmt.Sprintf("cluster_resources_managed %v\n", metrics.Resource.Managed))
+	// 	io.WriteString(w, fmt.Sprintf("cluster_resources_failed %v\n", metrics.Resource.Failed))
+	// 	io.WriteString(w, fmt.Sprintf("cluster_resources_failure_ignored %v\n", metrics.Resource.FailureIgnored))
+
+	// 	//io.WriteString(w, fmt.Sprintf("cluster_resources{role=\"stopped\"} %v\n", metrics.Resource.Stopped))
+	// 	io.WriteString(w, fmt.Sprintf("cluster_resources{role=\"started\"} %v\n", metrics.Resource.Started))
+	// 	io.WriteString(w, fmt.Sprintf("cluster_resources{role=\"slave\"} %v\n", metrics.Resource.Slave))
+	// 	io.WriteString(w, fmt.Sprintf("cluster_resources{role=\"master\"} %v\n", metrics.Resource.Master))
 
 }
 
@@ -301,7 +331,7 @@ func main() {
 	}
 
 	metrics := parseGenericMetrics(&status)
-	// add metrics
+	// add genric node metrics
 	clusterNodesConf.Set(float64(metrics.Node.Configured))
 	clusterNodesOnline.Set(float64(metrics.Node.Online))
 	clusterNodesStandby.Set(float64(metrics.Node.Standby))
@@ -312,14 +342,18 @@ func main() {
 	clusterNodesShutdown.Set(float64(metrics.Node.Shutdown))
 	clusterNodesExpectedUp.Set(float64(metrics.Node.ExpectedUp))
 	clusterNodesDC.Set(float64(metrics.Node.DC))
+	// add genric resource metrics
+	clusterResourcesUnique.Set(float64(metrics.Resource.Unique))
+	clusterResourcesDisabled.Set(float64(metrics.Resource.Disabled))
+	clusterResourcesConf.Set(float64(metrics.Resource.Configured))
 
+	// metrics with labels
 	clusterNodes.WithLabelValues("member").Add(float64(metrics.Node.TypeMember))
 	clusterNodes.WithLabelValues("ping").Add(float64(metrics.Node.TypePing))
 	clusterNodes.WithLabelValues("remote").Add(float64(metrics.Node.TypeRemote))
 	clusterNodes.WithLabelValues("unknown").Add(float64(metrics.Node.TypeUnknown))
 
-	// TODO: this is historically, we might don't need this. investigate on this later
-	// sort the keys to get consistent output
+	// TODO: this is historically, we might don't need to do like this. investigate on this later
 	keys := make([]string, len(metrics.PerNode))
 	i := 0
 	for k := range metrics.PerNode {
@@ -336,17 +370,3 @@ func main() {
 	http.Handle("/metrics", promhttp.Handler())
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }
-
-// 	io.WriteString(w, fmt.Sprintf("cluster_resources_configured %v\n", metrics.Resource.Configured))
-// 	io.WriteString(w, fmt.Sprintf("cluster_resources_unique %v\n", metrics.Resource.Unique))
-// 	io.WriteString(w, fmt.Sprintf("cluster_resources_disabled %v\n", metrics.Resource.Disabled))
-// 	//io.WriteString(w, fmt.Sprintf("cluster_resources{role=\"stopped\"} %v\n", metrics.Resource.Stopped))
-// 	io.WriteString(w, fmt.Sprintf("cluster_resources{role=\"started\"} %v\n", metrics.Resource.Started))
-// 	io.WriteString(w, fmt.Sprintf("cluster_resources{role=\"slave\"} %v\n", metrics.Resource.Slave))
-// 	io.WriteString(w, fmt.Sprintf("cluster_resources{role=\"master\"} %v\n", metrics.Resource.Master))
-// 	io.WriteString(w, fmt.Sprintf("cluster_resources_active %v\n", metrics.Resource.Active))
-// 	io.WriteString(w, fmt.Sprintf("cluster_resources_orphaned %v\n", metrics.Resource.Orphaned))
-// 	io.WriteString(w, fmt.Sprintf("cluster_resources_blocked %v\n", metrics.Resource.Blocked))
-// 	io.WriteString(w, fmt.Sprintf("cluster_resources_managed %v\n", metrics.Resource.Managed))
-// 	io.WriteString(w, fmt.Sprintf("cluster_resources_failed %v\n", metrics.Resource.Failed))
-// 	io.WriteString(w, fmt.Sprintf("cluster_resources_failure_ignored %v\n", metrics.Resource.FailureIgnored))
