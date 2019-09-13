@@ -8,9 +8,8 @@ It should run inside a node of the cluster.
 
 Build the binary with `make` and run it, it will expose the metrics on port `9002` by default. It can be changed.
 
-
-# Specificaion
-
 Use `ha_cluster_exporter -h` for options.
 
-* PORT: 9002 by default but this can be changed
+# Devel:
+
+Build the exporter and copy it to a node of the cluster
