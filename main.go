@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os/exec"
+	"sort"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -226,27 +227,60 @@ var (
 		Help: "Number of nodes in maintainance in ha cluster",
 	})
 
+	clusterNodesPending = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_nodes_pending",
+		Help: "Number of nodes pending in ha cluster",
+	})
+
+	clusterNodesUnclean = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_nodes_unclean",
+		Help: "Number of nodes unclean in ha cluster",
+	})
+
+	clusterNodesShutdown = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_nodes_shutdown",
+		Help: "Number of nodes shutdown in ha cluster",
+	})
+
+	clusterNodesExpectedUp = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_nodes_expected_up",
+		Help: "Number of nodes expected up in ha cluster",
+	})
+
+	clusterNodesDC = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_nodes_expected_dc",
+		Help: "Number of nodes dc in ha cluster",
+	})
+
 	// a gauge metric with label
 	clusterNodes = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cluster_nodes",
 			Help: "cluster nodes metrics",
 		}, []string{"type"})
-)
 
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_pending %v\n", metrics.Node.Pending))
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_unclean %v\n", metrics.Node.Unclean))
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_shutdown %v\n", metrics.Node.Shutdown))
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_expected_up %v\n", metrics.Node.ExpectedUp))
-// 	io.WriteString(w, fmt.Sprintf("cluster_nodes_dc %v\n", metrics.Node.DC))
+	clusterResourcesRunning = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cluster_resources_running",
+			Help: "number of cluster resources running",
+		}, []string{"node"})
+)
 
 func init() {
 	// Metrics have to be registered to be exposed:
 	prometheus.MustRegister(clusterNodesConf)
-	prometheus.MustRegister(clusterNodes)
 	prometheus.MustRegister(clusterNodesOnline)
 	prometheus.MustRegister(clusterNodesStandby)
 	prometheus.MustRegister(clusterNodesStandbyOnFail)
+	prometheus.MustRegister(clusterNodesPending)
+	prometheus.MustRegister(clusterNodesExpectedUp)
+	prometheus.MustRegister(clusterNodesUnclean)
+	prometheus.MustRegister(clusterNodesShutdown)
+	prometheus.MustRegister(clusterNodesDC)
+	// metrics with labels
+	prometheus.MustRegister(clusterNodes)
+	prometheus.MustRegister(clusterResourcesRunning)
+
 }
 
 var addr = flag.String("listen-address", ":9002", "The address to listen on for HTTP requests.")
@@ -273,31 +307,36 @@ func main() {
 	clusterNodesStandby.Set(float64(metrics.Node.Standby))
 	clusterNodesStandbyOnFail.Set(float64(metrics.Node.StandbyOnFail))
 	clusterNodesMaintenance.Set(float64(metrics.Node.Maintenance))
+	clusterNodesPending.Set(float64(metrics.Node.Pending))
+	clusterNodesUnclean.Set(float64(metrics.Node.Unclean))
+	clusterNodesShutdown.Set(float64(metrics.Node.Shutdown))
+	clusterNodesExpectedUp.Set(float64(metrics.Node.ExpectedUp))
+	clusterNodesDC.Set(float64(metrics.Node.DC))
 
 	clusterNodes.WithLabelValues("member").Add(float64(metrics.Node.TypeMember))
 	clusterNodes.WithLabelValues("ping").Add(float64(metrics.Node.TypePing))
 	clusterNodes.WithLabelValues("remote").Add(float64(metrics.Node.TypeRemote))
 	clusterNodes.WithLabelValues("unknown").Add(float64(metrics.Node.TypeUnknown))
 
+	// TODO: this is historically, we might don't need this. investigate on this later
+	// sort the keys to get consistent output
+	keys := make([]string, len(metrics.PerNode))
+	i := 0
+	for k := range metrics.PerNode {
+		keys[i] = k
+		i++
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		node := metrics.PerNode[k]
+		clusterResourcesRunning.WithLabelValues(k).Add(float64(node.ResourcesRunning))
+	}
+
 	// serve metrics
 	http.Handle("/metrics", promhttp.Handler())
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }
 
-// TODO: implement this
-
-// 	// sort the keys to get consistent output
-// 	keys := make([]string, len(metrics.PerNode))
-// 	i := 0
-// 	for k := range metrics.PerNode {
-// 		keys[i] = k
-// 		i++
-// 	}
-// 	sort.Strings(keys)
-// 	for _, k := range keys {
-// 		node := metrics.PerNode[k]
-// 		io.WriteString(w, fmt.Sprintf("cluster_resources_running{node=\"%v\"} %v\n", k, node.ResourcesRunning))
-// 	}
 // 	io.WriteString(w, fmt.Sprintf("cluster_resources_configured %v\n", metrics.Resource.Configured))
 // 	io.WriteString(w, fmt.Sprintf("cluster_resources_unique %v\n", metrics.Resource.Unique))
 // 	io.WriteString(w, fmt.Sprintf("cluster_resources_disabled %v\n", metrics.Resource.Disabled))
