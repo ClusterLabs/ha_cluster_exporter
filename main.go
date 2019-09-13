@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os/exec"
 	"sort"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -308,10 +309,10 @@ var (
 		prometheus.GaugeOpts{
 			Name: "cluster_resources",
 			Help: "number of cluster resources",
-		}, []string{"role"})
+		}, []string{"node", "resource_name", "role"})
 )
 
-func init() {
+func initMetrics() {
 	// Metrics have to be registered to be exposed:
 	prometheus.MustRegister(clusterNodesConf)
 	prometheus.MustRegister(clusterNodesOnline)
@@ -343,69 +344,94 @@ func init() {
 var portNumber = flag.String("port", ":9001", "The port number to listen on for HTTP requests.")
 
 func main() {
+	// read cli option and setup initial stat
 	flag.Parse()
-	// get cluster status xml
-	monxml, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
-	if err != nil {
-		fmt.Println("[ERROR]: crm_mon command was not executed correctly. Did you have crm_mon installed ?")
-		panic(err)
-	}
-
-	var status crmMon
-	err = xml.Unmarshal(monxml, &status)
-	if err != nil {
-		panic(err)
-	}
-
-	metrics := parseGenericMetrics(&status)
-	// add genric node metrics
-	clusterNodesConf.Set(float64(metrics.Node.Configured))
-	clusterNodesOnline.Set(float64(metrics.Node.Online))
-	clusterNodesStandby.Set(float64(metrics.Node.Standby))
-	clusterNodesStandbyOnFail.Set(float64(metrics.Node.StandbyOnFail))
-	clusterNodesMaintenance.Set(float64(metrics.Node.Maintenance))
-	clusterNodesPending.Set(float64(metrics.Node.Pending))
-	clusterNodesUnclean.Set(float64(metrics.Node.Unclean))
-	clusterNodesShutdown.Set(float64(metrics.Node.Shutdown))
-	clusterNodesExpectedUp.Set(float64(metrics.Node.ExpectedUp))
-	clusterNodesDC.Set(float64(metrics.Node.DC))
-	// add genric resource metrics
-	clusterResourcesUnique.Set(float64(metrics.Resource.Unique))
-	clusterResourcesDisabled.Set(float64(metrics.Resource.Disabled))
-	clusterResourcesConf.Set(float64(metrics.Resource.Configured))
-	clusterResourcesActive.Set(float64(metrics.Resource.Active))
-	clusterResourcesOrphaned.Set(float64(metrics.Resource.Orphaned))
-	clusterResourcesBlocked.Set(float64(metrics.Resource.Blocked))
-	clusterResourcesManaged.Set(float64(metrics.Resource.Managed))
-	clusterResourcesFailed.Set(float64(metrics.Resource.Failed))
-	clusterResourcesFailedIgnored.Set(float64(metrics.Resource.FailureIgnored))
-
-	// metrics with labels
-	clusterNodes.WithLabelValues("member").Add(float64(metrics.Node.TypeMember))
-	clusterNodes.WithLabelValues("ping").Add(float64(metrics.Node.TypePing))
-	clusterNodes.WithLabelValues("remote").Add(float64(metrics.Node.TypeRemote))
-	clusterNodes.WithLabelValues("unknown").Add(float64(metrics.Node.TypeUnknown))
-
-	clusterNodes.WithLabelValues("stopped").Add(float64(metrics.Resource.Stopped))
-	clusterNodes.WithLabelValues("started").Add(float64(metrics.Resource.Started))
-	clusterNodes.WithLabelValues("slave").Add(float64(metrics.Resource.Slave))
-	clusterNodes.WithLabelValues("master").Add(float64(metrics.Resource.Master))
-
-	// TODO: this is historically, we might don't need to do like this. investigate on this later
-	keys := make([]string, len(metrics.PerNode))
-	i := 0
-	for k := range metrics.PerNode {
-		keys[i] = k
-		i++
-	}
-	sort.Strings(keys)
-	for _, k := range keys {
-		node := metrics.PerNode[k]
-		clusterResourcesRunning.WithLabelValues(k).Add(float64(node.ResourcesRunning))
-	}
-
-	// serve metrics
+	initMetrics()
 	http.Handle("/metrics", promhttp.Handler())
+
+	// parse each 2 seconds the cluster configuration and update the metrics accordingly
+	// this is done in a goroutine async. we update in this way each 2 second the metrics. (the second will be a parameter in future)
+	go func() {
+
+		for {
+
+			var status crmMon
+			// get cluster status xml
+			fmt.Println("[INFO]: Reading cluster configuration with crm_mon..")
+			monxml, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
+			if err != nil {
+				fmt.Println("[ERROR]: crm_mon command was not executed correctly. Did you have crm_mon installed ?")
+				panic(err)
+			}
+
+			// read configuration
+			err = xml.Unmarshal(monxml, &status)
+			if err != nil {
+				panic(err)
+			}
+
+			metrics := parseGenericMetrics(&status)
+			// add genric node metrics
+			clusterNodesConf.Set(float64(metrics.Node.Configured))
+			clusterNodesOnline.Set(float64(metrics.Node.Online))
+			clusterNodesStandby.Set(float64(metrics.Node.Standby))
+			clusterNodesStandbyOnFail.Set(float64(metrics.Node.StandbyOnFail))
+			clusterNodesMaintenance.Set(float64(metrics.Node.Maintenance))
+			clusterNodesPending.Set(float64(metrics.Node.Pending))
+			clusterNodesUnclean.Set(float64(metrics.Node.Unclean))
+			clusterNodesShutdown.Set(float64(metrics.Node.Shutdown))
+			clusterNodesExpectedUp.Set(float64(metrics.Node.ExpectedUp))
+			clusterNodesDC.Set(float64(metrics.Node.DC))
+			// add genric resource metrics
+			clusterResourcesUnique.Set(float64(metrics.Resource.Unique))
+			clusterResourcesDisabled.Set(float64(metrics.Resource.Disabled))
+			clusterResourcesConf.Set(float64(metrics.Resource.Configured))
+			clusterResourcesActive.Set(float64(metrics.Resource.Active))
+			clusterResourcesOrphaned.Set(float64(metrics.Resource.Orphaned))
+			clusterResourcesBlocked.Set(float64(metrics.Resource.Blocked))
+			clusterResourcesManaged.Set(float64(metrics.Resource.Managed))
+			clusterResourcesFailed.Set(float64(metrics.Resource.Failed))
+			clusterResourcesFailedIgnored.Set(float64(metrics.Resource.FailureIgnored))
+
+			// metrics with labels
+			clusterNodes.WithLabelValues("member").Set(float64(metrics.Node.TypeMember))
+			clusterNodes.WithLabelValues("ping").Set(float64(metrics.Node.TypePing))
+			clusterNodes.WithLabelValues("remote").Set(float64(metrics.Node.TypeRemote))
+			clusterNodes.WithLabelValues("unknown").Set(float64(metrics.Node.TypeUnknown))
+
+			// TODO: rename this metric with Total etc.
+			//	clusterResourcesTotal.WithLabelValues("stopped").Add(float64(metrics.Resource.Stopped))
+			//  clusterResources.WithLabelValues("started").Add(float64(metrics.Resource.Started))
+			//	clusterResources.WithLabelValues("slave").Add(float64(metrics.Resource.Slave))
+			//	clusterResources.WithLabelValues("master").Add(float64(metrics.Resource.Master))
+
+			// this will produce a metric like this:
+			// cluster_resources{node="dma-dog-hana01" resource_name="RA1"  role="master"} 1
+			for _, nod := range status.Nodes.Node {
+				for _, rsc := range nod.Resources {
+					// TODO: FIXME FIND a mechanism to count the resources:
+					clusterResources.WithLabelValues(nod.Name, rsc.ID, rsc.Role).Set(float64(1))
+				}
+			}
+
+			// TODO: this is historically, we might don't need to do like this. investigate on this later
+			keys := make([]string, len(metrics.PerNode))
+			i := 0
+			for k := range metrics.PerNode {
+				keys[i] = k
+				i++
+			}
+			sort.Strings(keys)
+			for _, k := range keys {
+				node := metrics.PerNode[k]
+				clusterResourcesRunning.WithLabelValues(k).Set(float64(node.ResourcesRunning))
+			}
+			// TODO: make this configurable later
+			time.Sleep(2 * time.Second)
+
+		}
+	}()
+
 	fmt.Println("[INFO]: Serving metrics on port", *portNumber)
 	log.Fatal(http.ListenAndServe(*portNumber, nil))
 }
