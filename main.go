@@ -313,14 +313,14 @@ func init() {
 
 }
 
-var addr = flag.String("listen-address", ":9002", "The address to listen on for HTTP requests.")
+var portNumber = flag.String("port", ":9001", "The port number to listen on for HTTP requests.")
 
 func main() {
 	flag.Parse()
 	// get cluster status xml
 	monxml, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
-	fmt.Println("[ERROR]: crm_mon command was not executed correctly. Did you have crm_mon installed ?")
 	if err != nil {
+		fmt.Println("[ERROR]: crm_mon command was not executed correctly. Did you have crm_mon installed ?")
 		panic(err)
 	}
 
@@ -368,5 +368,5 @@ func main() {
 
 	// serve metrics
 	http.Handle("/metrics", promhttp.Handler())
-	log.Fatal(http.ListenAndServe(*addr, nil))
+	log.Fatal(http.ListenAndServe(*portNumber, nil))
 }
