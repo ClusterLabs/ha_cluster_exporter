@@ -261,6 +261,36 @@ var (
 		Help: "Number resources disabled in ha cluster",
 	})
 
+	clusterResourcesActive = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_resources_active",
+		Help: "Number resources active in ha cluster",
+	})
+
+	clusterResourcesOrphaned = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_resources_orphaned",
+		Help: "Number resources orphaned in ha cluster",
+	})
+
+	clusterResourcesBlocked = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_resources_blocked",
+		Help: "Number resources blocked in ha cluster",
+	})
+
+	clusterResourcesManaged = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_resources_managed",
+		Help: "Number resources managed in ha cluster",
+	})
+
+	clusterResourcesFailed = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_resources_failed",
+		Help: "Number resources failed in ha cluster",
+	})
+
+	clusterResourcesFailedIgnored = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_resources_failed_ignored",
+		Help: "Number resources failure ignored in ha cluster",
+	})
+
 	// a gauge metric with label
 	clusterNodes = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -290,18 +320,18 @@ func init() {
 	prometheus.MustRegister(clusterResourcesConf)
 	prometheus.MustRegister(clusterResourcesUnique)
 	prometheus.MustRegister(clusterResourcesDisabled)
+	prometheus.MustRegister(clusterResourcesActive)
+	prometheus.MustRegister(clusterResourcesOrphaned)
+	prometheus.MustRegister(clusterResourcesBlocked)
+	prometheus.MustRegister(clusterResourcesManaged)
+	prometheus.MustRegister(clusterResourcesFailed)
+	prometheus.MustRegister(clusterResourcesFailedIgnored)
 
 	// metrics with labels
 	prometheus.MustRegister(clusterNodes)
 	prometheus.MustRegister(clusterResourcesRunning)
 
 	// TODO: add this metrics
-	// 	io.WriteString(w, fmt.Sprintf("cluster_resources_active %v\n", metrics.Resource.Active))
-	// 	io.WriteString(w, fmt.Sprintf("cluster_resources_orphaned %v\n", metrics.Resource.Orphaned))
-	// 	io.WriteString(w, fmt.Sprintf("cluster_resources_blocked %v\n", metrics.Resource.Blocked))
-	// 	io.WriteString(w, fmt.Sprintf("cluster_resources_managed %v\n", metrics.Resource.Managed))
-	// 	io.WriteString(w, fmt.Sprintf("cluster_resources_failed %v\n", metrics.Resource.Failed))
-	// 	io.WriteString(w, fmt.Sprintf("cluster_resources_failure_ignored %v\n", metrics.Resource.FailureIgnored))
 
 	// 	//io.WriteString(w, fmt.Sprintf("cluster_resources{role=\"stopped\"} %v\n", metrics.Resource.Stopped))
 	// 	io.WriteString(w, fmt.Sprintf("cluster_resources{role=\"started\"} %v\n", metrics.Resource.Started))
@@ -344,6 +374,13 @@ func main() {
 	clusterResourcesDisabled.Set(float64(metrics.Resource.Disabled))
 	clusterResourcesConf.Set(float64(metrics.Resource.Configured))
 
+	clusterResourcesActive.Set(float64(metrics.Resource.Active))
+	clusterResourcesOrphaned.Set(float64(metrics.Resource.Orphaned))
+	clusterResourcesBlocked.Set(float64(metrics.Resource.Blocked))
+	clusterResourcesManaged.Set(float64(metrics.Resource.Managed))
+	clusterResourcesFailed.Set(float64(metrics.Resource.Failed))
+	clusterResourcesFailedIgnored.Set(float64(metrics.Resource.FailureIgnored))
+
 	// metrics with labels
 	clusterNodes.WithLabelValues("member").Add(float64(metrics.Node.TypeMember))
 	clusterNodes.WithLabelValues("ping").Add(float64(metrics.Node.TypePing))
@@ -365,6 +402,6 @@ func main() {
 
 	// serve metrics
 	http.Handle("/metrics", promhttp.Handler())
-	fmt.Println("[INFO]: Serving metrics on port:", *portNumber)
+	fmt.Println("[INFO]: Serving metrics on port", *portNumber)
 	log.Fatal(http.ListenAndServe(*portNumber, nil))
 }
