@@ -303,6 +303,12 @@ var (
 			Name: "cluster_resources_running",
 			Help: "number of cluster resources running",
 		}, []string{"node"})
+
+	clusterResources = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cluster_resources",
+			Help: "number of cluster resources",
+		}, []string{"role"})
 )
 
 func init() {
@@ -330,13 +336,7 @@ func init() {
 	// metrics with labels
 	prometheus.MustRegister(clusterNodes)
 	prometheus.MustRegister(clusterResourcesRunning)
-
-	// TODO: add this metrics
-
-	// 	//io.WriteString(w, fmt.Sprintf("cluster_resources{role=\"stopped\"} %v\n", metrics.Resource.Stopped))
-	// 	io.WriteString(w, fmt.Sprintf("cluster_resources{role=\"started\"} %v\n", metrics.Resource.Started))
-	// 	io.WriteString(w, fmt.Sprintf("cluster_resources{role=\"slave\"} %v\n", metrics.Resource.Slave))
-	// 	io.WriteString(w, fmt.Sprintf("cluster_resources{role=\"master\"} %v\n", metrics.Resource.Master))
+	prometheus.MustRegister(clusterResources)
 
 }
 
@@ -373,7 +373,6 @@ func main() {
 	clusterResourcesUnique.Set(float64(metrics.Resource.Unique))
 	clusterResourcesDisabled.Set(float64(metrics.Resource.Disabled))
 	clusterResourcesConf.Set(float64(metrics.Resource.Configured))
-
 	clusterResourcesActive.Set(float64(metrics.Resource.Active))
 	clusterResourcesOrphaned.Set(float64(metrics.Resource.Orphaned))
 	clusterResourcesBlocked.Set(float64(metrics.Resource.Blocked))
@@ -386,6 +385,11 @@ func main() {
 	clusterNodes.WithLabelValues("ping").Add(float64(metrics.Node.TypePing))
 	clusterNodes.WithLabelValues("remote").Add(float64(metrics.Node.TypeRemote))
 	clusterNodes.WithLabelValues("unknown").Add(float64(metrics.Node.TypeUnknown))
+
+	clusterNodes.WithLabelValues("stopped").Add(float64(metrics.Resource.Stopped))
+	clusterNodes.WithLabelValues("started").Add(float64(metrics.Resource.Started))
+	clusterNodes.WithLabelValues("slave").Add(float64(metrics.Resource.Slave))
+	clusterNodes.WithLabelValues("master").Add(float64(metrics.Resource.Master))
 
 	// TODO: this is historically, we might don't need to do like this. investigate on this later
 	keys := make([]string, len(metrics.PerNode))
