@@ -109,6 +109,8 @@ type perNodeMetrics struct {
 // this historically from hawk-apiserver and parse some generic metrics
 // it clusterStaterieve and parse cluster data and counters
 func parseGenericMetrics(status *crmMon) *clusterMetrics {
+
+	// clusterState save all the xml data . This is the metrics we will convert later to gauge etc.
 	clusterState := &clusterMetrics{}
 
 	clusterState.Node.Configured = status.Summary.Nodes.Number
@@ -191,6 +193,7 @@ func parseGenericMetrics(status *crmMon) *clusterMetrics {
 				clusterState.Resource.FailureIgnored++
 			}
 		}
+
 	}
 
 	clusterState.Resource.Unique = len(rscIds)
@@ -199,58 +202,7 @@ func parseGenericMetrics(status *crmMon) *clusterMetrics {
 }
 
 var (
-	// simple gauge metric
-	clusterNodesConf = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_nodes_configured",
-		Help: "Number of nodes configured in ha cluster",
-	})
-
-	clusterNodesOnline = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_nodes_online",
-		Help: "Number of nodes online in ha cluster",
-	})
-
-	clusterNodesStandby = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_nodes_standby",
-		Help: "Number of nodes standby in ha cluster",
-	})
-
-	clusterNodesStandbyOnFail = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_nodes_stanby_onfail",
-		Help: "Number of nodes standby onfail in ha cluster",
-	})
-
-	clusterNodesMaintenance = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_nodes_maintenance",
-		Help: "Number of nodes in maintainance in ha cluster",
-	})
-
-	clusterNodesPending = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_nodes_pending",
-		Help: "Number of nodes pending in ha cluster",
-	})
-
-	clusterNodesUnclean = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_nodes_unclean",
-		Help: "Number of nodes unclean in ha cluster",
-	})
-
-	clusterNodesShutdown = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_nodes_shutdown",
-		Help: "Number of nodes shutdown in ha cluster",
-	})
-
-	clusterNodesExpectedUp = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_nodes_expected_up",
-		Help: "Number of nodes expected up in ha cluster",
-	})
-
-	clusterNodesDC = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_nodes_expected_dc",
-		Help: "Number of nodes dc in ha cluster",
-	})
-
-	// a gauge metric with label
+	// metrics with labels. (prefer these always as guideline)
 	clusterNodes = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cluster_nodes",
@@ -262,7 +214,7 @@ var (
 			Name: "cluster_resources_running",
 			Help: "number of cluster resources running",
 		}, []string{"node"})
-
+	// TODO: rename this to nodeResource
 	clusterResources = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cluster_resources",
@@ -277,27 +229,16 @@ var (
 )
 
 func initMetrics() {
-	// Metrics have to be registered to be exposed:
-	prometheus.MustRegister(clusterNodesConf)
-	prometheus.MustRegister(clusterNodesOnline)
-	prometheus.MustRegister(clusterNodesStandby)
-	prometheus.MustRegister(clusterNodesStandbyOnFail)
-	prometheus.MustRegister(clusterNodesMaintenance)
-	prometheus.MustRegister(clusterNodesPending)
-	prometheus.MustRegister(clusterNodesUnclean)
-	prometheus.MustRegister(clusterNodesShutdown)
-	prometheus.MustRegister(clusterNodesExpectedUp)
-	prometheus.MustRegister(clusterNodesDC)
 
-	// metrics with labels
 	prometheus.MustRegister(clusterNodes)
+	// resources TODO: this 3 metrics can be refactored
 	prometheus.MustRegister(clusterResourcesRunning)
 	prometheus.MustRegister(clusterResources)
 	prometheus.MustRegister(clusterResourcesStatus)
-
 }
 
 var portNumber = flag.String("port", ":9001", "The port number to listen on for HTTP requests.")
+var timeoutSeconds = flag.Int("timeout", 5, "timeout seconds for exporter to wait to fetch new data")
 
 func main() {
 	// read cli option and setup initial stat
@@ -311,7 +252,17 @@ func main() {
 
 		for {
 
-			var status crmMon
+			// We want to reset certains metrics to 0 each time for removing the state.
+			// since we have complex/nested metrics with multiples labels, unregistering/re-registering is the cleanest way.
+			prometheus.Unregister(clusterResources)
+			// overwrite metric with an empty one
+			clusterResources := prometheus.NewGaugeVec(
+				prometheus.GaugeOpts{
+					Name: "cluster_resources",
+					Help: "number of cluster resources",
+				}, []string{"node", "resource_name", "role"})
+			prometheus.MustRegister(clusterResources)
+
 			// get cluster status xml
 			fmt.Println("[INFO]: Reading cluster configuration with crm_mon..")
 			monxml, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
@@ -321,23 +272,14 @@ func main() {
 			}
 
 			// read configuration
+			var status crmMon
 			err = xml.Unmarshal(monxml, &status)
 			if err != nil {
+				fmt.Println("[ERROR]: could not read cluster XML configuration")
 				panic(err)
 			}
 
 			metrics := parseGenericMetrics(&status)
-			// add genric node metrics
-			clusterNodesConf.Set(float64(metrics.Node.Configured))
-			clusterNodesOnline.Set(float64(metrics.Node.Online))
-			clusterNodesStandby.Set(float64(metrics.Node.Standby))
-			clusterNodesStandbyOnFail.Set(float64(metrics.Node.StandbyOnFail))
-			clusterNodesMaintenance.Set(float64(metrics.Node.Maintenance))
-			clusterNodesPending.Set(float64(metrics.Node.Pending))
-			clusterNodesUnclean.Set(float64(metrics.Node.Unclean))
-			clusterNodesShutdown.Set(float64(metrics.Node.Shutdown))
-			clusterNodesExpectedUp.Set(float64(metrics.Node.ExpectedUp))
-			clusterNodesDC.Set(float64(metrics.Node.DC))
 
 			// ressouce status metrics (TODO: rename it to total instead of status T)
 			clusterResourcesStatus.WithLabelValues("unique").Set(float64(metrics.Resource.Unique))
@@ -350,27 +292,37 @@ func main() {
 			clusterResourcesStatus.WithLabelValues("failed").Set(float64(metrics.Resource.Failed))
 			clusterResourcesStatus.WithLabelValues("failed_ignored").Set(float64(metrics.Resource.FailureIgnored))
 			clusterResourcesStatus.WithLabelValues("stopped").Set(float64(metrics.Resource.Stopped))
-			clusterResourcesStatus.WithLabelValues("started").Set(float64(metrics.Resource.Stopped))
+			clusterResourcesStatus.WithLabelValues("started").Set(float64(metrics.Resource.Started))
 			clusterResourcesStatus.WithLabelValues("slave").Set(float64(metrics.Resource.Slave))
-			clusterResourcesStatus.WithLabelValues("master").Add(float64(metrics.Resource.Master))
+			clusterResourcesStatus.WithLabelValues("master").Set(float64(metrics.Resource.Master))
 
 			// metrics with labels
 			clusterNodes.WithLabelValues("member").Set(float64(metrics.Node.TypeMember))
 			clusterNodes.WithLabelValues("ping").Set(float64(metrics.Node.TypePing))
 			clusterNodes.WithLabelValues("remote").Set(float64(metrics.Node.TypeRemote))
 			clusterNodes.WithLabelValues("unknown").Set(float64(metrics.Node.TypeUnknown))
+			clusterNodes.WithLabelValues("configured").Set(float64(metrics.Node.Configured))
+			clusterNodes.WithLabelValues("online").Set(float64(metrics.Node.Online))
+			clusterNodes.WithLabelValues("standby").Set(float64(metrics.Node.Standby))
+			clusterNodes.WithLabelValues("standby_onfail").Set(float64(metrics.Node.StandbyOnFail))
+			clusterNodes.WithLabelValues("maintenance").Set(float64(metrics.Node.Maintenance))
+			clusterNodes.WithLabelValues("pending").Set(float64(metrics.Node.Pending))
+			clusterNodes.WithLabelValues("unclean").Set(float64(metrics.Node.Unclean))
+			clusterNodes.WithLabelValues("shutdown").Set(float64(metrics.Node.Shutdown))
+			clusterNodes.WithLabelValues("expected_up").Set(float64(metrics.Node.ExpectedUp))
+			clusterNodes.WithLabelValues("DC").Set(float64(metrics.Node.DC))
 
 			// this will produce a metric like this:
 			// cluster_resources{node="dma-dog-hana01" resource_name="RA1"  role="master"} 1
 			for _, nod := range status.Nodes.Node {
 				for _, rsc := range nod.Resources {
-					// TODO: FIXME FIND a mechanism to count the resources:
-					// gauge2, err := pipelineCountMetric.GetMetricWithLabelValues("pipeline2")
-					clusterResources.WithLabelValues(nod.Name, rsc.ID, rsc.Role).Set(float64(1))
+					// if there is the same resource just add it. At each iteration it will be destroyed this metric so
+					// this is safe.
+					clusterResources.WithLabelValues(nod.Name, rsc.ID, rsc.Role).Inc()
 				}
 			}
-
 			// TODO: this is historically, we might don't need to do like this. investigate on this later
+			// this can be improved in a more simple way or even removed
 			keys := make([]string, len(metrics.PerNode))
 			i := 0
 			for k := range metrics.PerNode {
@@ -381,14 +333,13 @@ func main() {
 			for _, k := range keys {
 				node := metrics.PerNode[k]
 				clusterResourcesRunning.WithLabelValues(k).Set(float64(node.ResourcesRunning))
-
 			}
-			// TODO: make this configurable later
-			time.Sleep(2 * time.Second)
 
+			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 		}
 	}()
 
 	fmt.Println("[INFO]: Serving metrics on port", *portNumber)
+	fmt.Println("[INFO]: refreshing metric timeouts set to", *timeoutSeconds)
 	log.Fatal(http.ListenAndServe(*portNumber, nil))
 }
