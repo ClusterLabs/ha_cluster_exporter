@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os/exec"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -312,13 +313,11 @@ func main() {
 			clusterNodes.WithLabelValues("expected_up").Set(float64(metrics.Node.ExpectedUp))
 			clusterNodes.WithLabelValues("DC").Set(float64(metrics.Node.DC))
 
-			// this will produce a metric like this:
-			// cluster_resources{node="dma-dog-hana01" resource_name="RA1"  role="master"} 1
+			// this produce a metric like: cluster_resources{node="dma-dog-hana01" resource_name="RA1"  role="master"} 1
 			for _, nod := range status.Nodes.Node {
 				for _, rsc := range nod.Resources {
-					// if there is the same resource just add it. At each iteration it will be destroyed this metric so
-					// this is safe.
-					clusterResources.WithLabelValues(nod.Name, rsc.ID, rsc.Role).Inc()
+					// increment if same resource is present
+					clusterResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role)).Inc()
 				}
 			}
 			// TODO: this is historically, we might don't need to do like this. investigate on this later
