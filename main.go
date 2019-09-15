@@ -199,7 +199,7 @@ var (
 	// TODO: rename this to nodeResource
 	nodeResources = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "node_resources",
+			Name: "cluster_node_resources",
 			Help: "metric inherent per node resources",
 		}, []string{"node", "resource_name", "role"})
 
@@ -211,7 +211,6 @@ var (
 )
 
 func initMetrics() {
-
 	prometheus.MustRegister(clusterNodes)
 	prometheus.MustRegister(nodeResources)
 	prometheus.MustRegister(clusterResources)
@@ -229,17 +228,15 @@ func main() {
 	// parse each 2 seconds the cluster configuration and update the metrics accordingly
 	// this is done in a goroutine async. we update in this way each 2 second the metrics. (the second will be a parameter in future)
 	go func() {
-
 		for {
-
 			// We want to reset certains metrics to 0 each time for removing the state.
 			// since we have complex/nested metrics with multiples labels, unregistering/re-registering is the cleanest way.
 			prometheus.Unregister(nodeResources)
 			// overwrite metric with an empty one
-			nodeResources := prometheus.NewGaugeVec(
+			nodeResources = prometheus.NewGaugeVec(
 				prometheus.GaugeOpts{
-					Name: "cluster_resources",
-					Help: "number of cluster resources",
+					Name: "cluster_node_resources",
+					Help: "metric inherent per node resources",
 				}, []string{"node", "resource_name", "role"})
 			prometheus.MustRegister(nodeResources)
 
@@ -261,7 +258,6 @@ func main() {
 
 			metrics := parseGenericMetrics(&status)
 
-			// ressouce status metrics (TODO: rename it to total instead of status T)
 			clusterResources.WithLabelValues("unique").Set(float64(metrics.Resource.Unique))
 			clusterResources.WithLabelValues("disabled").Set(float64(metrics.Resource.Disabled))
 			clusterResources.WithLabelValues("configured").Set(float64(metrics.Resource.Configured))
