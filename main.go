@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os/exec"
-	"sort"
 	"strings"
 	"time"
 
@@ -100,11 +99,6 @@ type clusterMetrics struct {
 		Failed         int
 		FailureIgnored int
 	}
-	PerNode map[string]perNodeMetrics
-}
-
-type perNodeMetrics struct {
-	ResourcesRunning int
 }
 
 // this historically from hawk-apiserver and parse some generic metrics
@@ -113,18 +107,13 @@ func parseGenericMetrics(status *crmMon) *clusterMetrics {
 
 	// clusterState save all the xml data . This is the metrics we will convert later to gauge etc.
 	clusterState := &clusterMetrics{}
-
 	clusterState.Node.Configured = status.Summary.Nodes.Number
 	clusterState.Resource.Configured = status.Summary.Resources.Number
 	clusterState.Resource.Disabled = status.Summary.Resources.Disabled
-	clusterState.PerNode = make(map[string]perNodeMetrics)
-
 	rscIds := make(map[string]*resource)
 
 	// Node informations
 	for _, nod := range status.Nodes.Node {
-		perNode := perNodeMetrics{ResourcesRunning: nod.ResourcesRunning}
-		clusterState.PerNode[nod.Name] = perNode
 
 		if nod.Online {
 			clusterState.Node.Online++
@@ -162,7 +151,6 @@ func parseGenericMetrics(status *crmMon) *clusterMetrics {
 		} else {
 			clusterState.Node.TypeUnknown++
 		}
-
 		// node resources
 		for _, rsc := range nod.Resources {
 			rscIds[rsc.ID] = &rsc
@@ -196,9 +184,7 @@ func parseGenericMetrics(status *crmMon) *clusterMetrics {
 		}
 
 	}
-
 	clusterState.Resource.Unique = len(rscIds)
-
 	return clusterState
 }
 
@@ -210,11 +196,6 @@ var (
 			Help: "cluster nodes metrics",
 		}, []string{"type"})
 
-	clusterResourcesRunning = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cluster_resources_running",
-			Help: "number of cluster resources running",
-		}, []string{"node"})
 	// TODO: rename this to nodeResource
 	clusterResources = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -232,8 +213,8 @@ var (
 func initMetrics() {
 
 	prometheus.MustRegister(clusterNodes)
-	// resources TODO: this 3 metrics can be refactored
-	prometheus.MustRegister(clusterResourcesRunning)
+	// resources TODO: this 2 metrics can be refactored
+	// TODO rename clusterResources to nodeResources
 	prometheus.MustRegister(clusterResources)
 	prometheus.MustRegister(clusterResourcesStatus)
 }
@@ -297,7 +278,7 @@ func main() {
 			clusterResourcesStatus.WithLabelValues("slave").Set(float64(metrics.Resource.Slave))
 			clusterResourcesStatus.WithLabelValues("master").Set(float64(metrics.Resource.Master))
 
-			// metrics with labels
+			// nodes metrics
 			clusterNodes.WithLabelValues("member").Set(float64(metrics.Node.TypeMember))
 			clusterNodes.WithLabelValues("ping").Set(float64(metrics.Node.TypePing))
 			clusterNodes.WithLabelValues("remote").Set(float64(metrics.Node.TypeRemote))
@@ -319,19 +300,6 @@ func main() {
 					// increment if same resource is present
 					clusterResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role)).Inc()
 				}
-			}
-			// TODO: this is historically, we might don't need to do like this. investigate on this later
-			// this can be improved in a more simple way or even removed
-			keys := make([]string, len(metrics.PerNode))
-			i := 0
-			for k := range metrics.PerNode {
-				keys[i] = k
-				i++
-			}
-			sort.Strings(keys)
-			for _, k := range keys {
-				node := metrics.PerNode[k]
-				clusterResourcesRunning.WithLabelValues(k).Set(float64(node.ResourcesRunning))
 			}
 
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
