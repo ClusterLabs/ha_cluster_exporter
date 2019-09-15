@@ -247,51 +247,6 @@ var (
 		Help: "Number of nodes dc in ha cluster",
 	})
 
-	clusterResourcesConf = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_resources_configured",
-		Help: "Number of configured resources in ha cluster",
-	})
-
-	clusterResourcesUnique = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_resources_unique",
-		Help: "Number of uniques resources in ha cluster",
-	})
-
-	clusterResourcesDisabled = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_resources_disabled",
-		Help: "Number resources disabled in ha cluster",
-	})
-
-	clusterResourcesActive = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_resources_active",
-		Help: "Number resources active in ha cluster",
-	})
-
-	clusterResourcesOrphaned = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_resources_orphaned",
-		Help: "Number resources orphaned in ha cluster",
-	})
-
-	clusterResourcesBlocked = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_resources_blocked",
-		Help: "Number resources blocked in ha cluster",
-	})
-
-	clusterResourcesManaged = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_resources_managed",
-		Help: "Number resources managed in ha cluster",
-	})
-
-	clusterResourcesFailed = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_resources_failed",
-		Help: "Number resources failed in ha cluster",
-	})
-
-	clusterResourcesFailedIgnored = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_resources_failed_ignored",
-		Help: "Number resources failure ignored in ha cluster",
-	})
-
 	// a gauge metric with label
 	clusterNodes = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -310,6 +265,12 @@ var (
 			Name: "cluster_resources",
 			Help: "number of cluster resources",
 		}, []string{"node", "resource_name", "role"})
+
+	clusterResourcesStatus = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cluster_resources_status",
+			Help: "status of cluster resources",
+		}, []string{"status"})
 )
 
 func initMetrics() {
@@ -324,20 +285,12 @@ func initMetrics() {
 	prometheus.MustRegister(clusterNodesShutdown)
 	prometheus.MustRegister(clusterNodesExpectedUp)
 	prometheus.MustRegister(clusterNodesDC)
-	prometheus.MustRegister(clusterResourcesConf)
-	prometheus.MustRegister(clusterResourcesUnique)
-	prometheus.MustRegister(clusterResourcesDisabled)
-	prometheus.MustRegister(clusterResourcesActive)
-	prometheus.MustRegister(clusterResourcesOrphaned)
-	prometheus.MustRegister(clusterResourcesBlocked)
-	prometheus.MustRegister(clusterResourcesManaged)
-	prometheus.MustRegister(clusterResourcesFailed)
-	prometheus.MustRegister(clusterResourcesFailedIgnored)
 
 	// metrics with labels
 	prometheus.MustRegister(clusterNodes)
 	prometheus.MustRegister(clusterResourcesRunning)
 	prometheus.MustRegister(clusterResources)
+	prometheus.MustRegister(clusterResourcesStatus)
 
 }
 
@@ -382,16 +335,17 @@ func main() {
 			clusterNodesShutdown.Set(float64(metrics.Node.Shutdown))
 			clusterNodesExpectedUp.Set(float64(metrics.Node.ExpectedUp))
 			clusterNodesDC.Set(float64(metrics.Node.DC))
-			// add genric resource metrics
-			clusterResourcesUnique.Set(float64(metrics.Resource.Unique))
-			clusterResourcesDisabled.Set(float64(metrics.Resource.Disabled))
-			clusterResourcesConf.Set(float64(metrics.Resource.Configured))
-			clusterResourcesActive.Set(float64(metrics.Resource.Active))
-			clusterResourcesOrphaned.Set(float64(metrics.Resource.Orphaned))
-			clusterResourcesBlocked.Set(float64(metrics.Resource.Blocked))
-			clusterResourcesManaged.Set(float64(metrics.Resource.Managed))
-			clusterResourcesFailed.Set(float64(metrics.Resource.Failed))
-			clusterResourcesFailedIgnored.Set(float64(metrics.Resource.FailureIgnored))
+
+			// ressouce status metrics
+			clusterResourcesStatus.WithLabelValues("unique").Set(float64(metrics.Resource.Unique))
+			clusterResourcesStatus.WithLabelValues("disabled").Set(float64(metrics.Resource.Disabled))
+			clusterResourcesStatus.WithLabelValues("configured").Set(float64(metrics.Resource.Configured))
+			clusterResourcesStatus.WithLabelValues("active").Set(float64(metrics.Resource.Active))
+			clusterResourcesStatus.WithLabelValues("orpanhed").Set(float64(metrics.Resource.Orphaned))
+			clusterResourcesStatus.WithLabelValues("blocked").Set(float64(metrics.Resource.Blocked))
+			clusterResourcesStatus.WithLabelValues("managed").Set(float64(metrics.Resource.Managed))
+			clusterResourcesStatus.WithLabelValues("failed").Set(float64(metrics.Resource.Failed))
+			clusterResourcesStatus.WithLabelValues("failed_ignored").Set(float64(metrics.Resource.FailureIgnored))
 
 			// metrics with labels
 			clusterNodes.WithLabelValues("member").Set(float64(metrics.Node.TypeMember))
@@ -410,6 +364,7 @@ func main() {
 			for _, nod := range status.Nodes.Node {
 				for _, rsc := range nod.Resources {
 					// TODO: FIXME FIND a mechanism to count the resources:
+					// gauge2, err := pipelineCountMetric.GetMetricWithLabelValues("pipeline2")
 					clusterResources.WithLabelValues(nod.Name, rsc.ID, rsc.Role).Set(float64(1))
 				}
 			}
@@ -425,6 +380,7 @@ func main() {
 			for _, k := range keys {
 				node := metrics.PerNode[k]
 				clusterResourcesRunning.WithLabelValues(k).Set(float64(node.ResourcesRunning))
+
 			}
 			// TODO: make this configurable later
 			time.Sleep(2 * time.Second)
