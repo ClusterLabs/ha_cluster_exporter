@@ -2,7 +2,7 @@
 
 This prometheus exporter is used to serve metrics for pacemaker https://github.com/ClusterLabs/pacemaker
 
-It should run inside a node of the cluster.
+It should run inside a node of the cluster or both.
 
 # Usage
 
