@@ -193,30 +193,28 @@ var (
 	clusterNodes = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cluster_nodes",
-			Help: "cluster nodes metrics",
+			Help: "cluster nodes metrics for all of them",
 		}, []string{"type"})
 
 	// TODO: rename this to nodeResource
-	clusterResources = prometheus.NewGaugeVec(
+	nodeResources = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cluster_resources",
-			Help: "number of cluster resources",
+			Name: "node_resources",
+			Help: "metric inherent per node resources",
 		}, []string{"node", "resource_name", "role"})
 
-	clusterResourcesStatus = prometheus.NewGaugeVec(
+	clusterResources = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cluster_resources_status",
-			Help: "status of cluster resources",
+			Help: "global status of cluster resources",
 		}, []string{"status"})
 )
 
 func initMetrics() {
 
 	prometheus.MustRegister(clusterNodes)
-	// resources TODO: this 2 metrics can be refactored
-	// TODO rename clusterResources to nodeResources
+	prometheus.MustRegister(nodeResources)
 	prometheus.MustRegister(clusterResources)
-	prometheus.MustRegister(clusterResourcesStatus)
 }
 
 var portNumber = flag.String("port", ":9001", "The port number to listen on for HTTP requests.")
@@ -236,14 +234,14 @@ func main() {
 
 			// We want to reset certains metrics to 0 each time for removing the state.
 			// since we have complex/nested metrics with multiples labels, unregistering/re-registering is the cleanest way.
-			prometheus.Unregister(clusterResources)
+			prometheus.Unregister(nodeResources)
 			// overwrite metric with an empty one
-			clusterResources := prometheus.NewGaugeVec(
+			nodeResources := prometheus.NewGaugeVec(
 				prometheus.GaugeOpts{
 					Name: "cluster_resources",
 					Help: "number of cluster resources",
 				}, []string{"node", "resource_name", "role"})
-			prometheus.MustRegister(clusterResources)
+			prometheus.MustRegister(nodeResources)
 
 			// get cluster status xml
 			fmt.Println("[INFO]: Reading cluster configuration with crm_mon..")
@@ -264,19 +262,19 @@ func main() {
 			metrics := parseGenericMetrics(&status)
 
 			// ressouce status metrics (TODO: rename it to total instead of status T)
-			clusterResourcesStatus.WithLabelValues("unique").Set(float64(metrics.Resource.Unique))
-			clusterResourcesStatus.WithLabelValues("disabled").Set(float64(metrics.Resource.Disabled))
-			clusterResourcesStatus.WithLabelValues("configured").Set(float64(metrics.Resource.Configured))
-			clusterResourcesStatus.WithLabelValues("active").Set(float64(metrics.Resource.Active))
-			clusterResourcesStatus.WithLabelValues("orpanhed").Set(float64(metrics.Resource.Orphaned))
-			clusterResourcesStatus.WithLabelValues("blocked").Set(float64(metrics.Resource.Blocked))
-			clusterResourcesStatus.WithLabelValues("managed").Set(float64(metrics.Resource.Managed))
-			clusterResourcesStatus.WithLabelValues("failed").Set(float64(metrics.Resource.Failed))
-			clusterResourcesStatus.WithLabelValues("failed_ignored").Set(float64(metrics.Resource.FailureIgnored))
-			clusterResourcesStatus.WithLabelValues("stopped").Set(float64(metrics.Resource.Stopped))
-			clusterResourcesStatus.WithLabelValues("started").Set(float64(metrics.Resource.Started))
-			clusterResourcesStatus.WithLabelValues("slave").Set(float64(metrics.Resource.Slave))
-			clusterResourcesStatus.WithLabelValues("master").Set(float64(metrics.Resource.Master))
+			clusterResources.WithLabelValues("unique").Set(float64(metrics.Resource.Unique))
+			clusterResources.WithLabelValues("disabled").Set(float64(metrics.Resource.Disabled))
+			clusterResources.WithLabelValues("configured").Set(float64(metrics.Resource.Configured))
+			clusterResources.WithLabelValues("active").Set(float64(metrics.Resource.Active))
+			clusterResources.WithLabelValues("orpanhed").Set(float64(metrics.Resource.Orphaned))
+			clusterResources.WithLabelValues("blocked").Set(float64(metrics.Resource.Blocked))
+			clusterResources.WithLabelValues("managed").Set(float64(metrics.Resource.Managed))
+			clusterResources.WithLabelValues("failed").Set(float64(metrics.Resource.Failed))
+			clusterResources.WithLabelValues("failed_ignored").Set(float64(metrics.Resource.FailureIgnored))
+			clusterResources.WithLabelValues("stopped").Set(float64(metrics.Resource.Stopped))
+			clusterResources.WithLabelValues("started").Set(float64(metrics.Resource.Started))
+			clusterResources.WithLabelValues("slave").Set(float64(metrics.Resource.Slave))
+			clusterResources.WithLabelValues("master").Set(float64(metrics.Resource.Master))
 
 			// nodes metrics
 			clusterNodes.WithLabelValues("member").Set(float64(metrics.Node.TypeMember))
@@ -298,7 +296,7 @@ func main() {
 			for _, nod := range status.Nodes.Node {
 				for _, rsc := range nod.Resources {
 					// increment if same resource is present
-					clusterResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role)).Inc()
+					nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role)).Inc()
 				}
 			}
 
