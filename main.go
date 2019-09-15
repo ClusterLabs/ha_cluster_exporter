@@ -107,92 +107,95 @@ type perNodeMetrics struct {
 }
 
 // this historically from hawk-apiserver and parse some generic metrics
+// it clusterStaterieve and parse cluster data and counters
 func parseGenericMetrics(status *crmMon) *clusterMetrics {
-	ret := &clusterMetrics{}
+	clusterState := &clusterMetrics{}
 
-	ret.Node.Configured = status.Summary.Nodes.Number
-	ret.Resource.Configured = status.Summary.Resources.Number
-	ret.Resource.Disabled = status.Summary.Resources.Disabled
-	ret.PerNode = make(map[string]perNodeMetrics)
+	clusterState.Node.Configured = status.Summary.Nodes.Number
+	clusterState.Resource.Configured = status.Summary.Resources.Number
+	clusterState.Resource.Disabled = status.Summary.Resources.Disabled
+	clusterState.PerNode = make(map[string]perNodeMetrics)
 
 	rscIds := make(map[string]*resource)
 
+	// Node informations
 	for _, nod := range status.Nodes.Node {
 		perNode := perNodeMetrics{ResourcesRunning: nod.ResourcesRunning}
-		ret.PerNode[nod.Name] = perNode
+		clusterState.PerNode[nod.Name] = perNode
 
 		if nod.Online {
-			ret.Node.Online++
+			clusterState.Node.Online++
 		}
 		if nod.Standby {
-			ret.Node.Standby++
+			clusterState.Node.Standby++
 		}
 		if nod.StandbyOnFail {
-			ret.Node.StandbyOnFail++
+			clusterState.Node.StandbyOnFail++
 		}
 		if nod.Maintenance {
-			ret.Node.Maintenance++
+			clusterState.Node.Maintenance++
 		}
 		if nod.Pending {
-			ret.Node.Pending++
+			clusterState.Node.Pending++
 		}
 		if nod.Unclean {
-			ret.Node.Unclean++
+			clusterState.Node.Unclean++
 		}
 		if nod.Shutdown {
-			ret.Node.Shutdown++
+			clusterState.Node.Shutdown++
 		}
 		if nod.ExpectedUp {
-			ret.Node.ExpectedUp++
+			clusterState.Node.ExpectedUp++
 		}
 		if nod.DC {
-			ret.Node.DC++
+			clusterState.Node.DC++
 		}
 		if nod.Type == "member" {
-			ret.Node.TypeMember++
+			clusterState.Node.TypeMember++
 		} else if nod.Type == "ping" {
-			ret.Node.TypePing++
+			clusterState.Node.TypePing++
 		} else if nod.Type == "remote" {
-			ret.Node.TypeRemote++
+			clusterState.Node.TypeRemote++
 		} else {
-			ret.Node.TypeUnknown++
+			clusterState.Node.TypeUnknown++
 		}
 
+		// node resources
 		for _, rsc := range nod.Resources {
 			rscIds[rsc.ID] = &rsc
 			if rsc.Role == "Started" {
-				ret.Resource.Started++
+				clusterState.Resource.Started++
 			} else if rsc.Role == "Stopped" {
-				ret.Resource.Stopped++
+				clusterState.Resource.Stopped++
 			} else if rsc.Role == "Slave" {
-				ret.Resource.Slave++
+				clusterState.Resource.Slave++
 			} else if rsc.Role == "Master" {
-				ret.Resource.Master++
+				clusterState.Resource.Master++
 			}
 			if rsc.Active {
-				ret.Resource.Active++
+				clusterState.Resource.Active++
 			}
 			if rsc.Orphaned {
-				ret.Resource.Orphaned++
+				clusterState.Resource.Orphaned++
 			}
 			if rsc.Blocked {
-				ret.Resource.Blocked++
+				clusterState.Resource.Blocked++
 			}
 			if rsc.Managed {
-				ret.Resource.Managed++
+				clusterState.Resource.Managed++
 			}
 			if rsc.Failed {
-				ret.Resource.Failed++
+				clusterState.Resource.Failed++
 			}
 			if rsc.FailureIgnored {
-				ret.Resource.FailureIgnored++
+				clusterState.Resource.FailureIgnored++
 			}
 		}
 	}
 
-	ret.Resource.Unique = len(rscIds)
+	clusterState.Resource.Unique = len(rscIds)
 
-	return ret
+	return clusterState
 }
 
 var (
@@ -313,7 +316,7 @@ func main() {
 			fmt.Println("[INFO]: Reading cluster configuration with crm_mon..")
 			monxml, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
 			if err != nil {
-				fmt.Println("[ERROR]: crm_mon command was not executed correctly. Did you have crm_mon installed ?")
+				fmt.Println("[ERROR]: crm_mon command execution failed. Did you have crm_mon installed ?")
 				panic(err)
 			}
 
