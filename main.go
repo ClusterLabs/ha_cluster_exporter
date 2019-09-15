@@ -336,7 +336,7 @@ func main() {
 			clusterNodesExpectedUp.Set(float64(metrics.Node.ExpectedUp))
 			clusterNodesDC.Set(float64(metrics.Node.DC))
 
-			// ressouce status metrics
+			// ressouce status metrics (TODO: rename it to total instead of status T)
 			clusterResourcesStatus.WithLabelValues("unique").Set(float64(metrics.Resource.Unique))
 			clusterResourcesStatus.WithLabelValues("disabled").Set(float64(metrics.Resource.Disabled))
 			clusterResourcesStatus.WithLabelValues("configured").Set(float64(metrics.Resource.Configured))
@@ -346,18 +346,16 @@ func main() {
 			clusterResourcesStatus.WithLabelValues("managed").Set(float64(metrics.Resource.Managed))
 			clusterResourcesStatus.WithLabelValues("failed").Set(float64(metrics.Resource.Failed))
 			clusterResourcesStatus.WithLabelValues("failed_ignored").Set(float64(metrics.Resource.FailureIgnored))
+			clusterResourcesStatus.WithLabelValues("stopped").Set(float64(metrics.Resource.Stopped))
+			clusterResourcesStatus.WithLabelValues("started").Set(float64(metrics.Resource.Stopped))
+			clusterResourcesStatus.WithLabelValues("slave").Set(float64(metrics.Resource.Slave))
+			clusterResourcesStatus.WithLabelValues("master").Add(float64(metrics.Resource.Master))
 
 			// metrics with labels
 			clusterNodes.WithLabelValues("member").Set(float64(metrics.Node.TypeMember))
 			clusterNodes.WithLabelValues("ping").Set(float64(metrics.Node.TypePing))
 			clusterNodes.WithLabelValues("remote").Set(float64(metrics.Node.TypeRemote))
 			clusterNodes.WithLabelValues("unknown").Set(float64(metrics.Node.TypeUnknown))
-
-			// TODO: rename this metric with Total etc.
-			//	clusterResourcesTotal.WithLabelValues("stopped").Add(float64(metrics.Resource.Stopped))
-			//  clusterResources.WithLabelValues("started").Add(float64(metrics.Resource.Started))
-			//	clusterResources.WithLabelValues("slave").Add(float64(metrics.Resource.Slave))
-			//	clusterResources.WithLabelValues("master").Add(float64(metrics.Resource.Master))
 
 			// this will produce a metric like this:
 			// cluster_resources{node="dma-dog-hana01" resource_name="RA1"  role="master"} 1
