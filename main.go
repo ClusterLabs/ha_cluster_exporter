@@ -258,7 +258,7 @@ func main() {
 			}
 
 			metrics := parseGenericMetrics(&status)
-
+			// TODO: this metrics could be joined to node resource with a status field and removing this metric
 			clusterResources.WithLabelValues("unique").Set(float64(metrics.Resource.Unique))
 			clusterResources.WithLabelValues("disabled").Set(float64(metrics.Resource.Disabled))
 			clusterResources.WithLabelValues("configured").Set(float64(metrics.Resource.Configured))
