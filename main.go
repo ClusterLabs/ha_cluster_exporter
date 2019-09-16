@@ -216,7 +216,7 @@ func initMetrics() {
 	prometheus.MustRegister(clusterResources)
 }
 
-var portNumber = flag.String("port", ":9001", "The port number to listen on for HTTP requests.")
+var portNumber = flag.String("port", ":9002", "The port number to listen on for HTTP requests.")
 var timeoutSeconds = flag.Int("timeout", 5, "timeout seconds for exporter to wait to fetch new data")
 
 func main() {
@@ -225,7 +225,7 @@ func main() {
 	initMetrics()
 	http.Handle("/metrics", promhttp.Handler())
 
-	// parse each 2 seconds the cluster configuration and update the metrics accordingly
+	// parse each X seconds the cluster configuration and update the metrics accordingly
 	// this is done in a goroutine async. we update in this way each 2 second the metrics. (the second will be a parameter in future)
 	go func() {
 		for {
