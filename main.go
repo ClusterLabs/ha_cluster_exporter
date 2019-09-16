@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/xml"
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	"os/exec"
@@ -241,10 +240,10 @@ func main() {
 			prometheus.MustRegister(nodeResources)
 
 			// get cluster status xml
-			fmt.Println("[INFO]: Reading cluster configuration with crm_mon..")
+			log.Println("[INFO]: Reading cluster configuration with crm_mon..")
 			monxml, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
 			if err != nil {
-				fmt.Println("[ERROR]: crm_mon command execution failed. Did you have crm_mon installed ?")
+				log.Println("[ERROR]: crm_mon command execution failed. Did you have crm_mon installed ?")
 				panic(err)
 			}
 
@@ -252,7 +251,7 @@ func main() {
 			var status crmMon
 			err = xml.Unmarshal(monxml, &status)
 			if err != nil {
-				fmt.Println("[ERROR]: could not read cluster XML configuration")
+				log.Println("[ERROR]: could not read cluster XML configuration")
 				panic(err)
 			}
 
@@ -300,7 +299,7 @@ func main() {
 		}
 	}()
 
-	fmt.Println("[INFO]: Serving metrics on port", *portNumber)
-	fmt.Println("[INFO]: refreshing metric timeouts set to", *timeoutSeconds)
+	log.Println("[INFO]: Serving metrics on port", *portNumber)
+	log.Println("[INFO]: refreshing metric timeouts set to", *timeoutSeconds)
 	log.Fatal(http.ListenAndServe(*portNumber, nil))
 }
