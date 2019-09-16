@@ -237,14 +237,17 @@ func main() {
 					Name: "cluster_node_resources",
 					Help: "metric inherent per node resources",
 				}, []string{"node", "resource_name", "role"})
-			prometheus.MustRegister(nodeResources)
-
+			err := prometheus.Register(nodeResources)
+			if err != nil {
+				log.Println("[ERROR]: failed to register NodeResource metric. Perhaps another exporter is already running?")
+				log.Panic(err)
+			}
 			// get cluster status xml
 			log.Println("[INFO]: Reading cluster configuration with crm_mon..")
 			monxml, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
 			if err != nil {
 				log.Println("[ERROR]: crm_mon command execution failed. Did you have crm_mon installed ?")
-				panic(err)
+				log.Panic(err)
 			}
 
 			// read configuration
@@ -252,7 +255,7 @@ func main() {
 			err = xml.Unmarshal(monxml, &status)
 			if err != nil {
 				log.Println("[ERROR]: could not read cluster XML configuration")
-				panic(err)
+				log.Panic(err)
 			}
 
 			metrics := parseGenericMetrics(&status)
