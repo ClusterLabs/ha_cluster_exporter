@@ -195,7 +195,6 @@ var (
 			Help: "cluster nodes metrics for all of them",
 		}, []string{"type"})
 
-	// TODO: rename this to nodeResource
 	nodeResources = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cluster_node_resources",
