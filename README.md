@@ -20,6 +20,4 @@ You can find a package for #openSUSE distro here:
 
 https://build.opensuse.org/package/show/network:ha-clustering:Factory/prometheus-ha_cluster_exporter
 
-In future however the repository will moved to a monitoring releated one, so keep it as development repo.
-
-In this repo you can find also all the HA pkgs for openSUSE for having/building a cluster.
+In this repo you can find also all the HA pkgs for openSUSE for having/building a cluster. See https://en.opensuse.org/openSUSE:High_Availability
