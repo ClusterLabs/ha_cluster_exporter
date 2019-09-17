@@ -114,42 +114,6 @@ func parseGenericMetrics(status *crmMon) *clusterMetrics {
 	// Node informations
 	for _, nod := range status.Nodes.Node {
 
-		if nod.Online {
-			clusterState.Node.Online++
-		}
-		if nod.Standby {
-			clusterState.Node.Standby++
-		}
-		if nod.StandbyOnFail {
-			clusterState.Node.StandbyOnFail++
-		}
-		if nod.Maintenance {
-			clusterState.Node.Maintenance++
-		}
-		if nod.Pending {
-			clusterState.Node.Pending++
-		}
-		if nod.Unclean {
-			clusterState.Node.Unclean++
-		}
-		if nod.Shutdown {
-			clusterState.Node.Shutdown++
-		}
-		if nod.ExpectedUp {
-			clusterState.Node.ExpectedUp++
-		}
-		if nod.DC {
-			clusterState.Node.DC++
-		}
-		if nod.Type == "member" {
-			clusterState.Node.TypeMember++
-		} else if nod.Type == "ping" {
-			clusterState.Node.TypePing++
-		} else if nod.Type == "remote" {
-			clusterState.Node.TypeRemote++
-		} else {
-			clusterState.Node.TypeUnknown++
-		}
 		// node resources
 		for _, rsc := range nod.Resources {
 			rscIds[rsc.ID] = &rsc
@@ -193,7 +157,7 @@ var (
 		prometheus.GaugeOpts{
 			Name: "cluster_nodes",
 			Help: "cluster nodes metrics for all of them",
-		}, []string{"type"})
+		}, []string{"node", "type"})
 
 	nodeResources = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -214,6 +178,38 @@ func initMetrics() {
 	prometheus.MustRegister(clusterResources)
 }
 
+func resetMetrics() {
+	// We want to reset certains metrics to 0 each time for removing the state.
+	// since we have complex/nested metrics with multiples labels, unregistering/re-registering is the cleanest way.
+	prometheus.Unregister(nodeResources)
+	// overwrite metric with an empty one
+	nodeResources = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cluster_node_resources",
+			Help: "metric inherent per node resources",
+		}, []string{"node", "resource_name", "role"})
+	err := prometheus.Register(nodeResources)
+	if err != nil {
+		log.Println("[ERROR]: failed to register NodeResource metric. Perhaps another exporter is already running?")
+		log.Panic(err)
+	}
+
+	prometheus.Unregister(clusterNodes)
+	// overwrite metric with an empty one
+	clusterNodes = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cluster_nodes",
+			Help: "cluster nodes metrics for all of them",
+		}, []string{"node", "type"})
+
+	err = prometheus.Register(clusterNodes)
+	if err != nil {
+		log.Println("[ERROR]: failed to register clusterNode metric. Perhaps another exporter is already running?")
+		log.Panic(err)
+	}
+
+}
+
 var portNumber = flag.String("port", ":9002", "The port number to listen on for HTTP requests.")
 var timeoutSeconds = flag.Int("timeout", 5, "timeout seconds for exporter to wait to fetch new data")
 
@@ -227,20 +223,10 @@ func main() {
 	// this is done in a goroutine async. we update in this way each 2 second the metrics. (the second will be a parameter in future)
 	go func() {
 		for {
-			// We want to reset certains metrics to 0 each time for removing the state.
-			// since we have complex/nested metrics with multiples labels, unregistering/re-registering is the cleanest way.
-			prometheus.Unregister(nodeResources)
-			// overwrite metric with an empty one
-			nodeResources = prometheus.NewGaugeVec(
-				prometheus.GaugeOpts{
-					Name: "cluster_node_resources",
-					Help: "metric inherent per node resources",
-				}, []string{"node", "resource_name", "role"})
-			err := prometheus.Register(nodeResources)
-			if err != nil {
-				log.Println("[ERROR]: failed to register NodeResource metric. Perhaps another exporter is already running?")
-				log.Panic(err)
-			}
+
+			// remove all global state contained by metrics
+			resetMetrics()
+
 			// get cluster status xml
 			log.Println("[INFO]: Reading cluster configuration with crm_mon..")
 			monxml, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
@@ -273,21 +259,48 @@ func main() {
 			clusterResources.WithLabelValues("slave").Set(float64(metrics.Resource.Slave))
 			clusterResources.WithLabelValues("master").Set(float64(metrics.Resource.Master))
 
-			// nodes metrics
-			clusterNodes.WithLabelValues("member").Set(float64(metrics.Node.TypeMember))
-			clusterNodes.WithLabelValues("ping").Set(float64(metrics.Node.TypePing))
-			clusterNodes.WithLabelValues("remote").Set(float64(metrics.Node.TypeRemote))
-			clusterNodes.WithLabelValues("unknown").Set(float64(metrics.Node.TypeUnknown))
-			clusterNodes.WithLabelValues("configured").Set(float64(metrics.Node.Configured))
-			clusterNodes.WithLabelValues("online").Set(float64(metrics.Node.Online))
-			clusterNodes.WithLabelValues("standby").Set(float64(metrics.Node.Standby))
-			clusterNodes.WithLabelValues("standby_onfail").Set(float64(metrics.Node.StandbyOnFail))
-			clusterNodes.WithLabelValues("maintenance").Set(float64(metrics.Node.Maintenance))
-			clusterNodes.WithLabelValues("pending").Set(float64(metrics.Node.Pending))
-			clusterNodes.WithLabelValues("unclean").Set(float64(metrics.Node.Unclean))
-			clusterNodes.WithLabelValues("shutdown").Set(float64(metrics.Node.Shutdown))
-			clusterNodes.WithLabelValues("expected_up").Set(float64(metrics.Node.ExpectedUp))
-			clusterNodes.WithLabelValues("DC").Set(float64(metrics.Node.DC))
+			// set node metrics
+			// cluster_nodes{node="dma-dog-hana01" type="master"} 1
+			for _, nod := range status.Nodes.Node {
+
+				if nod.Online {
+					clusterNodes.WithLabelValues(nod.Name, "online").Set(float64(1))
+				}
+
+				if nod.Standby {
+					clusterNodes.WithLabelValues(nod.Name, "standby").Set(float64(1))
+				}
+				if nod.StandbyOnFail {
+					clusterNodes.WithLabelValues(nod.Name, "standby_onfail").Set(float64(1))
+				}
+				if nod.Maintenance {
+					clusterNodes.WithLabelValues(nod.Name, "maintenance").Set(float64(1))
+				}
+				if nod.Pending {
+					clusterNodes.WithLabelValues(nod.Name, "pending").Set(float64(1))
+				}
+				if nod.Unclean {
+					clusterNodes.WithLabelValues(nod.Name, "unclean").Set(float64(1))
+				}
+				if nod.Shutdown {
+					clusterNodes.WithLabelValues(nod.Name, "shutdown").Set(float64(1))
+				}
+				if nod.ExpectedUp {
+					clusterNodes.WithLabelValues(nod.Name, "expected_up").Set(float64(1))
+				}
+				if nod.DC {
+					clusterNodes.WithLabelValues(nod.Name, "dc").Set(float64(1))
+				}
+				if nod.Type == "member" {
+					clusterNodes.WithLabelValues(nod.Name, "member").Set(float64(1))
+				} else if nod.Type == "ping" {
+					clusterNodes.WithLabelValues(nod.Name, "ping").Set(float64(1))
+				} else if nod.Type == "remote" {
+					clusterNodes.WithLabelValues(nod.Name, "remote").Set(float64(1))
+				} else {
+					clusterNodes.WithLabelValues(nod.Name, "unknown").Set(float64(1))
+				}
+			}
 
 			// this produce a metric like: cluster_resources{node="dma-dog-hana01" resource_name="RA1"  role="master"} 1
 			for _, nod := range status.Nodes.Node {
