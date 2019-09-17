@@ -66,91 +66,6 @@ type resource struct {
 	NodesRunningOn int    `xml:"nodes_running_on,attr"`
 }
 
-type clusterMetrics struct {
-	Node struct {
-		Configured    int
-		Online        int
-		Standby       int
-		StandbyOnFail int
-		Maintenance   int
-		Pending       int
-		Unclean       int
-		Shutdown      int
-		ExpectedUp    int
-		DC            int
-		TypeMember    int
-		TypePing      int
-		TypeRemote    int
-		TypeUnknown   int
-	}
-	Resource struct {
-		Configured     int
-		Unique         int
-		Disabled       int
-		Stopped        int
-		Started        int
-		Slave          int
-		Master         int
-		Active         int
-		Orphaned       int
-		Blocked        int
-		Managed        int
-		Failed         int
-		FailureIgnored int
-	}
-}
-
-// this historically from hawk-apiserver and parse some generic metrics
-// it clusterStaterieve and parse cluster data and counters
-func parseGenericMetrics(status *crmMon) *clusterMetrics {
-
-	// clusterState save all the xml data . This is the metrics we will convert later to gauge etc.
-	clusterState := &clusterMetrics{}
-	clusterState.Node.Configured = status.Summary.Nodes.Number
-	clusterState.Resource.Configured = status.Summary.Resources.Number
-	clusterState.Resource.Disabled = status.Summary.Resources.Disabled
-	rscIds := make(map[string]*resource)
-
-	// Node informations
-	for _, nod := range status.Nodes.Node {
-
-		// node resources
-		for _, rsc := range nod.Resources {
-			rscIds[rsc.ID] = &rsc
-			if rsc.Role == "Started" {
-				clusterState.Resource.Started++
-			} else if rsc.Role == "Stopped" {
-				clusterState.Resource.Stopped++
-			} else if rsc.Role == "Slave" {
-				clusterState.Resource.Slave++
-			} else if rsc.Role == "Master" {
-				clusterState.Resource.Master++
-			}
-			if rsc.Active {
-				clusterState.Resource.Active++
-			}
-			if rsc.Orphaned {
-				clusterState.Resource.Orphaned++
-			}
-			if rsc.Blocked {
-				clusterState.Resource.Blocked++
-			}
-			if rsc.Managed {
-				clusterState.Resource.Managed++
-			}
-			if rsc.Failed {
-				clusterState.Resource.Failed++
-			}
-			if rsc.FailureIgnored {
-				clusterState.Resource.FailureIgnored++
-			}
-		}
-
-	}
-	clusterState.Resource.Unique = len(rscIds)
-	return clusterState
-}
-
 var (
 	// metrics with labels. (prefer these always as guideline)
 	clusterNodes = prometheus.NewGaugeVec(
@@ -163,19 +78,12 @@ var (
 		prometheus.GaugeOpts{
 			Name: "cluster_node_resources",
 			Help: "metric inherent per node resources",
-		}, []string{"node", "resource_name", "role"})
-
-	clusterResources = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cluster_resources_status",
-			Help: "global status of cluster resources",
-		}, []string{"status"})
+		}, []string{"node", "resource_name", "role", "status"})
 )
 
 func initMetrics() {
 	prometheus.MustRegister(clusterNodes)
 	prometheus.MustRegister(nodeResources)
-	prometheus.MustRegister(clusterResources)
 }
 
 func resetMetrics() {
@@ -187,7 +95,7 @@ func resetMetrics() {
 		prometheus.GaugeOpts{
 			Name: "cluster_node_resources",
 			Help: "metric inherent per node resources",
-		}, []string{"node", "resource_name", "role"})
+		}, []string{"node", "resource_name", "role", "status"})
 	err := prometheus.Register(nodeResources)
 	if err != nil {
 		log.Println("[ERROR]: failed to register NodeResource metric. Perhaps another exporter is already running?")
@@ -243,30 +151,12 @@ func main() {
 				log.Panic(err)
 			}
 
-			metrics := parseGenericMetrics(&status)
-			// TODO: this metrics could be joined to node resource with a status field and removing this metric
-			clusterResources.WithLabelValues("unique").Set(float64(metrics.Resource.Unique))
-			clusterResources.WithLabelValues("disabled").Set(float64(metrics.Resource.Disabled))
-			clusterResources.WithLabelValues("configured").Set(float64(metrics.Resource.Configured))
-			clusterResources.WithLabelValues("active").Set(float64(metrics.Resource.Active))
-			clusterResources.WithLabelValues("orpanhed").Set(float64(metrics.Resource.Orphaned))
-			clusterResources.WithLabelValues("blocked").Set(float64(metrics.Resource.Blocked))
-			clusterResources.WithLabelValues("managed").Set(float64(metrics.Resource.Managed))
-			clusterResources.WithLabelValues("failed").Set(float64(metrics.Resource.Failed))
-			clusterResources.WithLabelValues("failed_ignored").Set(float64(metrics.Resource.FailureIgnored))
-			clusterResources.WithLabelValues("stopped").Set(float64(metrics.Resource.Stopped))
-			clusterResources.WithLabelValues("started").Set(float64(metrics.Resource.Started))
-			clusterResources.WithLabelValues("slave").Set(float64(metrics.Resource.Slave))
-			clusterResources.WithLabelValues("master").Set(float64(metrics.Resource.Master))
-
 			// set node metrics
 			// cluster_nodes{node="dma-dog-hana01" type="master"} 1
 			for _, nod := range status.Nodes.Node {
-
 				if nod.Online {
 					clusterNodes.WithLabelValues(nod.Name, "online").Set(float64(1))
 				}
-
 				if nod.Standby {
 					clusterNodes.WithLabelValues(nod.Name, "standby").Set(float64(1))
 				}
@@ -302,12 +192,38 @@ func main() {
 				}
 			}
 
-			// this produce a metric like: cluster_resources{node="dma-dog-hana01" resource_name="RA1"  role="master"} 1
+			// parse node status
+			// this produce a metric like:
+			//  cluster_resources{node="dma-dog-hana01" resource_name="RA1" type="active" role="master"} 1
+			//  cluster_resources{node="dma-dog-hana01" resource_name="RA1" type="failed" role="master"} 1
 			for _, nod := range status.Nodes.Node {
 				for _, rsc := range nod.Resources {
-					// increment if same resource is present
-					nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role)).Inc()
+					if rsc.Active {
+						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role),
+							"active").Inc()
+					}
+					if rsc.Orphaned {
+						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role),
+							"orphaned").Inc()
+					}
+					if rsc.Blocked {
+						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role),
+							"blocked").Inc()
+					}
+					if rsc.Managed {
+						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role),
+							"managed").Inc()
+					}
+					if rsc.Failed {
+						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role),
+							"failed").Inc()
+					}
+					if rsc.FailureIgnored {
+						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role),
+							"failed_ignored").Inc()
+					}
 				}
+
 			}
 
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
