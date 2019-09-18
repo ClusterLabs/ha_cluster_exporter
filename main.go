@@ -68,6 +68,16 @@ type resource struct {
 }
 
 var (
+	clusterNodesConf = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_nodes_configured_total",
+		Help: "Number of nodes configured in ha cluster",
+	})
+
+	clusterResourcesConf = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "cluster_resources_configured_total",
+		Help: "Number of total configured resources in ha cluster",
+	})
+
 	// metrics with labels. (prefer these always as guideline)
 	clusterNodes = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -85,6 +95,8 @@ var (
 func initMetrics() {
 	prometheus.MustRegister(clusterNodes)
 	prometheus.MustRegister(nodeResources)
+	prometheus.MustRegister(clusterResourcesConf)
+	prometheus.MustRegister(clusterNodesConf)
 }
 
 func resetMetrics() {
@@ -152,6 +164,9 @@ func main() {
 				log.Panic(err)
 			}
 
+			clusterResourcesConf.Set(float64(status.Summary.Resources.Number))
+			clusterNodesConf.Set(float64(status.Summary.Nodes.Number))
+
 			// set node metrics
 			// cluster_nodes{node="dma-dog-hana01" type="master"} 1
 			for _, nod := range status.Nodes.Node {
@@ -195,8 +210,8 @@ func main() {
 
 			// parse node status
 			// this produce a metric like:
-			//  cluster_resources{node="dma-dog-hana01" resource_name="RA1" type="active", managed="true" role="master"} 1
-			//  cluster_resources{node="dma-dog-hana01" resource_name="RA1" type="failed"  managed="false" role="master"} 1
+			//	cluster_node_resources{managed="false",node="dma-dog-hana01",resource_name="rsc_saphanatopology_prd_hdb00",role="started",status="active"} 1
+			//  cluster_node_resources{managed="true",node="dma-dog-hana01",resource_name="rsc_ip_prd_hdb00",role="started",status="active"} 1
 			for _, nod := range status.Nodes.Node {
 				for _, rsc := range nod.Resources {
 					if rsc.Active {
