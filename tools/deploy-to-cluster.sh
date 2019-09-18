@@ -4,7 +4,7 @@
 
 # this script is just for deploying the binary to the cluster. Nothing else.
 
-node="root@10.162.30.186"
+node="root@10.162.31.39"
 
 ssh $node "rm /root/ha_cluster_exporter"
 echo "copying binary"

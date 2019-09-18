@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -78,7 +79,7 @@ var (
 		prometheus.GaugeOpts{
 			Name: "cluster_node_resources",
 			Help: "metric inherent per node resources",
-		}, []string{"node", "resource_name", "role", "status"})
+		}, []string{"node", "resource_name", "role", "managed", "status"})
 )
 
 func initMetrics() {
@@ -95,7 +96,7 @@ func resetMetrics() {
 		prometheus.GaugeOpts{
 			Name: "cluster_node_resources",
 			Help: "metric inherent per node resources",
-		}, []string{"node", "resource_name", "role", "status"})
+		}, []string{"node", "resource_name", "role", "managed", "status"})
 	err := prometheus.Register(nodeResources)
 	if err != nil {
 		log.Println("[ERROR]: failed to register NodeResource metric. Perhaps another exporter is already running?")
@@ -194,32 +195,28 @@ func main() {
 
 			// parse node status
 			// this produce a metric like:
-			//  cluster_resources{node="dma-dog-hana01" resource_name="RA1" type="active" role="master"} 1
-			//  cluster_resources{node="dma-dog-hana01" resource_name="RA1" type="failed" role="master"} 1
+			//  cluster_resources{node="dma-dog-hana01" resource_name="RA1" type="active", managed="true" role="master"} 1
+			//  cluster_resources{node="dma-dog-hana01" resource_name="RA1" type="failed"  managed="false" role="master"} 1
 			for _, nod := range status.Nodes.Node {
 				for _, rsc := range nod.Resources {
 					if rsc.Active {
-						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role),
+						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
 							"active").Inc()
 					}
 					if rsc.Orphaned {
-						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role),
+						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
 							"orphaned").Inc()
 					}
 					if rsc.Blocked {
-						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role),
+						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
 							"blocked").Inc()
 					}
-					if rsc.Managed {
-						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role),
-							"managed").Inc()
-					}
 					if rsc.Failed {
-						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role),
+						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
 							"failed").Inc()
 					}
 					if rsc.FailureIgnored {
-						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role),
+						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
 							"failed_ignored").Inc()
 					}
 				}
