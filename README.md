@@ -6,7 +6,7 @@ It should run inside a node of the cluster or both.
 
 # Design:
 
-[design](doc/design.md)
+For the technical design of the exporter have look at [design](doc/design.md)
 
 # Usage
 
