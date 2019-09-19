@@ -5,7 +5,7 @@ Some principle might have changed but not much.
 
 ![design](design.jpeg)
 
-First in the `main` function we setup the Prometheus exporter metrics constructs. A metric hold a state. You can imagine them as global mutablev ariables which are served over http at the end.
+First in the `main` function we setup the Prometheus exporter metrics constructs. A metric hold a state. You can imagine them as global mutable variables which are served over http at the end.
 
 The main functionality of the exporter is executed in a golang routine. At the begin of the loop most of all metrics are "reset", so all the old information/state is removed. 
 (this is done to clean up metrics who have complex labels)
