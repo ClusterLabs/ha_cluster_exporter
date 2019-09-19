@@ -4,6 +4,10 @@ This prometheus exporter is used to serve metrics for pacemaker https://github.c
 
 It should run inside a node of the cluster or both.
 
+# Design:
+
+[design](doc/design.md)
+
 # Usage
 
 Build the binary with `make` and run it, it will expose the metrics on port `9001` by default.
