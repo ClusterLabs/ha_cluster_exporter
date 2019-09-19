@@ -16,6 +16,8 @@ Once the data is retrieved, this the golang types are popoulated.
 
 Within this we set the various metrics (gauge, gaugeVec). 
 
-THe loops sleep a X timeout . And go to being
+THe loops sleep a X timeout . Finally the loop start to the begin again. 
 
-The metric are served via http
+The metric are served via http.
+
+THe data/metrics retrivial is done in a gorutine async from the serving of metrics.
