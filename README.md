@@ -8,7 +8,7 @@ It should run inside a node of the cluster or both.
 
 - expose cluster node and resource metrics via `crm_mon` (pacemaker data xml)
 
-- expose corosync metrics **not done yet WIP**
+- expose corosync metrics (ring errors, quorum metrics)
 
 # Devel:
 
