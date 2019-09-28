@@ -1,6 +1,6 @@
 default: build
 
-build: fmt-check  vet-check 
+build: fmt-check  vet-check test
 	go build .
 
 install:
@@ -11,7 +11,8 @@ vet-check:
 
 fmt-check:
 	go fmt  .
-
+test:
+	go test 
 # This deploy the binary to a node of cluster in devel mode port :9002. 
 # you need to change the IP adress in the script. 
 # TODO: (In future we can add an arg var..)

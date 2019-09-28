@@ -68,6 +68,13 @@ type resource struct {
 }
 
 var (
+	// corosync metrics
+	corosyncRingErrorsTotal = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "corosync_ring_errors_total",
+		Help: "Total number of ring errors in corosync",
+	})
+
+	// cluster metrics
 	clusterNodesConf = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "cluster_nodes_configured_total",
 		Help: "Number of nodes configured in ha cluster",
@@ -92,12 +99,17 @@ var (
 		}, []string{"node", "resource_name", "role", "managed", "status"})
 )
 
-func initMetrics() {
+func init() {
 	prometheus.MustRegister(clusterNodes)
 	prometheus.MustRegister(nodeResources)
 	prometheus.MustRegister(clusterResourcesConf)
 	prometheus.MustRegister(clusterNodesConf)
+	prometheus.MustRegister(corosyncRingErrorsTotal)
 }
+
+// this function is for some cluster metrics which have resource as labels.
+// since we cannot be sure a resource exists always, we need to destroy the metrics at each iteration
+// otherwise we will have wrong metrics ( thinking a resource exist when not)
 
 func resetMetrics() {
 	// We want to reset certains metrics to 0 each time for removing the state.
@@ -137,11 +149,25 @@ var timeoutSeconds = flag.Int("timeout", 5, "timeout seconds for exporter to wai
 func main() {
 	// read cli option and setup initial stat
 	flag.Parse()
-	initMetrics()
 	http.Handle("/metrics", promhttp.Handler())
 
-	// parse each X seconds the cluster configuration and update the metrics accordingly
-	// this is done in a goroutine async. we update in this way each 2 second the metrics. (the second will be a parameter in future)
+	// for each different metrics, handle it in differents gorutines, and use same timeout.
+
+	// 1) set corosync metrics
+	go func() {
+		for {
+			ringStatus := getCorosyncRingStatus()
+			ringErrorsTotal, err := parseRingStatus(ringStatus)
+			if err != nil {
+				log.Println("[ERROR]: could not execute command: usr/sbin/corosync-cfgtool -s")
+				log.Panic(err)
+			}
+			corosyncRingErrorsTotal.Set(float64(ringErrorsTotal))
+			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+		}
+	}()
+
+	// 2) set cluster pacemaker metrics
 	go func() {
 		for {
 
