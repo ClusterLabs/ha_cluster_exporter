@@ -86,6 +86,16 @@ var (
 	})
 
 	// metrics with labels. (prefer these always as guideline)
+
+	// corosync quorum		
+	corosyncQuorum = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "corosync_quorum",
+			Help: "cluster quorum information",
+		}, []string{"expected_votes", "highest_expected", "total_votes", "quorum", "quorate"})
+
+
+	// cluster metrics
 	clusterNodes = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cluster_nodes",
@@ -105,13 +115,14 @@ func init() {
 	prometheus.MustRegister(clusterResourcesConf)
 	prometheus.MustRegister(clusterNodesConf)
 	prometheus.MustRegister(corosyncRingErrorsTotal)
+	prometheus.MustRegister(corosyncQuorum)
 }
 
 // this function is for some cluster metrics which have resource as labels.
 // since we cannot be sure a resource exists always, we need to destroy the metrics at each iteration
 // otherwise we will have wrong metrics ( thinking a resource exist when not)
 
-func resetMetrics() {
+func resetClusterMetrics() {
 	// We want to reset certains metrics to 0 each time for removing the state.
 	// since we have complex/nested metrics with multiples labels, unregistering/re-registering is the cleanest way.
 	prometheus.Unregister(nodeResources)
@@ -153,11 +164,12 @@ func main() {
 
 	// for each different metrics, handle it in differents gorutines, and use same timeout.
 
-	// 1) set corosync metrics
+	// 1a) set corosync metrics: Ring errors 
 	go func() {
 		for {
 			ringStatus := getCorosyncRingStatus()
 			ringErrorsTotal, err := parseRingStatus(ringStatus)
+			// todo: reflect if we want to error out. We could just ignore error for resiliance
 			if err != nil {
 				log.Println("[ERROR]: could not execute command: usr/sbin/corosync-cfgtool -s")
 				log.Panic(err)
@@ -166,13 +178,23 @@ func main() {
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 		}
 	}()
-
+    // 1b) set corosync metrics: quorum metrics
+	go func() {
+		for {
+			quoromStatus := getQuoromClusterInfo()
+			voteQuorumInfo, quorate := parseQuoromStatus(quoromStatus)
+			
+			// set metrics
+			corosyncQuorum.WithLabelValues(nod.Name, "standby").Set(float64(1))
+			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+		}
+	}()
 	// 2) set cluster pacemaker metrics
 	go func() {
 		for {
 
 			// remove all global state contained by metrics
-			resetMetrics()
+			resetClusterMetrics()
 
 			// get cluster status xml
 			log.Println("[INFO]: Reading cluster configuration with crm_mon..")

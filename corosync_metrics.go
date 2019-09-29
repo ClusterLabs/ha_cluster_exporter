@@ -32,7 +32,8 @@ func parseQuoromStatus(quoromStatus []byte) (map[string]int, string) {
 	// Total votes:      2
 	// Quorum:           1
 
-	// split the string for finding the word "Expected votes:", and get via regex
+	// We apply the same method for all the metrics/data: 
+	// first split the string for finding the word , e.g "Expected votes:", and get it via regex
 	// only the number   2,
 	// and convert it to integer type
 	numberOnly := regexp.MustCompile("[0-9]+")
@@ -52,7 +53,7 @@ func parseQuoromStatus(quoromStatus []byte) (map[string]int, string) {
 		"quorum":          quorum,
 	}
 
-	// there is a ringError
+	
 	return voteQuorumInfo, quorate
 }
 
