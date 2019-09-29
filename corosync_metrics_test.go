@@ -5,6 +5,60 @@ import (
 	"testing"
 )
 
+// TEST group quorum metrics
+func TestQuoromMetricParsing(t *testing.T) {
+	// the data is fake data
+	fmt.Println("=== Testing quorum info retrivial")
+	quoromStatus := `
+	Quorum information
+	------------------
+	Date:             Sun Sep 29 16:10:37 2019
+	Quorum provider:  corosync_votequorum
+	Nodes:            2
+	Node ID:          1084780051
+	Ring ID:          1084780051/44
+	Quorate:          Yes
+	
+	Votequorum information
+	----------------------
+	Expected votes:   232
+	Highest expected: 22
+	Total votes:      21
+	Quorum:           421  
+	Flags:            2Node Quorate WaitForAll 
+	
+	Membership information
+	----------------------
+		Nodeid      Votes Name
+	1084780051          1 dma-dog-hana01 (local)
+	1084780052          1 dma-dog-hana02
+	dma-dog-hana01:~ # 
+	`
+	getQuoromClusterInfo()
+	voteQuorumInfo, quorate := parseQuoromStatus([]byte(quoromStatus))
+
+	if voteQuorumInfo["expectedVotes"] != 232 {
+		t.Errorf("expectedVotes should be 232 got instead: %d", voteQuorumInfo["expectedVotes"])
+	}
+	if voteQuorumInfo["highestExpected"] != 22 {
+		t.Errorf("expectedVotes should be 232 got instead: %d", voteQuorumInfo["highestExpected"])
+	}
+
+	if voteQuorumInfo["totalVotes"] != 21 {
+		t.Errorf("expectedVotes should be 232 got instead: %d", voteQuorumInfo["totalVotes"])
+	}
+
+	if voteQuorumInfo["quorum"] != 421 {
+		t.Errorf("expectedVotes should be 421 got instead: %d", voteQuorumInfo["quorum"])
+	}
+
+	if quorate != "Yes" {
+		t.Errorf("quorate should be set to Yes, got %s", quorate)
+	}
+
+}
+
+// TEST group RING metrics
 // test that we recognize 1 error (for increasing metric later)
 func TestOneRingError(t *testing.T) {
 	fmt.Println("=== Test one ring error")
