@@ -32,15 +32,15 @@ func parseQuoromStatus(quoromStatus []byte) (map[string]int, string) {
 	// Total votes:      2
 	// Quorum:           1
 
-	// We apply the same method for all the metrics/data: 
+	// We apply the same method for all the metrics/data:
 	// first split the string for finding the word , e.g "Expected votes:", and get it via regex
 	// only the number   2,
 	// and convert it to integer type
 	numberOnly := regexp.MustCompile("[0-9]+")
 	wordOnly := regexp.MustCompile("[a-zA-Z]+")
 
-	quorate := wordOnly.FindString(strings.SplitAfterN(quoromRaw, "Quorate:", 2)[1])
-
+	quorateRaw := wordOnly.FindString(strings.SplitAfterN(quoromRaw, "Quorate:", 2)[1])
+	quorate := strings.ToLower(quorateRaw)
 	expVotes, _ := strconv.Atoi(numberOnly.FindString(strings.SplitAfterN(quoromRaw, "Expected votes:", 2)[1]))
 	highVotes, _ := strconv.Atoi(numberOnly.FindString(strings.SplitAfterN(quoromRaw, "Highest expected:", 2)[1]))
 	totalVotes, _ := strconv.Atoi(numberOnly.FindString(strings.SplitAfterN(quoromRaw, "Total votes:", 2)[1]))
@@ -53,7 +53,6 @@ func parseQuoromStatus(quoromStatus []byte) (map[string]int, string) {
 		"quorum":          quorum,
 	}
 
-	
 	return voteQuorumInfo, quorate
 }
 

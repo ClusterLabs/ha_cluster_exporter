@@ -52,7 +52,7 @@ func TestQuoromMetricParsing(t *testing.T) {
 		t.Errorf("expectedVotes should be 421 got instead: %d", voteQuorumInfo["quorum"])
 	}
 
-	if quorate != "Yes" {
+	if quorate != "yes" {
 		t.Errorf("quorate should be set to Yes, got %s", quorate)
 	}
 

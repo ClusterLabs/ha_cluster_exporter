@@ -69,9 +69,15 @@ type resource struct {
 
 var (
 	// corosync metrics
+
 	corosyncRingErrorsTotal = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "corosync_ring_errors_total",
 		Help: "Total number of ring errors in corosync",
+	})
+
+	corosyncQuorate = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "corosync_quorate",
+		Help: "IF it is 1 we have a cluster ha quorate if 0 we don't have it",
 	})
 
 	// cluster metrics
@@ -87,13 +93,12 @@ var (
 
 	// metrics with labels. (prefer these always as guideline)
 
-	// corosync quorum		
+	// corosync quorum
 	corosyncQuorum = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "corosync_quorum",
 			Help: "cluster quorum information",
-		}, []string{"expected_votes", "highest_expected", "total_votes", "quorum", "quorate"})
-
+		}, []string{"type"})
 
 	// cluster metrics
 	clusterNodes = prometheus.NewGaugeVec(
@@ -116,6 +121,7 @@ func init() {
 	prometheus.MustRegister(clusterNodesConf)
 	prometheus.MustRegister(corosyncRingErrorsTotal)
 	prometheus.MustRegister(corosyncQuorum)
+	prometheus.MustRegister(corosyncQuorate)
 }
 
 // this function is for some cluster metrics which have resource as labels.
@@ -164,7 +170,7 @@ func main() {
 
 	// for each different metrics, handle it in differents gorutines, and use same timeout.
 
-	// 1a) set corosync metrics: Ring errors 
+	// 1a) set corosync metrics: Ring errors
 	go func() {
 		for {
 			ringStatus := getCorosyncRingStatus()
@@ -178,14 +184,27 @@ func main() {
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 		}
 	}()
-    // 1b) set corosync metrics: quorum metrics
+	// 1b) set corosync metrics: quorum metrics
 	go func() {
 		for {
 			quoromStatus := getQuoromClusterInfo()
 			voteQuorumInfo, quorate := parseQuoromStatus(quoromStatus)
-			
-			// set metrics
-			corosyncQuorum.WithLabelValues(nod.Name, "standby").Set(float64(1))
+
+			// set metrics relative to quorum infos
+			corosyncQuorum.WithLabelValues("expected_votes").Set(float64(voteQuorumInfo["expectedVotes"]))
+			corosyncQuorum.WithLabelValues("highest_expected").Set(float64(voteQuorumInfo["highest_expected"]))
+			corosyncQuorum.WithLabelValues("total_votes").Set(float64(voteQuorumInfo["total_votes"]))
+			corosyncQuorum.WithLabelValues("quorum").Set(float64(voteQuorumInfo["quorum"]))
+
+			// set metric if we have a quorate or not
+			if quorate == "yes" {
+				corosyncQuorate.Set(float64(1))
+			}
+
+			if quorate == "no" {	
+				corosyncQuorate.Set(float64(0))
+			}
+
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 		}
 	}()
