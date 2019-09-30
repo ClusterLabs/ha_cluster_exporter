@@ -11,13 +11,15 @@ It should run inside a node of the cluster or both.
 
 You can find RPM pkgs for the exporter here: https://build.opensuse.org/package/show/server:monitoring/prometheus-ha_cluster_exporter
 
-Once installed run the start the exporter inside one node of cluster:
+Once installed run **inside a cluster node** the exporter with: 
 
 `systemctl start prometheus-ha_cluster_exporter`, by default it will expose on `http://YOUR_HOST_IP:9002/metrics`.
 
-If you open a web-browser it will serve the metrics.
+If you open a web-browser it will serve the metrics. 
 
-Hint:
+The exporter can't work outside a HA cluster node
+
+**Hint:**
 For a terraform deployment you can read also : https://github.com/SUSE/ha-sap-terraform-deployments
 
 
