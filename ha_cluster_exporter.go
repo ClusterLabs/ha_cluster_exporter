@@ -77,7 +77,7 @@ var (
 
 	corosyncQuorate = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "corosync_quorate",
-		Help: "shows if the cluster is quorate. 1 cluster is quorate, 0 not"
+		Help: "shows if the cluster is quorate. 1 cluster is quorate, 0 not",
 	})
 
 	// cluster metrics
