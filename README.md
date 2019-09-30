@@ -1,5 +1,8 @@
 # ha_cluster_exporter
 
+[![Build Status](https://travis-ci.org/ClusterLabs/ha_cluster_exporter.svg?branch=master)](https://travis-ci.org/ClusterLabs/ha_cluster_exporter)
+
+
 This prometheus exporter is used to serve metrics for pacemaker https://github.com/ClusterLabs/pacemaker
 
 It should run inside a node of the cluster or both.
@@ -8,7 +11,7 @@ It should run inside a node of the cluster or both.
 
 - expose cluster node and resource metrics via `crm_mon` (pacemaker data xml)
 
-- expose corosync metrics **not done yet WIP**
+- expose corosync metrics (ring errors, quorum metrics)
 
 # Devel:
 

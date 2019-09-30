@@ -68,6 +68,19 @@ type resource struct {
 }
 
 var (
+	// corosync metrics
+
+	corosyncRingErrorsTotal = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "corosync_ring_errors_total",
+		Help: "Total number of ring errors in corosync",
+	})
+
+	corosyncQuorate = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "corosync_quorate",
+		Help: "shows if the cluster is quorate. 1 cluster is quorate, 0 not",
+	})
+
+	// cluster metrics
 	clusterNodesConf = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "cluster_nodes_configured_total",
 		Help: "Number of nodes configured in ha cluster",
@@ -79,6 +92,15 @@ var (
 	})
 
 	// metrics with labels. (prefer these always as guideline)
+
+	// corosync quorum
+	corosyncQuorum = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "corosync_quorum",
+			Help: "cluster quorum information",
+		}, []string{"type"})
+
+	// cluster metrics
 	clusterNodes = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cluster_nodes",
@@ -92,14 +114,21 @@ var (
 		}, []string{"node", "resource_name", "role", "managed", "status"})
 )
 
-func initMetrics() {
+func init() {
 	prometheus.MustRegister(clusterNodes)
 	prometheus.MustRegister(nodeResources)
 	prometheus.MustRegister(clusterResourcesConf)
 	prometheus.MustRegister(clusterNodesConf)
+	prometheus.MustRegister(corosyncRingErrorsTotal)
+	prometheus.MustRegister(corosyncQuorum)
+	prometheus.MustRegister(corosyncQuorate)
 }
 
-func resetMetrics() {
+// this function is for some cluster metrics which have resource as labels.
+// since we cannot be sure a resource exists always, we need to destroy the metrics at each iteration
+// otherwise we will have wrong metrics ( thinking a resource exist when not)
+
+func resetClusterMetrics() {
 	// We want to reset certains metrics to 0 each time for removing the state.
 	// since we have complex/nested metrics with multiples labels, unregistering/re-registering is the cleanest way.
 	prometheus.Unregister(nodeResources)
@@ -137,16 +166,55 @@ var timeoutSeconds = flag.Int("timeout", 5, "timeout seconds for exporter to wai
 func main() {
 	// read cli option and setup initial stat
 	flag.Parse()
-	initMetrics()
 	http.Handle("/metrics", promhttp.Handler())
 
-	// parse each X seconds the cluster configuration and update the metrics accordingly
-	// this is done in a goroutine async. we update in this way each 2 second the metrics. (the second will be a parameter in future)
+	// for each different metrics, handle it in differents gorutines, and use same timeout.
+
+	// 1a) set corosync metrics: Ring errors
+	go func() {
+		for {
+			ringStatus := getCorosyncRingStatus()
+			ringErrorsTotal, err := parseRingStatus(ringStatus)
+			// todo: reflect if we want to error out. We could just ignore error for resiliance
+			if err != nil {
+				log.Println("[ERROR]: could not execute command: usr/sbin/corosync-cfgtool -s")
+				log.Panic(err)
+			}
+			corosyncRingErrorsTotal.Set(float64(ringErrorsTotal))
+			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+		}
+	}()
+	// 1b) set corosync metrics: quorum metrics
+	go func() {
+		for {
+			quoromStatus := getQuoromClusterInfo()
+			voteQuorumInfo, quorate := parseQuoromStatus(quoromStatus)
+
+			// set metrics relative to quorum infos
+			corosyncQuorum.WithLabelValues("expected_votes").Set(float64(voteQuorumInfo["expectedVotes"]))
+			corosyncQuorum.WithLabelValues("highest_expected").Set(float64(voteQuorumInfo["highestExpected"]))
+			corosyncQuorum.WithLabelValues("total_votes").Set(float64(voteQuorumInfo["totalVotes"]))
+			corosyncQuorum.WithLabelValues("quorum").Set(float64(voteQuorumInfo["quorum"]))
+
+			// set metric if we have a quorate or not
+			// 1 means we have it
+			if quorate == "yes" {
+				corosyncQuorate.Set(float64(1))
+			}
+
+			if quorate == "no" {
+				corosyncQuorate.Set(float64(0))
+			}
+
+			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+		}
+	}()
+	// 2) set cluster pacemaker metrics
 	go func() {
 		for {
 
 			// remove all global state contained by metrics
-			resetMetrics()
+			resetClusterMetrics()
 
 			// get cluster status xml
 			log.Println("[INFO]: Reading cluster configuration with crm_mon..")
