@@ -77,7 +77,7 @@ var (
 
 	corosyncQuorate = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "corosync_quorate",
-		Help: "IF it is 1 we have a cluster ha quorate if 0 we don't have it",
+		Help: "shows if the cluster is quorate. 1 cluster is quorate, 0 not"
 	})
 
 	// cluster metrics
@@ -192,16 +192,17 @@ func main() {
 
 			// set metrics relative to quorum infos
 			corosyncQuorum.WithLabelValues("expected_votes").Set(float64(voteQuorumInfo["expectedVotes"]))
-			corosyncQuorum.WithLabelValues("highest_expected").Set(float64(voteQuorumInfo["highest_expected"]))
-			corosyncQuorum.WithLabelValues("total_votes").Set(float64(voteQuorumInfo["total_votes"]))
+			corosyncQuorum.WithLabelValues("highest_expected").Set(float64(voteQuorumInfo["highestExpected"]))
+			corosyncQuorum.WithLabelValues("total_votes").Set(float64(voteQuorumInfo["totalVotes"]))
 			corosyncQuorum.WithLabelValues("quorum").Set(float64(voteQuorumInfo["quorum"]))
 
 			// set metric if we have a quorate or not
+			// 1 means we have it
 			if quorate == "yes" {
 				corosyncQuorate.Set(float64(1))
 			}
 
-			if quorate == "no" {	
+			if quorate == "no" {
 				corosyncQuorate.Set(float64(0))
 			}
 
