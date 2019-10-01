@@ -64,8 +64,10 @@ func parseQuoromStatus(quoromStatus []byte) (map[string]int, string) {
 func getCorosyncRingStatus() []byte {
 	// get ringStatus
 	log.Println("[INFO]: Reading ring status with corosync-cfgtool...")
-	// ignore error because If any interfaces are faulty, 1 is returned by the binary. If all interfaces
-	// are active 0 is returned to the shell.
+	// We ignore the  error because If any interfaces are faulty, 1 is returned by the binary.
+	// we want to catch the situation where an interface is faulty and set the metrics accordingly, and we don't consider this
+	// as an error ( so ignore it)
+	// If all interfaces are active/without error, 0 is returned to the shell.
 	ringStatusRaw, _ := exec.Command("/usr/sbin/corosync-cfgtool", "-s").Output()
 	return ringStatusRaw
 }
