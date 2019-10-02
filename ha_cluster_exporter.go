@@ -185,7 +185,7 @@ func main() {
 			// read configuration of SBD
 			sbdConfiguration, err := readSdbFile()
 			if err != nil {
-				log.Panic("couldn't read SBD /etc/sysconfig/sbd config file")
+				log.Panic(err)
 			}
 			// retrieve a list of sbd devices
 			sbdDevices := getSbdDevices(sbdConfiguration)
