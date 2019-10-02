@@ -69,7 +69,6 @@ type resource struct {
 
 var (
 	// corosync metrics
-
 	corosyncRingErrorsTotal = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "corosync_ring_errors_total",
 		Help: "Total number of ring errors in corosync",
@@ -92,6 +91,13 @@ var (
 	})
 
 	// metrics with labels. (prefer these always as guideline)
+
+	// sbd metrics
+	sbdDevStatus = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cluster_sbd_device_status",
+			Help: "cluster sbd status for each SBD device. 1 is healthy device, 0 is not",
+		}, []string{"device_name"})
 
 	// corosync quorum
 	corosyncQuorum = prometheus.NewGaugeVec(
@@ -122,6 +128,8 @@ func init() {
 	prometheus.MustRegister(corosyncRingErrorsTotal)
 	prometheus.MustRegister(corosyncQuorum)
 	prometheus.MustRegister(corosyncQuorate)
+	prometheus.MustRegister(sbdDevStatus)
+
 }
 
 // this function is for some cluster metrics which have resource as labels.
@@ -170,7 +178,39 @@ func main() {
 
 	// for each different metrics, handle it in differents gorutines, and use same timeout.
 
-	// 1a) set corosync metrics: Ring errors
+	// set SBD device metrics
+	go func() {
+		for {
+			log.Println("[INFO]: Reading cluster SBD configuration..")
+			// read configuration of SBD
+			sbdConfiguration, err := readSdbFile()
+			if err != nil {
+				log.Panic("couldn't read SBD /etc/sysconfig/sbd config file")
+			}
+			// retrieve a list of sbd devices
+			sbdDevices := getSbdDevices(sbdConfiguration)
+			// set and return a map of sbd devices with true healthy, false not
+			sbdStatus := setSbdDeviceHealth(sbdDevices)
+
+			if len(sbdStatus) == 0 {
+				log.Println("[WARN]: Could not retrieve any sbd device")
+				continue
+			}
+
+			for sbdDev, sbdStatusBool := range sbdStatus {
+				// true it means the sbd device is healthy
+				if sbdStatusBool == true {
+					sbdDevStatus.WithLabelValues(sbdDev).Set(float64(1))
+				} else {
+					sbdDevStatus.WithLabelValues(sbdDev).Set(float64(0))
+				}
+			}
+
+			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+		}
+	}()
+
+	// set corosync metrics: Ring errors
 	go func() {
 		for {
 			ringStatus := getCorosyncRingStatus()
@@ -184,7 +224,7 @@ func main() {
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 		}
 	}()
-	// 1b) set corosync metrics: quorum metrics
+	// set corosync metrics: quorum metrics
 	go func() {
 		for {
 			quoromStatus := getQuoromClusterInfo()
@@ -209,7 +249,7 @@ func main() {
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 		}
 	}()
-	// 2) set cluster pacemaker metrics
+	// set cluster pacemaker metrics
 	go func() {
 		for {
 

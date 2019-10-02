@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 )
@@ -34,4 +35,22 @@ func getSbdDevices(sbdConfigRaw []byte) []string {
 	sbdDevices := strings.Split(strings.Trim(sbdArray, "\""), ";")
 
 	return sbdDevices
+}
+
+// this function take a list of sbd devices and return
+// a  map of devices with the status, true is healthy , false isn't
+func setSbdDeviceHealth(sbdDevices []string) map[string]bool {
+	sbdStatus := make(map[string]bool)
+
+	for _, sbdDev := range sbdDevices {
+		_, err := exec.Command("sbd", "-d", sbdDev, "dump").Output()
+
+		// in case of error the device is not healthy
+		if err != nil {
+			sbdStatus[sbdDev] = false
+		} else {
+			sbdStatus[sbdDev] = true
+		}
+	}
+	return sbdStatus
 }
