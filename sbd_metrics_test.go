@@ -24,7 +24,7 @@ func TestReadSbdConfFileError(t *testing.T) {
 func TestGetSbdDevicesWithoutDoubleQuotes(t *testing.T) {
 	fmt.Println("=== Testing SBD devices retrival from config without quotes")
 
-    // this is a full config file more or less , in other tests it is cutted
+	// this is a full config file more or less , in other tests it is cutted
 	sbdConfig := `
 	 # SBD_DEVICE specifies the devices to use for exchanging sbd messages
 	 # and to monitor. If specifying more than one path, use ";" as
