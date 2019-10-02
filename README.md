@@ -22,12 +22,13 @@ The exporter can't work outside a HA cluster node
 **Hint:**
 For a terraform deployment you can read also : https://github.com/SUSE/ha-sap-terraform-deployments
 
-
 # Features:
 
 - expose cluster node and resource metrics via `crm_mon` (pacemaker data xml)
 
 - expose corosync metrics (ring errors, quorum metrics)
+
+- expose SBD disk health metrics
 
 # Devel:
 
