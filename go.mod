@@ -1,4 +1,4 @@
-module github.com/MalloZup/ha_cluster_exporter
+module github.com/ClusterLabs/ha_cluster_exporter
 
 go 1.12
 
