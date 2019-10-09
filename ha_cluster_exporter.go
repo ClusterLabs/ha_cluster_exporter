@@ -14,6 +14,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+// this types are for reading pacemaker configuration xml when running crm_mon command
+// and lookup the corrispective value
 type crmMon struct {
 	Version string  `xml:"version,attr"`
 	Summary summary `xml:"summary"`
@@ -90,7 +92,7 @@ var (
 		Help: "Number of total configured resources in ha cluster",
 	})
 
-	// metrics with labels. (prefer these always as guideline)
+	// metrics with labels
 
 	// sbd metrics
 	sbdDevStatus = prometheus.NewGaugeVec(
@@ -136,7 +138,7 @@ func init() {
 // since we cannot be sure a resource exists always, we need to destroy the metrics at each iteration
 // otherwise we will have wrong metrics ( thinking a resource exist when not)
 
-func resetClusterMetrics() {
+func resetClusterMetrics() error {
 	// We want to reset certains metrics to 0 each time for removing the state.
 	// since we have complex/nested metrics with multiples labels, unregistering/re-registering is the cleanest way.
 	prometheus.Unregister(nodeResources)
@@ -149,7 +151,7 @@ func resetClusterMetrics() {
 	err := prometheus.Register(nodeResources)
 	if err != nil {
 		log.Println("[ERROR]: failed to register NodeResource metric. Perhaps another exporter is already running?")
-		log.Panic(err)
+		return err
 	}
 
 	prometheus.Unregister(clusterNodes)
@@ -163,9 +165,10 @@ func resetClusterMetrics() {
 	err = prometheus.Register(clusterNodes)
 	if err != nil {
 		log.Println("[ERROR]: failed to register clusterNode metric. Perhaps another exporter is already running?")
-		log.Panic(err)
+		return err
 	}
 
+	return nil
 }
 
 var portNumber = flag.String("port", ":9002", "The port number to listen on for HTTP requests.")
@@ -185,7 +188,8 @@ func main() {
 			// read configuration of SBD
 			sbdConfiguration, err := readSdbFile()
 			if err != nil {
-				log.Panic(err)
+				log.Println(err)
+				continue
 			}
 			// retrieve a list of sbd devices
 			sbdDevices := getSbdDevices(sbdConfiguration)
@@ -215,10 +219,10 @@ func main() {
 		for {
 			ringStatus := getCorosyncRingStatus()
 			ringErrorsTotal, err := parseRingStatus(ringStatus)
-			// todo: reflect if we want to error out. We could just ignore error for resiliance
 			if err != nil {
 				log.Println("[ERROR]: could not execute command: usr/sbin/corosync-cfgtool -s")
-				log.Panic(err)
+				log.Println(err)
+				continue
 			}
 			corosyncRingErrorsTotal.Set(float64(ringErrorsTotal))
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
@@ -229,6 +233,11 @@ func main() {
 		for {
 			quoromStatus := getQuoromClusterInfo()
 			voteQuorumInfo, quorate := parseQuoromStatus(quoromStatus)
+
+			if len(voteQuorumInfo) == 0 {
+				log.Println("[ERROR]: Could not retrieve any quorum information, map is empty")
+				continue
+			}
 
 			// set metrics relative to quorum infos
 			corosyncQuorum.WithLabelValues("expected_votes").Set(float64(voteQuorumInfo["expectedVotes"]))
@@ -254,14 +263,19 @@ func main() {
 		for {
 
 			// remove all global state contained by metrics
-			resetClusterMetrics()
-
+			err := resetClusterMetrics()
+			if err != nil {
+				log.Println("[ERROR]: fail to 	 reset metrics for cluster crm_mon component")
+				log.Println(err)
+				continue
+			}
 			// get cluster status xml
 			log.Println("[INFO]: Reading cluster configuration with crm_mon..")
 			monxml, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
 			if err != nil {
 				log.Println("[ERROR]: crm_mon command execution failed. Did you have crm_mon installed ?")
-				log.Panic(err)
+				log.Println(err)
+				continue
 			}
 
 			// read configuration
@@ -269,7 +283,8 @@ func main() {
 			err = xml.Unmarshal(monxml, &status)
 			if err != nil {
 				log.Println("[ERROR]: could not read cluster XML configuration")
-				log.Panic(err)
+				log.Println(err)
+				continue
 			}
 
 			clusterResourcesConf.Set(float64(status.Summary.Resources.Number))
