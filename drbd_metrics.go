@@ -10,7 +10,8 @@ type drbdStatus struct {
 	Name    string `json:"name"`
 	Role    string `json:"role"`
 	Devices []struct {
-		Volume int `json:"volume"`
+		Volume    int    `json:"volume"`
+		DiskState string `json:"disk-state"`
 	} `json:"devices"`
 }
 
