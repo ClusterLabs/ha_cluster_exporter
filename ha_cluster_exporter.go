@@ -120,6 +120,13 @@ var (
 			Name: "cluster_node_resources",
 			Help: "metric inherent per node resources",
 		}, []string{"node", "resource_name", "role", "managed", "status"})
+
+	// drbd metrics
+	drbdDiskState = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "ha_cluster_drbd_resource_disk_state",
+			Help: "disk states 0=Out of Sync, 1=UptoDate, 2=Syncing",
+		}, []string{"resource_name", "role", "volume"})
 )
 
 func init() {
@@ -131,7 +138,7 @@ func init() {
 	prometheus.MustRegister(corosyncQuorum)
 	prometheus.MustRegister(corosyncQuorate)
 	prometheus.MustRegister(sbdDevStatus)
-
+	prometheus.MustRegister(drbdDiskState)
 }
 
 // this function is for some cluster metrics which have resource as labels.
@@ -192,6 +199,23 @@ func main() {
 				log.Println(err)
 				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
+			}
+			// TODO DELETE metrics ! since we can't know if volume get destroyed
+
+			// iterate over resources of drbd status
+			for _, resource := range drbdDev {
+
+				for _, device := range resource.Devices {
+					// 0 out of sync, 1 UpToDate, 2 Syncing
+					// lowercase the diskstates
+					if "UpToDate" == resource.Devices[device.Volume].DiskState {
+						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(1))
+					}
+					// TODO: check this better and lowercase it
+					if "outofsync" == resource.Devices[device.Volume].DiskState {
+						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(1))
+					}
+				}
 			}
 			// set drbd metric
 			log.Println(drbdDev)
