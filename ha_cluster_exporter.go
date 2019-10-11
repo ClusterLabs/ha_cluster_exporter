@@ -185,7 +185,7 @@ func main() {
 	go func() {
 		for {
 			drbdStatusJSONRaw := getDrbdInfo()
-			log.Println(drbdStatusJSONRaw)
+			log.Printf("DRBD_DEBUG: %s", drbdStatusJSONRaw)
 			// todo parse json, drbdStatus will contain all data parsed from json
 			//drbdStatus := parseDRBD(drbdStatusJSONRaw)
 			// set metrics accordingly
@@ -201,13 +201,15 @@ func main() {
 			sbdConfiguration, err := readSdbFile()
 			if err != nil {
 				log.Println(err)
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
 			// retrieve a list of sbd devices
 			sbdDevices, err2 := getSbdDevices(sbdConfiguration)
 			// mostly, the sbd_device were not set in conf file for returning an error
 			if err2 != nil {
-				log.Println(err)
+				log.Println(err2)
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
 			// set and return a map of sbd devices with true healthy, false not
@@ -215,6 +217,7 @@ func main() {
 
 			if len(sbdStatus) == 0 {
 				log.Println("[WARN]: Could not retrieve any sbd device")
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
 
@@ -239,6 +242,7 @@ func main() {
 			if err != nil {
 				log.Println("[ERROR]: could not execute command: usr/sbin/corosync-cfgtool -s")
 				log.Println(err)
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
 			corosyncRingErrorsTotal.Set(float64(ringErrorsTotal))
@@ -253,6 +257,7 @@ func main() {
 
 			if len(voteQuorumInfo) == 0 {
 				log.Println("[ERROR]: Could not retrieve any quorum information, map is empty")
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
 
@@ -284,6 +289,7 @@ func main() {
 			if err != nil {
 				log.Println("[ERROR]: fail to 	 reset metrics for cluster crm_mon component")
 				log.Println(err)
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
 			// get cluster status xml
@@ -292,6 +298,7 @@ func main() {
 			if err != nil {
 				log.Println("[ERROR]: crm_mon command execution failed. Did you have crm_mon installed ?")
 				log.Println(err)
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
 
@@ -301,6 +308,7 @@ func main() {
 			if err != nil {
 				log.Println("[ERROR]: could not read cluster XML configuration")
 				log.Println(err)
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
 
