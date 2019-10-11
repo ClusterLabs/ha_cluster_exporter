@@ -181,6 +181,15 @@ func main() {
 
 	// for each different metrics, handle it in differents gorutines, and use same timeout.
 
+	// set DRBD metrics
+	go func() {
+		for {
+			drbdStatusJsonRaw := getDrbdInfo()
+			// TODO: parse json
+			log.Println(drbdStatusJsonRaw)
+			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+		}
+	}()
 	// set SBD device metrics
 	go func() {
 		for {
