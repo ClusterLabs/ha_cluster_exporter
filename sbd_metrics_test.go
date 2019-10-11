@@ -125,7 +125,7 @@ func TestGetSbdDevicesWithoutDoubleQuotes(t *testing.T) {
 	 SBD_DEVICE=/dev/vdc;/dev/brother;/dev/syster																					
 			`
 
-	sbdDevices := getSbdDevices([]byte(sbdConfig))
+	sbdDevices, _ := getSbdDevices([]byte(sbdConfig))
 	// we should have 3 devices
 	expected := "/dev/vdc"
 	if sbdDevices[0] != expected {
@@ -173,7 +173,7 @@ func TestGetSbdDevicesWithDoubleQuotes(t *testing.T) {
 	 #
 	 SBD_OPTS=`
 
-	sbdDevices := getSbdDevices([]byte(sbdConfig))
+	sbdDevices, _ := getSbdDevices([]byte(sbdConfig))
 	// we should have 3 devices
 	expected := "/dev/vdc"
 	if sbdDevices[0] != expected {
@@ -208,7 +208,7 @@ func TestOnlyOneDeviceSbd(t *testing.T) {
 	 ## Default: "flush,reboot"
 `
 
-	sbdDevices := getSbdDevices([]byte(sbdConfig))
+	sbdDevices, _ := getSbdDevices([]byte(sbdConfig))
 
 	// we should have 1 device
 	expected := "/dev/vdc"

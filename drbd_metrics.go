@@ -9,6 +9,6 @@ import (
 func getDrbdInfo() []byte {
 	// get ringStatus
 	log.Println("[INFO]: Reading drbd status with drbdsetup status ...")
-	drbdStatusRaw, _ := exec.Command("/usr/sbin/drbdsetup", "status", "--json").Output()
+	drbdStatusRaw, _ := exec.Command("/sbin/drbdsetup", "status", "--json").Output()
 	return drbdStatusRaw
 }

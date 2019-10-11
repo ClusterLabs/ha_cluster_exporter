@@ -184,9 +184,12 @@ func main() {
 	// set DRBD metrics
 	go func() {
 		for {
-			drbdStatusJsonRaw := getDrbdInfo()
-			// TODO: parse json
-			log.Println(drbdStatusJsonRaw)
+			drbdStatusJSONRaw := getDrbdInfo()
+			log.Println(drbdStatusJSONRaw)
+			// todo parse json, drbdStatus will contain all data parsed from json
+			//drbdStatus := parseDRBD(drbdStatusJSONRaw)
+			// set metrics accordingly
+
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 		}
 	}()
@@ -201,7 +204,12 @@ func main() {
 				continue
 			}
 			// retrieve a list of sbd devices
-			sbdDevices := getSbdDevices(sbdConfiguration)
+			sbdDevices, err2 := getSbdDevices(sbdConfiguration)
+			// mostly, the sbd_device were not set in conf file for returning an error
+			if err2 != nil {
+				log.Println(err)
+				continue
+			}
 			// set and return a map of sbd devices with true healthy, false not
 			sbdStatus := setSbdDeviceHealth(sbdDevices)
 
