@@ -200,25 +200,22 @@ func main() {
 				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
-			// TODO DELETE metrics ! since we can't know if volume get destroyed
+			// TODO 1: DELETE metrics ! since we can't know if volume get destroyed
 
 			// iterate over resources of drbd status
 			for _, resource := range drbdDev {
-
 				for _, device := range resource.Devices {
 					// 0 out of sync, 1 UpToDate, 2 Syncing
-					// lowercase the diskstates
+					// TODO 2:lowercase the diskstates
 					if "UpToDate" == resource.Devices[device.Volume].DiskState {
 						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(1))
 					}
-					// TODO: check this better and lowercase it
+					// TODO 3: check this better and lowercase it (we need to be sure how many states are there)
 					if "outofsync" == resource.Devices[device.Volume].DiskState {
 						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(1))
 					}
 				}
 			}
-			// set drbd metric
-			log.Println(drbdDev)
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 		}
 	}()
