@@ -184,12 +184,17 @@ func main() {
 	// set DRBD metrics
 	go func() {
 		for {
+			// retrieve info via binary
 			drbdStatusJSONRaw := getDrbdInfo()
-			log.Printf("DRBD_DEBUG: %s", drbdStatusJSONRaw)
-			// todo parse json, drbdStatus will contain all data parsed from json
-			//drbdStatus := parseDRBD(drbdStatusJSONRaw)
-			// set metrics accordingly
-
+			// populate structs and parse relevant info
+			drbdDev, err := parseDrbdStatus(drbdStatusJSONRaw)
+			if err != nil {
+				log.Println(err)
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+				continue
+			}
+			// set drbd metric
+			log.Println(drbdDev)
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 		}
 	}()

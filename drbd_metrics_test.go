@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"testing"
@@ -114,8 +113,7 @@ func TestDrbdParsing(t *testing.T) {
 			} ]
 		}]`)
 
-	var drbdDevs []drbdStatus
-	err := json.Unmarshal(drbdDataRaw, &drbdDevs)
+	drbdDevs, err := parseDrbdStatus(drbdDataRaw)
 	if err != nil {
 		log.Fatalln("[ERROR]:", err)
 	}

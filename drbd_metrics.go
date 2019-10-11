@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"os/exec"
 )
@@ -21,4 +22,13 @@ func getDrbdInfo() []byte {
 	log.Println("[INFO]: Reading drbd status with drbdsetup status ...")
 	drbdStatusRaw, _ := exec.Command("/sbin/drbdsetup", "status", "--json").Output()
 	return drbdStatusRaw
+}
+
+func parseDrbdStatus(statusRaw []byte) ([]drbdStatus, error) {
+	var drbdDevs []drbdStatus
+	err := json.Unmarshal(statusRaw, &drbdDevs)
+	if err != nil {
+		return drbdDevs, err
+	}
+	return drbdDevs, nil
 }
