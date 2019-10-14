@@ -70,8 +70,8 @@ var (
 	drbdDiskState = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "ha_cluster_drbd_resource_disk_state",
-			Help: "disk states 0=Diskless, 1=Attaching, 2=Failed, 3=Negotiating, 4=Inconsistent, 5=Outdated, 6=DUnknown, 7=Consistent, 8=UpToDate",
-		}, []string{"resource_name", "role", "volume"})
+			Help: "show per resource name, its role, the volume and disk_state (Diskless,Attaching, Failed, Negotiating, Inconsistent, Outdated, DUnknown, Consistent, UpToDate)",
+		}, []string{"resource_name", "role", "volume", "disk_state"})
 )
 
 func init() {
@@ -129,8 +129,8 @@ func resetDrbdMetrics() error {
 	drbdDiskState = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "ha_cluster_drbd_resource_disk_state",
-			Help: "disk states 0=Out of Sync, 1=UptoDate, 2=Syncing",
-		}, []string{"resource_name", "role", "volume"})
+			Help: "show per resource name, its role, the volume and disk_state (Diskless,Attaching, Failed, Negotiating, Inconsistent, Outdated, DUnknown, Consistent, UpToDate)",
+		}, []string{"resource_name", "role", "volume", "disk_state"})
 	err := prometheus.Register(drbdDiskState)
 	if err != nil {
 		log.Println("[ERROR]: failed to register DRBD disk state metric. Perhaps another exporter is already running?")
@@ -153,46 +153,23 @@ func main() {
 	// set DRBD metrics
 	go func() {
 		for {
-			// retrieve info via binary
+			// retrieve drbdInfos calling its binary
 			drbdStatusJSONRaw := getDrbdInfo()
-			// populate structs and parse relevant info
+			// populate structs and parse relevant info we will expose via metrics
 			drbdDev, err := parseDrbdStatus(drbdStatusJSONRaw)
 			if err != nil {
 				log.Println(err)
 				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
+			// reset metrics before setting news to remove any state information
 			resetDrbdMetrics()
-			// following code produce such metric:
-			// ha_cluster_drbd_resource_disk_state{resource_name="1-single-0", role="primary", volume="0"} 1
-			// 0: "Diskless", 1="Attaching", 2="Failed", 3="Negotiating", 4="Inconsistent", 5="Outdated" etc.
 
+			// create a metric like : ha_cluster_drbd_resource_disk_state{resource_name="1-single-0", role="primary", volume="0",  disk_state="uptodate"} 1
+			// the metric is always set to 1 or is absent
 			for _, resource := range drbdDev {
 				for _, device := range resource.Devices {
-					if "uptodate" == strings.ToLower(resource.Devices[device.Volume].DiskState) {
-						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(0))
-					}
-					if "attaching" == strings.ToLower(resource.Devices[device.Volume].DiskState) {
-						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(1))
-					}
-					if "failed" == strings.ToLower(resource.Devices[device.Volume].DiskState) {
-						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(2))
-					}
-					if "negotiating" == strings.ToLower(resource.Devices[device.Volume].DiskState) {
-						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(3))
-					}
-					if "outdated" == strings.ToLower(resource.Devices[device.Volume].DiskState) {
-						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(4))
-					}
-					if "dunknown" == strings.ToLower(resource.Devices[device.Volume].DiskState) {
-						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(5))
-					}
-					if "consistent" == strings.ToLower(resource.Devices[device.Volume].DiskState) {
-						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(6))
-					}
-					if "uptodate" == strings.ToLower(resource.Devices[device.Volume].DiskState) {
-						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(7))
-					}
+					drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume), strings.ToLower(resource.Devices[device.Volume].DiskState)).Set(float64(1))
 				}
 			}
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
