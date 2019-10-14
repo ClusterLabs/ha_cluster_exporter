@@ -69,7 +69,7 @@ var (
 	// drbd metrics
 	drbdDiskState = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "ha_cluster_drbd_resource_disk_state",
+			Name: "ha_cluster_drbd_resource",
 			Help: "show per resource name, its role, the volume and disk_state (Diskless,Attaching, Failed, Negotiating, Inconsistent, Outdated, DUnknown, Consistent, UpToDate)",
 		}, []string{"resource_name", "role", "volume", "disk_state"})
 )
@@ -128,7 +128,7 @@ func resetDrbdMetrics() error {
 	// overwrite metric with an empty one
 	drbdDiskState = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "ha_cluster_drbd_resource_disk_state",
+			Name: "ha_cluster_drbd_resource",
 			Help: "show per resource name, its role, the volume and disk_state (Diskless,Attaching, Failed, Negotiating, Inconsistent, Outdated, DUnknown, Consistent, UpToDate)",
 		}, []string{"resource_name", "role", "volume", "disk_state"})
 	err := prometheus.Register(drbdDiskState)
@@ -154,7 +154,13 @@ func main() {
 	go func() {
 		for {
 			// retrieve drbdInfos calling its binary
-			drbdStatusJSONRaw := getDrbdInfo()
+			drbdStatusJSONRaw, err := getDrbdInfo()
+			if err != nil {
+				log.Println(err)
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+				continue
+			}
+
 			// populate structs and parse relevant info we will expose via metrics
 			drbdDev, err := parseDrbdStatus(drbdStatusJSONRaw)
 			if err != nil {
@@ -165,7 +171,7 @@ func main() {
 			// reset metrics before setting news to remove any state information
 			resetDrbdMetrics()
 
-			// create a metric like : ha_cluster_drbd_resource_disk_state{resource_name="1-single-0", role="primary", volume="0",  disk_state="uptodate"} 1
+			// create a metric like : ha_cluster_drbd_resource{resource_name="1-single-0", role="primary", volume="0",  disk_state="uptodate"} 1
 			// the metric is always set to 1 or is absent
 			for _, resource := range drbdDev {
 				for _, device := range resource.Devices {
@@ -187,10 +193,10 @@ func main() {
 				continue
 			}
 			// retrieve a list of sbd devices
-			sbdDevices, err2 := getSbdDevices(sbdConfiguration)
+			sbdDevices, err := getSbdDevices(sbdConfiguration)
 			// mostly, the sbd_device were not set in conf file for returning an error
-			if err2 != nil {
-				log.Println(err2)
+			if err != nil {
+				log.Println(err)
 				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
