@@ -6,6 +6,10 @@
 This prometheus exporter is used to serve metrics for pacemaker https://github.com/ClusterLabs/pacemaker.
 It should run inside a node of the cluster or both.
 
+- [Usage](#Usage)
+- [Features](#Features)
+- [Devel](#Devel)
+
 # Usage:
 
 You can find the RPM pkgs for the exporter here: https://build.opensuse.org/package/show/server:monitoring/prometheus-ha_cluster_exporter.
