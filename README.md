@@ -6,7 +6,13 @@
 This prometheus exporter is used to serve metrics for pacemaker https://github.com/ClusterLabs/pacemaker.
 It should run inside a node of the cluster or both.
 
-# Usage:
+## Table of Contents:
+1. [Usage](#Usage)
+2. [Features](#Features)
+3. [Devel](#Devel)
+4. [Design](#Design)
+
+## Usage:
 
 You can find the RPM pkgs for the exporter here: https://build.opensuse.org/package/show/server:monitoring/prometheus-ha_cluster_exporter.
 
@@ -20,7 +26,7 @@ The exporter can't work outside a HA cluster node.
 **Hint:**
 For a terraform deployment you can also read: https://github.com/SUSE/ha-sap-terraform-deployments
 
-# Features:
+## Features:
 
 - show cluster node and resource metrics via `crm_mon` (pacemaker data xml)
 
@@ -28,7 +34,7 @@ For a terraform deployment you can also read: https://github.com/SUSE/ha-sap-ter
 
 - show SBD disk health metrics
 
-# Devel:
+## Devel:
 
 Build the binary with `make` and run it inside a node of the ha cluster, it will show the metrics on port `9002` by default.
 Use `ha_cluster_exporter -h` for options.
