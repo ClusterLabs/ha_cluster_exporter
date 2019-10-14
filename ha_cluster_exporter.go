@@ -125,7 +125,7 @@ var (
 	drbdDiskState = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "ha_cluster_drbd_resource_disk_state",
-			Help: "disk states 0=Out of Sync, 1=UptoDate, 2=Syncing",
+			Help: "disk states 0=Diskless, 1=Attaching, 2=Failed, 3=Negotiating, 4=Inconsistent, 5=Outdated, 6=DUnknown, 7=Consistent, 8=UpToDate",
 		}, []string{"resource_name", "role", "volume"})
 )
 
@@ -144,7 +144,6 @@ func init() {
 // this function is for some cluster metrics which have resource as labels.
 // since we cannot be sure a resource exists always, we need to destroy the metrics at each iteration
 // otherwise we will have wrong metrics ( thinking a resource exist when not)
-
 func resetClusterMetrics() error {
 	// We want to reset certains metrics to 0 each time for removing the state.
 	// since we have complex/nested metrics with multiples labels, unregistering/re-registering is the cleanest way.
@@ -174,6 +173,24 @@ func resetClusterMetrics() error {
 		log.Println("[ERROR]: failed to register clusterNode metric. Perhaps another exporter is already running?")
 		return err
 	}
+	return nil
+}
+
+func resetDrbdMetrics() error {
+	// for Drbd we need to reset remove metrics state because some disk could be removed during cluster lifecycle
+	// so we need to have a clean atomic snapshot
+	prometheus.Unregister(drbdDiskState)
+	// overwrite metric with an empty one
+	drbdDiskState = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "ha_cluster_drbd_resource_disk_state",
+			Help: "disk states 0=Out of Sync, 1=UptoDate, 2=Syncing",
+		}, []string{"resource_name", "role", "volume"})
+	err := prometheus.Register(drbdDiskState)
+	if err != nil {
+		log.Println("[ERROR]: failed to register DRBD disk state metric. Perhaps another exporter is already running?")
+		return err
+	}
 
 	return nil
 }
@@ -200,19 +217,36 @@ func main() {
 				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
-			// TODO 1: DELETE metrics ! since we can't know if volume get destroyed
+			resetDrbdMetrics()
+			// following code produce such metric:
+			// ha_cluster_drbd_resource_disk_state{resource_name="1-single-0", role="primary", volume="0"} 1
+			// 0: "Diskless", 1="Attaching", 2="Failed", 3="Negotiating", 4="Inconsistent", 5="Outdated" etc.
 
-			// iterate over resources of drbd status
 			for _, resource := range drbdDev {
 				for _, device := range resource.Devices {
-					// 0 out of sync, 1 UpToDate, 2 Syncing
-					// TODO 2:lowercase the diskstates
-					if "UpToDate" == resource.Devices[device.Volume].DiskState {
+					if "uptodate" == strings.ToLower(resource.Devices[device.Volume].DiskState) {
+						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(0))
+					}
+					if "attaching" == strings.ToLower(resource.Devices[device.Volume].DiskState) {
 						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(1))
 					}
-					// TODO 3: check this better and lowercase it (we need to be sure how many states are there)
-					if "outofsync" == resource.Devices[device.Volume].DiskState {
-						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(1))
+					if "failed" == strings.ToLower(resource.Devices[device.Volume].DiskState) {
+						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(2))
+					}
+					if "negotiating" == strings.ToLower(resource.Devices[device.Volume].DiskState) {
+						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(3))
+					}
+					if "outdated" == strings.ToLower(resource.Devices[device.Volume].DiskState) {
+						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(4))
+					}
+					if "dunknown" == strings.ToLower(resource.Devices[device.Volume].DiskState) {
+						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(5))
+					}
+					if "consistent" == strings.ToLower(resource.Devices[device.Volume].DiskState) {
+						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(6))
+					}
+					if "uptodate" == strings.ToLower(resource.Devices[device.Volume].DiskState) {
+						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume)).Set(float64(7))
 					}
 				}
 			}
