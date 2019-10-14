@@ -5,6 +5,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -183,6 +184,10 @@ func main() {
 
 	// set SBD device metrics
 	go func() {
+		if _, err := os.Stat("/etc/sysconfig/sbd"); os.IsNotExist(err) {
+			return
+		}
+
 		for {
 			log.Println("[INFO]: Reading cluster SBD configuration..")
 			// read configuration of SBD
