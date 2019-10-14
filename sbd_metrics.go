@@ -25,16 +25,22 @@ func readSdbFile() ([]byte, error) {
 }
 
 // return a list of sbd devices that we get from config
-func getSbdDevices(sbdConfigRaw []byte) []string {
+func getSbdDevices(sbdConfigRaw []byte) ([]string, error) {
 	// in config it can be both SBD_DEVICE="/dev/foo" or SBD_DEVICE=/dev/foo;/dev/bro
 	wordOnly := regexp.MustCompile("SBD_DEVICE=\"?[a-zA-Z-/;]+\"?")
 	sbdDevicesConfig := wordOnly.FindString(string(sbdConfigRaw))
+
+	// check the case there is an sbd_config but the SBD_DEVICE is not set
+
+	if sbdDevicesConfig == "" {
+		return nil, fmt.Errorf("[ERROR] there are no SBD_DEVICE set in configuration file")
+	}
 	// remove the SBD_DEVICE
 	sbdArray := strings.Split(sbdDevicesConfig, "SBD_DEVICE=")[1]
 	// make a list of devices by ; seperators and remove double quotes if present
 	sbdDevices := strings.Split(strings.Trim(sbdArray, "\""), ";")
 
-	return sbdDevices
+	return sbdDevices, nil
 }
 
 // this function take a list of sbd devices and return

@@ -15,61 +15,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// this types are for reading pacemaker configuration xml when running crm_mon command
-// and lookup the corrispective value
-type crmMon struct {
-	Version string  `xml:"version,attr"`
-	Summary summary `xml:"summary"`
-	Nodes   nodes   `xml:"nodes"`
-}
-
-type summary struct {
-	Nodes struct {
-		Number int `xml:"number,attr"`
-	} `xml:"nodes_configured"`
-	Resources resourcesConfigured `xml:"resources_configured"`
-}
-
-type resourcesConfigured struct {
-	Number   int `xml:"number,attr"`
-	Disabled int `xml:"disabled,attr"`
-	Blocked  int `xml:"blocked,attr"`
-}
-
-type nodes struct {
-	Node []node `xml:"node"`
-}
-
-type node struct {
-	Name             string     `xml:"name,attr"`
-	ID               string     `xml:"id,attr"`
-	Online           bool       `xml:"online,attr"`
-	Standby          bool       `xml:"standby,attr"`
-	StandbyOnFail    bool       `xml:"standby_onfail,attr"`
-	Maintenance      bool       `xml:"maintenance,attr"`
-	Pending          bool       `xml:"pending,attr"`
-	Unclean          bool       `xml:"unclean,attr"`
-	Shutdown         bool       `xml:"shutdown,attr"`
-	ExpectedUp       bool       `xml:"expected_up,attr"`
-	DC               bool       `xml:"is_dc,attr"`
-	ResourcesRunning int        `xml:"resources_running,attr"`
-	Type             string     `xml:"type,attr"`
-	Resources        []resource `xml:"resource"`
-}
-
-type resource struct {
-	ID             string `xml:"id,attr"`
-	Agent          string `xml:"resource_agent,attr"`
-	Role           string `xml:"role,attr"`
-	Active         bool   `xml:"active,attr"`
-	Orphaned       bool   `xml:"orphaned,attr"`
-	Blocked        bool   `xml:"blocked,attr"`
-	Managed        bool   `xml:"managed,attr"`
-	Failed         bool   `xml:"failed,attr"`
-	FailureIgnored bool   `xml:"failure_ignored,attr"`
-	NodesRunningOn int    `xml:"nodes_running_on,attr"`
-}
-
 var (
 	// corosync metrics
 	corosyncRingErrorsTotal = prometheus.NewGauge(prometheus.GaugeOpts{
@@ -121,6 +66,13 @@ var (
 			Name: "cluster_node_resources",
 			Help: "metric inherent per node resources",
 		}, []string{"node", "resource_name", "role", "managed", "status"})
+
+	// drbd metrics
+	drbdDiskState = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "ha_cluster_drbd_resource",
+			Help: "show per resource name, its role, the volume and disk_state (Diskless,Attaching, Failed, Negotiating, Inconsistent, Outdated, DUnknown, Consistent, UpToDate)",
+		}, []string{"resource_name", "role", "volume", "disk_state"})
 )
 
 func init() {
@@ -132,13 +84,12 @@ func init() {
 	prometheus.MustRegister(corosyncQuorum)
 	prometheus.MustRegister(corosyncQuorate)
 	prometheus.MustRegister(sbdDevStatus)
-
+	prometheus.MustRegister(drbdDiskState)
 }
 
 // this function is for some cluster metrics which have resource as labels.
 // since we cannot be sure a resource exists always, we need to destroy the metrics at each iteration
 // otherwise we will have wrong metrics ( thinking a resource exist when not)
-
 func resetClusterMetrics() error {
 	// We want to reset certains metrics to 0 each time for removing the state.
 	// since we have complex/nested metrics with multiples labels, unregistering/re-registering is the cleanest way.
@@ -168,6 +119,24 @@ func resetClusterMetrics() error {
 		log.Println("[ERROR]: failed to register clusterNode metric. Perhaps another exporter is already running?")
 		return err
 	}
+	return nil
+}
+
+func resetDrbdMetrics() error {
+	// for Drbd we need to reset remove metrics state because some disk could be removed during cluster lifecycle
+	// so we need to have a clean atomic snapshot
+	prometheus.Unregister(drbdDiskState)
+	// overwrite metric with an empty one
+	drbdDiskState = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "ha_cluster_drbd_resource",
+			Help: "show per resource name, its role, the volume and disk_state (Diskless,Attaching, Failed, Negotiating, Inconsistent, Outdated, DUnknown, Consistent, UpToDate)",
+		}, []string{"resource_name", "role", "volume", "disk_state"})
+	err := prometheus.Register(drbdDiskState)
+	if err != nil {
+		log.Println("[ERROR]: failed to register DRBD disk state metric. Perhaps another exporter is already running?")
+		return err
+	}
 
 	return nil
 }
@@ -182,6 +151,37 @@ func main() {
 
 	// for each different metrics, handle it in differents gorutines, and use same timeout.
 
+	// set DRBD metrics
+	go func() {
+		for {
+			// retrieve drbdInfos calling its binary
+			drbdStatusJSONRaw, err := getDrbdInfo()
+			if err != nil {
+				log.Println(err)
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+				continue
+			}
+
+			// populate structs and parse relevant info we will expose via metrics
+			drbdDev, err := parseDrbdStatus(drbdStatusJSONRaw)
+			if err != nil {
+				log.Println(err)
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+				continue
+			}
+			// reset metrics before setting news to remove any state information
+			resetDrbdMetrics()
+
+			// create a metric like : ha_cluster_drbd_resource{resource_name="1-single-0", role="primary", volume="0",  disk_state="uptodate"} 1
+			// the metric is always set to 1 or is absent
+			for _, resource := range drbdDev {
+				for _, device := range resource.Devices {
+					drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume), strings.ToLower(resource.Devices[device.Volume].DiskState)).Set(float64(1))
+				}
+			}
+			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+		}
+	}()
 	// set SBD device metrics
 	go func() {
 		if _, err := os.Stat("/etc/sysconfig/sbd"); os.IsNotExist(err) {
@@ -194,15 +194,23 @@ func main() {
 			sbdConfiguration, err := readSdbFile()
 			if err != nil {
 				log.Println(err)
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
 			// retrieve a list of sbd devices
-			sbdDevices := getSbdDevices(sbdConfiguration)
+			sbdDevices, err := getSbdDevices(sbdConfiguration)
+			// mostly, the sbd_device were not set in conf file for returning an error
+			if err != nil {
+				log.Println(err)
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+				continue
+			}
 			// set and return a map of sbd devices with true healthy, false not
 			sbdStatus := setSbdDeviceHealth(sbdDevices)
 
 			if len(sbdStatus) == 0 {
 				log.Println("[WARN]: Could not retrieve any sbd device")
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
 
@@ -227,6 +235,7 @@ func main() {
 			if err != nil {
 				log.Println("[ERROR]: could not execute command: usr/sbin/corosync-cfgtool -s")
 				log.Println(err)
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
 			corosyncRingErrorsTotal.Set(float64(ringErrorsTotal))
@@ -241,6 +250,7 @@ func main() {
 
 			if len(voteQuorumInfo) == 0 {
 				log.Println("[ERROR]: Could not retrieve any quorum information, map is empty")
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
 
@@ -272,6 +282,7 @@ func main() {
 			if err != nil {
 				log.Println("[ERROR]: fail to 	 reset metrics for cluster crm_mon component")
 				log.Println(err)
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
 			// get cluster status xml
@@ -280,6 +291,7 @@ func main() {
 			if err != nil {
 				log.Println("[ERROR]: crm_mon command execution failed. Did you have crm_mon installed ?")
 				log.Println(err)
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
 
@@ -289,6 +301,7 @@ func main() {
 			if err != nil {
 				log.Println("[ERROR]: could not read cluster XML configuration")
 				log.Println(err)
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
 
