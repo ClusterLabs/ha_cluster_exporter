@@ -17,23 +17,23 @@ import (
 var (
 	// corosync metrics
 	corosyncRingErrorsTotal = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "corosync_ring_errors_total",
+		Name: "ha_cluster_corosync_ring_errors_total",
 		Help: "Total number of ring errors in corosync",
 	})
 
 	corosyncQuorate = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "corosync_quorate",
+		Name: "ha_cluster_corosync_quorate",
 		Help: "shows if the cluster is quorate. 1 cluster is quorate, 0 not",
 	})
 
 	// cluster metrics
 	clusterNodesConf = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_nodes_configured_total",
+		Name: "ha_cluster_nodes_configured_total",
 		Help: "Number of nodes configured in ha cluster",
 	})
 
 	clusterResourcesConf = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "cluster_resources_configured_total",
+		Name: "ha_cluster_resources_configured_total",
 		Help: "Number of total configured resources in ha cluster",
 	})
 
@@ -42,27 +42,27 @@ var (
 	// sbd metrics
 	sbdDevStatus = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cluster_sbd_device_status",
+			Name: "ha_cluster_sbd_device_status",
 			Help: "cluster sbd status for each SBD device. 1 is healthy device, 0 is not",
 		}, []string{"device_name"})
 
 	// corosync quorum
 	corosyncQuorum = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "corosync_quorum",
+			Name: "ha_cluster_corosync_quorum",
 			Help: "cluster quorum information",
 		}, []string{"type"})
 
 	// cluster metrics
 	clusterNodes = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cluster_nodes",
+			Name: "ha_cluster_nodes",
 			Help: "cluster nodes metrics for all of them",
 		}, []string{"node", "type"})
 
 	nodeResources = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cluster_node_resources",
+			Name: "ha_cluster_node_resources",
 			Help: "metric inherent per node resources",
 		}, []string{"node", "resource_name", "role", "managed", "status"})
 
@@ -96,7 +96,7 @@ func resetClusterMetrics() error {
 	// overwrite metric with an empty one
 	nodeResources = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cluster_node_resources",
+			Name: "ha_cluster_node_resources",
 			Help: "metric inherent per node resources",
 		}, []string{"node", "resource_name", "role", "managed", "status"})
 	err := prometheus.Register(nodeResources)
@@ -109,7 +109,7 @@ func resetClusterMetrics() error {
 	// overwrite metric with an empty one
 	clusterNodes = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cluster_nodes",
+			Name: "ha_cluster_nodes",
 			Help: "cluster nodes metrics for all of them",
 		}, []string{"node", "type"})
 
