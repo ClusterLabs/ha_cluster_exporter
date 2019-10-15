@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/xml"
+
+	"github.com/pkg/errors"
 )
 
 // this types are for reading pacemaker configuration xml when running crm_mon command
@@ -63,7 +65,7 @@ func parsePacemakerStatus(pacemakerXMLRaw []byte) (pacemakerStatus, error) {
 	var pacemakerStat pacemakerStatus
 	err := xml.Unmarshal(pacemakerXMLRaw, &pacemakerStat)
 	if err != nil {
-		return pacemakerStat, err
+		return pacemakerStat, errors.Wrap(err, "could not parse Pacemaker status from XML")
 	}
 	return pacemakerStat, nil
 }

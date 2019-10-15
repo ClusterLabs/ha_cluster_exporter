@@ -1,13 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 )
 
 func TestParsePacemakerXML(t *testing.T) {
-	fmt.Println("=== Testing Pacemaker metric parsing")
-
 	// this is a full config file more or less , in other tests it is cutted
 	pacemakerxml := `<?xml version="1.0"?>
 	<crm_mon version="2.0.0">
