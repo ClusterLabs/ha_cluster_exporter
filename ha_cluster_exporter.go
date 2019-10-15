@@ -59,13 +59,13 @@ var (
 		prometheus.GaugeOpts{
 			Name: "ha_cluster_nodes",
 			Help: "cluster nodes metrics for all of them",
-		}, []string{"node", "type"})
+		}, []string{"node_name", "type"})
 
 	nodeResources = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "ha_cluster_node_resources",
 			Help: "metric inherent per node resources",
-		}, []string{"node", "resource_name", "role", "managed", "status"})
+		}, []string{"node_name", "resource_name", "role", "managed", "status"})
 
 	// drbd metrics
 	drbdDiskState = prometheus.NewGaugeVec(
@@ -99,7 +99,7 @@ func resetClusterMetrics() error {
 		prometheus.GaugeOpts{
 			Name: "ha_cluster_node_resources",
 			Help: "metric inherent per node resources",
-		}, []string{"node", "resource_name", "role", "managed", "status"})
+		}, []string{"node_name", "resource_name", "role", "managed", "status"})
 	err := prometheus.Register(nodeResources)
 	if err != nil {
 		return errors.Wrap(err, "failed to register NodeResource metric. Perhaps another exporter is already running?")
@@ -111,7 +111,7 @@ func resetClusterMetrics() error {
 		prometheus.GaugeOpts{
 			Name: "ha_cluster_nodes",
 			Help: "cluster nodes metrics for all of them",
-		}, []string{"node", "type"})
+		}, []string{"node_name", "type"})
 
 	err = prometheus.Register(clusterNodes)
 	if err != nil {
