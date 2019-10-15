@@ -131,6 +131,6 @@ func TestDrbdParsing(t *testing.T) {
 func TestDrbdInfoError(t *testing.T) {
 	_, err := getDrbdInfo() // should fail because test environment doesn't have the drbdsetup binary
 	if err == nil {
-		t.Errorf("an non nil error was expected")
+		t.Errorf("a non nil error was expected")
 	}
 }
