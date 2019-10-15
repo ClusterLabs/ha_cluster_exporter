@@ -160,7 +160,6 @@ func main() {
 				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
-
 			// populate structs and parse relevant info we will expose via metrics
 			drbdDev, err := parseDrbdStatus(drbdStatusJSONRaw)
 			if err != nil {
@@ -186,7 +185,6 @@ func main() {
 		if _, err := os.Stat("/etc/sysconfig/sbd"); os.IsNotExist(err) {
 			return
 		}
-
 		for {
 			log.Println("[INFO]: Reading cluster SBD configuration..")
 			// read configuration of SBD
@@ -212,7 +210,6 @@ func main() {
 				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
-
 			for sbdDev, sbdStatusBool := range sbdStatus {
 				// true it means the sbd device is healthy
 				if sbdStatusBool == true {
