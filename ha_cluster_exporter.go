@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/xml"
 	"flag"
 	"log"
 	"net/http"
@@ -161,7 +160,6 @@ func main() {
 				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
-
 			// populate structs and parse relevant info we will expose via metrics
 			drbdDev, err := parseDrbdStatus(drbdStatusJSONRaw)
 			if err != nil {
@@ -187,7 +185,6 @@ func main() {
 		if _, err := os.Stat("/etc/sysconfig/sbd"); os.IsNotExist(err) {
 			return
 		}
-
 		for {
 			log.Println("[INFO]: Reading cluster SBD configuration..")
 			// read configuration of SBD
@@ -213,7 +210,6 @@ func main() {
 				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 				continue
 			}
-
 			for sbdDev, sbdStatusBool := range sbdStatus {
 				// true it means the sbd device is healthy
 				if sbdStatusBool == true {
@@ -287,7 +283,7 @@ func main() {
 			}
 			// get cluster status xml
 			log.Println("[INFO]: Reading cluster configuration with crm_mon..")
-			monxml, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
+			pacemakerXMLRaw, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
 			if err != nil {
 				log.Println("[ERROR]: crm_mon command execution failed. Did you have crm_mon installed ?")
 				log.Println(err)
@@ -295,9 +291,8 @@ func main() {
 				continue
 			}
 
-			// read configuration
-			var status crmMon
-			err = xml.Unmarshal(monxml, &status)
+			// parse raw XML returned from crm_mon and populate structs for metrics
+			status, err := parsePacemakerStatus(pacemakerXMLRaw)
 			if err != nil {
 				log.Println("[ERROR]: could not read cluster XML configuration")
 				log.Println(err)
