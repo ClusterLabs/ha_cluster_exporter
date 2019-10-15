@@ -10,7 +10,7 @@ vet-check:
 	go vet .
 
 fmt-check:
-	go fmt  .
+	go fmt .
 
 test:
 	go test -v

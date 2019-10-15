@@ -51,7 +51,6 @@ func parseQuoromStatus(quoromStatus []byte) (map[string]int, string, error) {
 		"quorum":          quorum,
 	}
 
-
 	if len(voteQuorumInfo) == 0 {
 		return voteQuorumInfo, quorate, errors.New("could not retrieve any quorum information")
 	}
