@@ -1,12 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 )
 
 func TestReadSbdConfFileError(t *testing.T) {
-	fmt.Println("=== Testing SBD : reading config file")
 	sbdConfFile, err := readSdbFile()
 
 	if sbdConfFile != nil {
@@ -22,8 +20,6 @@ func TestReadSbdConfFileError(t *testing.T) {
 }
 
 func TestGetSbdDevicesWithoutDoubleQuotes(t *testing.T) {
-	fmt.Println("=== Testing SBD devices retrival from config without quotes")
-
 	// this is a full config file more or less , in other tests it is cutted
 	sbdConfig := `
 	 # SBD_DEVICE specifies the devices to use for exchanging sbd messages
@@ -149,8 +145,6 @@ func TestGetSbdDevicesWithoutDoubleQuotes(t *testing.T) {
 
 // test the other case with double quotes, and put the string in random place
 func TestGetSbdDevicesWithDoubleQuotes(t *testing.T) {
-	fmt.Println("=== Testing SBD devices retrival from config with Double quotes")
-
 	sbdConfig := `## Type: string
 	 ## Default: ""
 	 #
@@ -197,8 +191,6 @@ func TestGetSbdDevicesWithDoubleQuotes(t *testing.T) {
 
 // test the other case with double quotes, and put the string in random place
 func TestOnlyOneDeviceSbd(t *testing.T) {
-	fmt.Println("=== Testing Only 1 device")
-
 	sbdConfig := `## Type: string
 	 ## Default: ""
 	

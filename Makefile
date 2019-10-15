@@ -11,15 +11,12 @@ vet-check:
 
 fmt-check:
 	go fmt  .
+
 test:
-	go test 
+	go test -v
 
 coverage:
 	go test -cover -coverprofile=coverage.out
 	go tool cover -html=coverage.out
-# This deploy the binary to a node of cluster in devel mode port :9002. 
-# you need to change the IP adress in the script. 
-# TODO: (In future we can add an arg var..)
-deploy:
-	tools/deploy-to-cluster.sh
+
 .PHONY: build install vet-check

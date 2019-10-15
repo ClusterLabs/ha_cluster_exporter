@@ -1,14 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 )
 
 // TEST group quorum metrics
 func TestQuoromMetricParsing(t *testing.T) {
-	// the data is fake data
-	fmt.Println("=== Testing quorum info retrivial")
+	// the data is fake
 	quoromStatus := `
 	Quorum information
 	------------------
@@ -61,7 +59,6 @@ func TestQuoromMetricParsing(t *testing.T) {
 // TEST group RING metrics
 // test that we recognize 1 error (for increasing metric later)
 func TestOneRingError(t *testing.T) {
-	fmt.Println("=== Test one ring error")
 	ringStatusWithOneError := `Printing ring status.
 	Local node ID 16777226
 	RING ID 0
@@ -84,7 +81,6 @@ func TestOneRingError(t *testing.T) {
 }
 
 func TestZeroRingErrors(t *testing.T) {
-	fmt.Println("=== Test zero Ring errors")
 	ringStatusWithOneError := `Printing ring status.
 	Local node ID 16777226
 	RING ID 0
@@ -108,7 +104,6 @@ func TestZeroRingErrors(t *testing.T) {
 
 // test that we recognize 3 rings error (for increasing metric later)
 func TestMultipleRingErrors(t *testing.T) {
-	fmt.Println("=== Test multiples ring error")
 	ringStatusWithOneError := `Printing ring status.
 	Local node ID 16777226
 	RING ID 0
@@ -146,8 +141,6 @@ func TestMultipleRingErrors(t *testing.T) {
 
 // test that in case of system unexpected error we detect this
 func TestSystemUnexpectedError(t *testing.T) {
-	fmt.Println("=== Test unexpected error")
-
 	ringStatusError := getCorosyncRingStatus()
 
 	// should fail because test environment has no cluster
