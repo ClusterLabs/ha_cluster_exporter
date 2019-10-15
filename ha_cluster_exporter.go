@@ -350,42 +350,42 @@ func main() {
 
 			// set node metrics
 			// cluster_nodes{node="dma-dog-hana01" type="master"} 1
-			for _, nod := range status.Nodes.Node {
-				if nod.Online {
-					clusterNodes.WithLabelValues(nod.Name, "online").Set(float64(1))
+			for _, node := range status.Nodes.Node {
+				if node.Online {
+					clusterNodes.WithLabelValues(node.Name, "online").Set(float64(1))
 				}
-				if nod.Standby {
-					clusterNodes.WithLabelValues(nod.Name, "standby").Set(float64(1))
+				if node.Standby {
+					clusterNodes.WithLabelValues(node.Name, "standby").Set(float64(1))
 				}
-				if nod.StandbyOnFail {
-					clusterNodes.WithLabelValues(nod.Name, "standby_onfail").Set(float64(1))
+				if node.StandbyOnFail {
+					clusterNodes.WithLabelValues(node.Name, "standby_onfail").Set(float64(1))
 				}
-				if nod.Maintenance {
-					clusterNodes.WithLabelValues(nod.Name, "maintenance").Set(float64(1))
+				if node.Maintenance {
+					clusterNodes.WithLabelValues(node.Name, "maintenance").Set(float64(1))
 				}
-				if nod.Pending {
-					clusterNodes.WithLabelValues(nod.Name, "pending").Set(float64(1))
+				if node.Pending {
+					clusterNodes.WithLabelValues(node.Name, "pending").Set(float64(1))
 				}
-				if nod.Unclean {
-					clusterNodes.WithLabelValues(nod.Name, "unclean").Set(float64(1))
+				if node.Unclean {
+					clusterNodes.WithLabelValues(node.Name, "unclean").Set(float64(1))
 				}
-				if nod.Shutdown {
-					clusterNodes.WithLabelValues(nod.Name, "shutdown").Set(float64(1))
+				if node.Shutdown {
+					clusterNodes.WithLabelValues(node.Name, "shutdown").Set(float64(1))
 				}
-				if nod.ExpectedUp {
-					clusterNodes.WithLabelValues(nod.Name, "expected_up").Set(float64(1))
+				if node.ExpectedUp {
+					clusterNodes.WithLabelValues(node.Name, "expected_up").Set(float64(1))
 				}
-				if nod.DC {
-					clusterNodes.WithLabelValues(nod.Name, "dc").Set(float64(1))
+				if node.DC {
+					clusterNodes.WithLabelValues(node.Name, "dc").Set(float64(1))
 				}
-				if nod.Type == "member" {
-					clusterNodes.WithLabelValues(nod.Name, "member").Set(float64(1))
-				} else if nod.Type == "ping" {
-					clusterNodes.WithLabelValues(nod.Name, "ping").Set(float64(1))
-				} else if nod.Type == "remote" {
-					clusterNodes.WithLabelValues(nod.Name, "remote").Set(float64(1))
+				if node.Type == "member" {
+					clusterNodes.WithLabelValues(node.Name, "member").Set(float64(1))
+				} else if node.Type == "ping" {
+					clusterNodes.WithLabelValues(node.Name, "ping").Set(float64(1))
+				} else if node.Type == "remote" {
+					clusterNodes.WithLabelValues(node.Name, "remote").Set(float64(1))
 				} else {
-					clusterNodes.WithLabelValues(nod.Name, "unknown").Set(float64(1))
+					clusterNodes.WithLabelValues(node.Name, "unknown").Set(float64(1))
 				}
 			}
 
