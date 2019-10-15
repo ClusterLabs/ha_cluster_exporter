@@ -1,8 +1,12 @@
 package main
 
+import (
+	"encoding/xml"
+)
+
 // this types are for reading pacemaker configuration xml when running crm_mon command
 // and lookup the corrispective value
-type crmMon struct {
+type pacemakerStatus struct {
 	Version string  `xml:"version,attr"`
 	Summary summary `xml:"summary"`
 	Nodes   nodes   `xml:"nodes"`
@@ -53,4 +57,13 @@ type resource struct {
 	Failed         bool   `xml:"failed,attr"`
 	FailureIgnored bool   `xml:"failure_ignored,attr"`
 	NodesRunningOn int    `xml:"nodes_running_on,attr"`
+}
+
+func parsePacemakerStatus(pacemakerXMLRaw []byte) (pacemakerStatus, error) {
+	var pacemakerStat pacemakerStatus
+	err := xml.Unmarshal(pacemakerXMLRaw, &pacemakerStat)
+	if err != nil {
+		return pacemakerStat, err
+	}
+	return pacemakerStat, nil
 }

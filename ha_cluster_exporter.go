@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/xml"
 	"flag"
 	"log"
 	"net/http"
@@ -287,7 +286,7 @@ func main() {
 			}
 			// get cluster status xml
 			log.Println("[INFO]: Reading cluster configuration with crm_mon..")
-			monxml, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
+			pacemakerXMLRaw, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
 			if err != nil {
 				log.Println("[ERROR]: crm_mon command execution failed. Did you have crm_mon installed ?")
 				log.Println(err)
@@ -295,9 +294,8 @@ func main() {
 				continue
 			}
 
-			// read configuration
-			var status crmMon
-			err = xml.Unmarshal(monxml, &status)
+			// parse raw XML returned from crm_mon and populate structs for metrics
+			status, err := parsePacemakerStatus(pacemakerXMLRaw)
 			if err != nil {
 				log.Println("[ERROR]: could not read cluster XML configuration")
 				log.Println(err)
