@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -44,8 +45,8 @@ func getSbdDevices(sbdConfigRaw []byte) ([]string, error) {
 }
 
 // this function take a list of sbd devices and return
-// a  map of devices with the status, true is healthy , false isn't
-func setSbdDeviceHealth(sbdDevices []string) map[string]bool {
+// a map of devices with the status, true is healthy, false isn't
+func getSbdDeviceHealth(sbdDevices []string) (map[string]bool, error) {
 	sbdStatus := make(map[string]bool)
 
 	for _, sbdDev := range sbdDevices {
@@ -58,5 +59,10 @@ func setSbdDeviceHealth(sbdDevices []string) map[string]bool {
 			sbdStatus[sbdDev] = true
 		}
 	}
-	return sbdStatus
+
+	if len(sbdStatus) == 0 {
+		return nil, errors.New("could not retrieve SBD status")
+	}
+
+	return sbdStatus, nil
 }

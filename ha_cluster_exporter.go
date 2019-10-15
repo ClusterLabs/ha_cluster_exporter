@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -13,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -151,7 +151,7 @@ func main() {
 	// set DRBD metrics
 
 	go func() {
-		log.Println("[INFO]: Starting DRBD metrics collector...")
+		log.Infoln("Starting DRBD metrics collector...")
 
 		started := false
 
@@ -164,25 +164,25 @@ func main() {
 
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 
-			log.Println("[INFO]: Reading DRBD status...")
+			log.Infoln("Reading DRBD status...")
 
 			// retrieve drbdInfos calling its binary
 			drbdStatusJSONRaw, err := getDrbdInfo()
 			if err != nil {
-				log.Printf("[ERROR]: %s\n", err)
+				log.Errorln(err)
 				continue
 			}
 			// populate structs and parse relevant info we will expose via metrics
 			drbdDev, err := parseDrbdStatus(drbdStatusJSONRaw)
 			if err != nil {
-				log.Printf("[ERROR]: %s\n", err)
+				log.Errorln(err)
 				continue
 			}
 
 			// reset metrics before setting news to remove any state information
 			err = resetDrbdMetrics()
 			if err != nil {
-				log.Printf("[ERROR]: %s\n", err)
+				log.Errorln(err)
 				continue
 			}
 
@@ -199,11 +199,11 @@ func main() {
 	// set SBD device metrics
 	go func() {
 		if _, err := os.Stat("/etc/sysconfig/sbd"); os.IsNotExist(err) {
-			log.Println("[WARN]: SBD configuration not available, SBD metrics won't be collected")
+			log.Warnln("SBD configuration not available, SBD metrics won't be collected")
 			return
 		}
 
-		log.Println("[INFO]: Starting SBD metrics collector...")
+		log.Infoln("Starting SBD metrics collector...")
 
 		started := false
 
@@ -217,21 +217,21 @@ func main() {
 			// read configuration of SBD
 			sbdConfiguration, err := readSdbFile()
 			if err != nil {
-				log.Printf("[ERROR]: %s\n", err)
+				log.Errorln(err)
 				continue
 			}
 			// retrieve a list of sbd devices
 			sbdDevices, err := getSbdDevices(sbdConfiguration)
 			// mostly, the sbd_device were not set in conf file for returning an error
 			if err != nil {
-				log.Printf("[ERROR]: %s\n", err)
+				log.Errorln(err)
 				continue
 			}
 
-			// set and return a map of sbd devices with true healthy, false not
-			sbdStatus := setSbdDeviceHealth(sbdDevices)
-			if len(sbdStatus) == 0 {
-				log.Println("[WARN]: Could not retrieve any sbd device")
+			// set and return a map of sbd devices with true if healthy, false if not
+			sbdStatus, err := getSbdDeviceHealth(sbdDevices)
+			if err != nil {
+				log.Errorln(err)
 				continue
 			}
 			for sbdDev, sbdStatusBool := range sbdStatus {
@@ -247,7 +247,7 @@ func main() {
 
 	// set corosync metrics: ring errors
 	go func() {
-		log.Println("[INFO]: Starting corosync ring errors collector...")
+		log.Infoln("Starting corosync ring errors collector...")
 
 		started := false
 
@@ -258,11 +258,11 @@ func main() {
 				started = true
 			}
 
-			log.Println("[INFO]: Reading ring status...")
+			log.Infoln("Reading ring status...")
 			ringStatus := getCorosyncRingStatus()
 			ringErrorsTotal, err := parseRingStatus(ringStatus)
 			if err != nil {
-				log.Printf("[ERROR]: %s\n", err)
+				log.Errorln(err)
 				continue
 			}
 			corosyncRingErrorsTotal.Set(float64(ringErrorsTotal))
@@ -271,7 +271,7 @@ func main() {
 
 	// set corosync metrics: quorum metrics
 	go func() {
-		log.Println("[INFO]: Starting corosync quorum metrics collector...")
+		log.Infoln("Starting corosync quorum metrics collector...")
 
 		started := false
 
@@ -282,11 +282,11 @@ func main() {
 				started = true
 			}
 
-			log.Println("[INFO]: Reading quorum status...")
+			log.Infoln("Reading quorum status...")
 			quoromStatus := getQuoromClusterInfo()
 			voteQuorumInfo, quorate, err := parseQuoromStatus(quoromStatus)
 			if err != nil {
-				log.Printf("[ERROR]: %s\n", err)
+				log.Errorln(err)
 				continue
 			}
 
@@ -312,7 +312,7 @@ func main() {
 
 	// set cluster pacemaker metrics
 	go func() {
-		log.Println("[INFO]: Starting pacemaker metrics collector...")
+		log.Infoln("Starting pacemaker metrics collector...")
 
 		started := false
 
@@ -326,25 +326,22 @@ func main() {
 			// remove all global state contained by metrics
 			err := resetClusterMetrics()
 			if err != nil {
-				log.Println("[ERROR]: fail to 	 reset metrics for cluster crm_mon component")
-				log.Println(err)
+				log.Errorln(err)
 				continue
 			}
 
 			// get cluster status xml
-			log.Println("[INFO]: Reading cluster configuration with crm_mon..")
+			log.Infoln("Reading cluster configuration with crm_mon..")
 			pacemakerXMLRaw, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
 			if err != nil {
-				log.Println("[ERROR]: crm_mon command execution failed. Did you have crm_mon installed ?")
-				log.Println(err)
+				log.Errorln(err)
 				continue
 			}
 
 			// parse raw XML returned from crm_mon and populate structs for metrics
 			status, err := parsePacemakerStatus(pacemakerXMLRaw)
 			if err != nil {
-				log.Println("[ERROR]: could not read cluster XML configuration")
-				log.Println(err)
+				log.Errorln(err)
 				continue
 			}
 
@@ -424,7 +421,7 @@ func main() {
 		}
 	}()
 
-	log.Println("[INFO]: Serving metrics on port", *portNumber)
-	log.Println("[INFO]: refreshing metric timeouts set to", *timeoutSeconds)
+	log.Infoln("Serving metrics on port", *portNumber)
+	log.Infoln("refreshing metric timeouts set to", *timeoutSeconds)
 	log.Fatal(http.ListenAndServe(*portNumber, nil))
 }
