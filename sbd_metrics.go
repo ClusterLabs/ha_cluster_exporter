@@ -12,14 +12,14 @@ import (
 func readSdbFile() ([]byte, error) {
 	sbdConfFile, err := os.Open("/etc/sysconfig/sbd")
 	if err != nil {
-		return nil, fmt.Errorf("[ERROR] Could not open sbd config file %s", err)
+		return nil, fmt.Errorf("could not open sbd config file %s", err)
 	}
 
 	defer sbdConfFile.Close()
 	sbdConfigRaw, err := ioutil.ReadAll(sbdConfFile)
 
 	if err != nil {
-		return nil, fmt.Errorf("[ERROR] Could not read sbd config file %s", err)
+		return nil, fmt.Errorf("could not read sbd config file %s", err)
 	}
 	return sbdConfigRaw, nil
 }
@@ -33,7 +33,7 @@ func getSbdDevices(sbdConfigRaw []byte) ([]string, error) {
 	// check the case there is an sbd_config but the SBD_DEVICE is not set
 
 	if sbdDevicesConfig == "" {
-		return nil, fmt.Errorf("[ERROR] there are no SBD_DEVICE set in configuration file")
+		return nil, fmt.Errorf("there are no SBD_DEVICE set in configuration file")
 	}
 	// remove the SBD_DEVICE
 	sbdArray := strings.Split(sbdDevicesConfig, "SBD_DEVICE=")[1]

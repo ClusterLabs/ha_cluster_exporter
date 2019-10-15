@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"os/exec"
 )
 
@@ -18,8 +17,6 @@ type drbdStatus struct {
 
 // return drbd status in byte raw json
 func getDrbdInfo() ([]byte, error) {
-	// get ringStatus
-	log.Println("[INFO]: Reading drbd status with drbdsetup status ...")
 	drbdStatusRaw, err := exec.Command("/sbin/drbdsetup", "status", "--json").Output()
 	return drbdStatusRaw, err
 }

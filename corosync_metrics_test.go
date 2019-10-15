@@ -35,7 +35,7 @@ func TestQuoromMetricParsing(t *testing.T) {
 	dma-dog-hana01:~ # 
 	`
 	getQuoromClusterInfo()
-	voteQuorumInfo, quorate := parseQuoromStatus([]byte(quoromStatus))
+	voteQuorumInfo, quorate, _ := parseQuoromStatus([]byte(quoromStatus))
 
 	if voteQuorumInfo["expectedVotes"] != 232 {
 		t.Errorf("expectedVotes should be 232 got instead: %d", voteQuorumInfo["expectedVotes"])
@@ -134,28 +134,30 @@ func TestMultipleRingErrors(t *testing.T) {
 
 	getCorosyncRingStatus()
 	ringErrorsTotal, err := parseRingStatus([]byte(ringStatusWithOneError))
+	if err != nil {
+		t.Error(err)
+	}
+
 	RingExpectedErrors := 3
 	if ringErrorsTotal != RingExpectedErrors {
 		t.Errorf("ringErrors was incorrect, got: %d, expected: %d.", ringErrorsTotal, RingExpectedErrors)
-	}
-	if err != nil {
-		t.Errorf("error should be nil got instead: %s", err)
 	}
 }
 
 // test that in case of system unexpected error we detect this
 func TestSystemUnexpectedError(t *testing.T) {
 	fmt.Println("=== Test unexpected error")
-	// since there is no cluster in a Test env. this will return an error
+
 	ringStatusError := getCorosyncRingStatus()
-	parseRingStatus([]byte(ringStatusError))
+
+	// should fail because test environment has no cluster
 	ringErrorsTotal, err := parseRingStatus([]byte(ringStatusError))
-	RingExpectedErrors := 0
-	if ringErrorsTotal != RingExpectedErrors {
-		t.Errorf("ringErrors was incorrect, got: %d, expected: %d.", ringErrorsTotal, RingExpectedErrors)
-	}
 	if err == nil {
-		t.Errorf("error should not be nil got !!")
+		t.Error("a non nil error was expected")
 	}
 
+	ringExpectedErrors := 0
+	if ringErrorsTotal != ringExpectedErrors {
+		t.Errorf("ringErrors was incorrect, got: %d, expected: %d.", ringErrorsTotal, ringExpectedErrors)
+	}
 }

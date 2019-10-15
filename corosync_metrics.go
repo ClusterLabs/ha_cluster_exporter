@@ -1,8 +1,8 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -13,15 +13,13 @@ import (
 
 // return the output of quorum in raw format
 func getQuoromClusterInfo() []byte {
-	// get ringStatus
-	log.Println("[INFO]: Reading quorum status with corosync-quorumtool...")
 	// ignore error because If any interfaces are faulty, 1 is returned by the binary. If all interfaces
 	// are active 0 is returned to the shell.
 	quorumInfoRaw, _ := exec.Command("/usr/sbin/corosync-quorumtool").Output()
 	return quorumInfoRaw
 }
 
-func parseQuoromStatus(quoromStatus []byte) (map[string]int, string) {
+func parseQuoromStatus(quoromStatus []byte) (map[string]int, string, error) {
 	quoromRaw := string(quoromStatus)
 	// Quorate:          Yes
 
@@ -53,7 +51,12 @@ func parseQuoromStatus(quoromStatus []byte) (map[string]int, string) {
 		"quorum":          quorum,
 	}
 
-	return voteQuorumInfo, quorate
+
+	if len(voteQuorumInfo) == 0 {
+		return voteQuorumInfo, quorate, errors.New("could not retrieve any quorum information")
+	}
+
+	return voteQuorumInfo, quorate, nil
 }
 
 // RING metrics
@@ -62,8 +65,6 @@ func parseQuoromStatus(quoromStatus []byte) (map[string]int, string) {
 // this function can return also just an malformed output in case of error, we don't check.
 // It is the parser that will check the status
 func getCorosyncRingStatus() []byte {
-	// get ringStatus
-	log.Println("[INFO]: Reading ring status with corosync-cfgtool...")
 	// We ignore the  error because If any interfaces are faulty, 1 is returned by the binary.
 	// we want to catch the situation where an interface is faulty and set the metrics accordingly, and we don't consider this
 	// as an error ( so ignore it)
@@ -82,7 +83,7 @@ func parseRingStatus(ringStatus []byte) (int, error) {
 	if ringErrorsTotal == 0 {
 		// if there is no RING ID word, the command corosync-cfgtool went wrong/error out
 		if strings.Count(statusRaw, "RING ID") == 0 {
-			return 0, fmt.Errorf("[ERROR]: corosync-cfgtool command returned an unexpected error %s", statusRaw)
+			return 0, fmt.Errorf("corosync-cfgtool command returned an unexpected error %s", statusRaw)
 		}
 
 		return 0, nil
