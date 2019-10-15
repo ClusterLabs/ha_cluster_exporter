@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -12,14 +13,14 @@ import (
 func readSdbFile() ([]byte, error) {
 	sbdConfFile, err := os.Open("/etc/sysconfig/sbd")
 	if err != nil {
-		return nil, fmt.Errorf("[ERROR] Could not open sbd config file %s", err)
+		return nil, fmt.Errorf("could not open sbd config file %s", err)
 	}
 
 	defer sbdConfFile.Close()
 	sbdConfigRaw, err := ioutil.ReadAll(sbdConfFile)
 
 	if err != nil {
-		return nil, fmt.Errorf("[ERROR] Could not read sbd config file %s", err)
+		return nil, fmt.Errorf("could not read sbd config file %s", err)
 	}
 	return sbdConfigRaw, nil
 }
@@ -33,7 +34,7 @@ func getSbdDevices(sbdConfigRaw []byte) ([]string, error) {
 	// check the case there is an sbd_config but the SBD_DEVICE is not set
 
 	if sbdDevicesConfig == "" {
-		return nil, fmt.Errorf("[ERROR] there are no SBD_DEVICE set in configuration file")
+		return nil, fmt.Errorf("there are no SBD_DEVICE set in configuration file")
 	}
 	// remove the SBD_DEVICE
 	sbdArray := strings.Split(sbdDevicesConfig, "SBD_DEVICE=")[1]
@@ -44,8 +45,8 @@ func getSbdDevices(sbdConfigRaw []byte) ([]string, error) {
 }
 
 // this function take a list of sbd devices and return
-// a  map of devices with the status, true is healthy , false isn't
-func setSbdDeviceHealth(sbdDevices []string) map[string]bool {
+// a map of devices with the status, true is healthy, false isn't
+func getSbdDeviceHealth(sbdDevices []string) (map[string]bool, error) {
 	sbdStatus := make(map[string]bool)
 
 	for _, sbdDev := range sbdDevices {
@@ -58,5 +59,10 @@ func setSbdDeviceHealth(sbdDevices []string) map[string]bool {
 			sbdStatus[sbdDev] = true
 		}
 	}
-	return sbdStatus
+
+	if len(sbdStatus) == 0 {
+		return nil, errors.New("could not retrieve SBD status")
+	}
+
+	return sbdStatus, nil
 }

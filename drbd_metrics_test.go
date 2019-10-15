@@ -1,17 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"testing"
 )
-
-// this test verify that we return something when call the function.
-// we can't really test it since we need the binary
-func TestDrbdStatusFuncMinimalError(t *testing.T) {
-	fmt.Println("=== Testing DRBD : testing function to get infos")
-	getDrbdInfo()
-}
 
 func TestDrbdParsing(t *testing.T) {
 	var drbdDataRaw = []byte(` [
@@ -115,9 +106,11 @@ func TestDrbdParsing(t *testing.T) {
 
 	drbdDevs, err := parseDrbdStatus(drbdDataRaw)
 	if err != nil {
-		log.Fatalln("[ERROR]:", err)
+		t.Error(err)
 	}
+
 	// test attributes
+
 	if "1-single-0" != drbdDevs[0].Name {
 		t.Errorf("name doesn't correspond! fail got %s", drbdDevs[0].Name)
 	}
@@ -128,11 +121,16 @@ func TestDrbdParsing(t *testing.T) {
 
 	if "UpToDate" != drbdDevs[0].Devices[0].DiskState {
 		t.Errorf("disk-states doesn't correspond! fail got %s", drbdDevs[0].Devices[0].DiskState)
-
 	}
 
 	if 0 != drbdDevs[0].Devices[0].Volume {
 		t.Errorf("volumes should be 0")
 	}
+}
 
+func TestDrbdInfoError(t *testing.T) {
+	_, err := getDrbdInfo() // should fail because test environment doesn't have the drbdsetup binary
+	if err == nil {
+		t.Errorf("a non nil error was expected")
+	}
 }
