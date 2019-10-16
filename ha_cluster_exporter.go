@@ -151,6 +151,11 @@ func main() {
 	// set DRBD metrics
 
 	go func() {
+		if _, err := os.Stat("/sbin/drbdsetup"); os.IsNotExist(err) {
+			log.Warnln("drbdsetup binary not available, DRBD metrics won't be collected")
+			return
+		}
+
 		log.Infoln("Starting DRBD metrics collector...")
 
 		started := false
