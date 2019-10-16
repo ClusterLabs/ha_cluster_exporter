@@ -2,6 +2,7 @@ default: build
 
 build: fmt-check  vet-check test
 	go build .
+	go mod tidy
 
 install:
 	go install
