@@ -76,9 +76,9 @@ var (
 
 	drbdRemoteDiskState = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "ha_cluster_drbd_resource_remote_connection",
+			Name: "ha_cluster_drbd_resources_remote_connection",
 			Help: "show per remote connection resource name, its role, the volume and disk_state (Diskless,Attaching, Failed, Negotiating, Inconsistent, Outdated, DUnknown, Consistent, UpToDate)",
-		}, []string{"resource_name", "peer_role", "volume", "peer_disk_state"})
+		}, []string{"resource_name", "peer_node_id", "peer_role", "volume", "peer_disk_state"})
 )
 
 func init() {
@@ -144,7 +144,7 @@ func resetDrbdMetrics() error {
 	prometheus.Unregister(drbdRemoteDiskState)
 	drbdRemoteDiskState = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "ha_cluster_drbd_resource_remote_connection",
+			Name: "ha_cluster_drbd_resources_remote_connection",
 			Help: "show per remote connection resource name, its role, the volume and disk_state (Diskless,Attaching, Failed, Negotiating, Inconsistent, Outdated, DUnknown, Consistent, UpToDate)",
 		}, []string{"resource_name", "peer_node_id", "peer_role", "volume", "peer_disk_state"})
 
@@ -175,20 +175,20 @@ func main() {
 			// retrieve drbdInfos calling its binary
 			drbdStatusJSONRaw, err := getDrbdInfo()
 			if err != nil {
-				log.Errorln(err)
+				log.Warnf("Error by retrieving drbd infos %s", err)
 				continue
 			}
 			// populate structs and parse relevant info we will expose via metrics
 			drbdDev, err := parseDrbdStatus(drbdStatusJSONRaw)
 			if err != nil {
-				log.Errorln(err)
+				log.Warnf("Error by parsing drbd json: %s", err)
 				continue
 			}
 
 			// reset metrics before setting news to remove any state information
 			err = resetDrbdMetrics()
 			if err != nil {
-				log.Errorln(err)
+				log.Warnf("Error by resetting drbd metrics %s", err)
 				continue
 			}
 
@@ -203,7 +203,7 @@ func main() {
 			for _, resource := range drbdDev {
 				// a resource could not have any connection
 				if len(resource.Connections) == 0 {
-					log.Errorln("could not retrieve any remote disk state connection info")
+					log.Warnln("could not retrieve any remote disk state connection info")
 					continue
 				}
 				// a Resource can have multiple connection with different nodes
@@ -211,11 +211,11 @@ func main() {
 					// []string{"resource_name", "peer_node_id", "peer_role", "volume", "peer_disk_state"})
 					// pro resource go through the volume of peer and its peer state
 					if len(conn.PeerDevices) == 0 {
-						log.Errorln("could not retrieve any peer Devices metric")
+						log.Warnln("could not retrieve any peer Devices metric")
 						continue
 					}
 					for _, peerDev := range conn.PeerDevices {
-						drbdDiskState.WithLabelValues(resource.Name, strconv.Itoa(conn.PeerNodeID), conn.PeerRole, strconv.Itoa(peerDev.Volume), strings.ToLower(peerDev.PeerDiskState)).Set(float64(1))
+						drbdRemoteDiskState.WithLabelValues(resource.Name, strconv.Itoa(conn.PeerNodeID), conn.PeerRole, strconv.Itoa(peerDev.Volume), strings.ToLower(peerDev.PeerDiskState)).Set(float64(1))
 					}
 				}
 			}
@@ -236,21 +236,21 @@ func main() {
 			// read configuration of SBD
 			sbdConfiguration, err := readSdbFile()
 			if err != nil {
-				log.Errorln(err)
+				log.Warnln(err)
 				continue
 			}
 			// retrieve a list of sbd devices
 			sbdDevices, err := getSbdDevices(sbdConfiguration)
 			// mostly, the sbd_device were not set in conf file for returning an error
 			if err != nil {
-				log.Errorln(err)
+				log.Warnln(err)
 				continue
 			}
 
 			// set and return a map of sbd devices with true if healthy, false if not
 			sbdStatus, err := getSbdDeviceHealth(sbdDevices)
 			if err != nil {
-				log.Errorln(err)
+				log.Warnln(err)
 				continue
 			}
 			for sbdDev, sbdStatusBool := range sbdStatus {
@@ -275,7 +275,7 @@ func main() {
 			ringStatus := getCorosyncRingStatus()
 			ringErrorsTotal, err := parseRingStatus(ringStatus)
 			if err != nil {
-				log.Errorln(err)
+				log.Warnln(err)
 				continue
 			}
 			corosyncRingErrorsTotal.Set(float64(ringErrorsTotal))
@@ -290,10 +290,14 @@ func main() {
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 
 			log.Infoln("Reading quorum status...")
-			quoromStatus := getQuoromClusterInfo()
+			quoromStatus, err := getQuoromClusterInfo()
+			if err != nil {
+				log.Warnln(err)
+				continue
+			}
 			voteQuorumInfo, quorate, err := parseQuoromStatus(quoromStatus)
 			if err != nil {
-				log.Errorln(err)
+				log.Warnln(err)
 				continue
 			}
 
@@ -328,7 +332,7 @@ func main() {
 			// remove all global state contained by metrics
 			err := resetClusterMetrics()
 			if err != nil {
-				log.Errorln(err)
+				log.Warnln(err)
 				continue
 			}
 
@@ -336,14 +340,14 @@ func main() {
 			log.Infoln("Reading cluster configuration with crm_mon..")
 			pacemakerXMLRaw, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
 			if err != nil {
-				log.Errorln(err)
+				log.Warnln(err)
 				continue
 			}
 
 			// parse raw XML returned from crm_mon and populate structs for metrics
 			status, err := parsePacemakerStatus(pacemakerXMLRaw)
 			if err != nil {
-				log.Errorln(err)
+				log.Warnln(err)
 				continue
 			}
 
