@@ -154,6 +154,17 @@ func resetDrbdMetrics() error {
 	return nil
 }
 
+// helper function for setting timeout for goroutines
+// we skip the timeout by init apply each time later
+func sleepDefaultTimeout(firstTime *bool) {
+	// by the initialization of exporter we don't wait timeout but serve metrics.
+	if *firstTime {
+		*firstTime = false
+		return
+	}
+	time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+}
+
 var portNumber = flag.String("port", ":9002", "The port number to listen on for HTTP requests.")
 var timeoutSeconds = flag.Int("timeout", 5, "timeout seconds for exporter to wait to fetch new data")
 
@@ -167,9 +178,9 @@ func main() {
 	// set DRBD metrics
 	go func() {
 		log.Infoln("Starting DRBD metrics collector...")
+		firstTime := true
 		for {
-
-			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+			sleepDefaultTimeout(&firstTime)
 			log.Infoln("Reading DRBD status...")
 
 			// retrieve drbdInfos calling its binary
@@ -222,6 +233,7 @@ func main() {
 
 	// set SBD device metrics
 	go func() {
+		firstTime := true
 		if _, err := os.Stat("/etc/sysconfig/sbd"); os.IsNotExist(err) {
 			log.Warnln("SBD configuration not available, SBD metrics won't be collected")
 			return
@@ -230,7 +242,7 @@ func main() {
 		log.Infoln("Starting SBD metrics collector...")
 
 		for {
-			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+			sleepDefaultTimeout(&firstTime)
 			// read configuration of SBD
 			sbdConfiguration, err := readSdbFile()
 			if err != nil {
@@ -265,9 +277,10 @@ func main() {
 	// set corosync metrics: ring errors
 	go func() {
 		log.Infoln("Starting corosync ring errors collector...")
-
+		firstTime := true
 		for {
-			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+
+			sleepDefaultTimeout(&firstTime)
 
 			log.Infoln("Reading ring status...")
 			ringStatus := getCorosyncRingStatus()
@@ -283,9 +296,9 @@ func main() {
 	// set corosync metrics: quorum metrics
 	go func() {
 		log.Infoln("Starting corosync quorum metrics collector...")
-
+		firstTime := true
 		for {
-			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+			sleepDefaultTimeout(&firstTime)
 
 			log.Infoln("Reading quorum status...")
 			quoromStatus, err := getQuoromClusterInfo()
@@ -322,10 +335,9 @@ func main() {
 	// set cluster pacemaker metrics
 	go func() {
 		log.Infoln("Starting pacemaker metrics collector...")
-
+		firstTime := true
 		for {
-
-			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+			sleepDefaultTimeout(&firstTime)
 
 			// remove all global state contained by metrics
 			err := resetClusterMetrics()
