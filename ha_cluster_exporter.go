@@ -127,7 +127,7 @@ func resetDrbdMetrics() error {
 	// overwrite metric with an empty one
 	drbdDiskState = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "ha_cluster_drbd_resource",
+			Name: "ha_cluster_drbd_resources",
 			Help: "show per resource name, its role, the volume and disk_state (Diskless,Attaching, Failed, Negotiating, Inconsistent, Outdated, DUnknown, Consistent, UpToDate)",
 		}, []string{"resource_name", "role", "volume", "disk_state"})
 	err := prometheus.Register(drbdDiskState)
