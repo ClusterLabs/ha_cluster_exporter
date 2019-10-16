@@ -13,6 +13,14 @@ type drbdStatus struct {
 		Volume    int    `json:"volume"`
 		DiskState string `json:"disk-state"`
 	} `json:"devices"`
+	Connections []struct {
+		PeerNodeID  int    `json:"peer-node-id"`
+		PeerRole    string `json:"peer-role"`
+		PeerDevices []struct {
+			Volume        int    `json:"volume"`
+			PeerDiskState string `json:"peer-disk-state"`
+		} `json:"peer_devices"`
+	} `json:"connections"`
 }
 
 // return drbd status in byte raw json

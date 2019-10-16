@@ -75,10 +75,10 @@ var (
 		}, []string{"resource_name", "role", "volume", "disk_state"})
 
 	drbdRemoteDiskState = prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Name: "ha_cluster_drbd_resource_remote_connection",
-				Help: "show per remote connection resource name, its role, the volume and disk_state (Diskless,Attaching, Failed, Negotiating, Inconsistent, Outdated, DUnknown, Consistent, UpToDate)",
-			}, []string{"resource_name", "peer-role", "volume", "peer-node-id", "peer-disk-state" })
+		prometheus.GaugeOpts{
+			Name: "ha_cluster_drbd_resource_remote_connection",
+			Help: "show per remote connection resource name, its role, the volume and disk_state (Diskless,Attaching, Failed, Negotiating, Inconsistent, Outdated, DUnknown, Consistent, UpToDate)",
+		}, []string{"resource_name", "peer_role", "volume", "peer_disk_state"})
 )
 
 func init() {
@@ -146,9 +146,10 @@ func resetDrbdMetrics() error {
 		prometheus.GaugeOpts{
 			Name: "ha_cluster_drbd_resource_remote_connection",
 			Help: "show per remote connection resource name, its role, the volume and disk_state (Diskless,Attaching, Failed, Negotiating, Inconsistent, Outdated, DUnknown, Consistent, UpToDate)",
-		}, []string{"resource_name", "peer-role", "volume", "peer-node-id", "peer-disk-state" })
+		}, []string{"resource_name", "peer_node_id", "peer_role", "volume", "peer_disk_state"})
+
 	if err != nil {
-			return errors.Wrap(err, "failed to register DRBD remote disk state metric. Perhaps another exporter is already running?")
+		return errors.Wrap(err, "failed to register DRBD remote disk state metric. Perhaps another exporter is already running?")
 	}
 	return nil
 }
@@ -164,19 +165,11 @@ func main() {
 	// for each different metrics, handle it in differents gorutines, and use same timeout.
 
 	// set DRBD metrics
-
 	go func() {
 		log.Infoln("Starting DRBD metrics collector...")
-
-
 		for {
-			
-			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
-		
-			
 
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
-
 			log.Infoln("Reading DRBD status...")
 
 			// retrieve drbdInfos calling its binary
@@ -199,11 +192,31 @@ func main() {
 				continue
 			}
 
-			// create a metric like : ha_cluster_drbd_resource{resource_name="1-single-0", role="primary", volume="0",  disk_state="uptodate"} 1
+			// 1) ha_cluster_drbd_resource{resource_name="1-single-0", role="primary", volume="0",  disk_state="uptodate"} 1
 			// the metric is always set to 1 or is absent
 			for _, resource := range drbdDev {
 				for _, device := range resource.Devices {
 					drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume), strings.ToLower(resource.Devices[device.Volume].DiskState)).Set(float64(1))
+				}
+			}
+			// 2) ha_cluster_drbd_resource_remote_connection{resource_name="1-single-0", peer_node_id="1", role="primary", volume="0",  disk_state="uptodate"} 1
+			for _, resource := range drbdDev {
+				// a resource could not have any connection
+				if len(resource.Connections) == 0 {
+					log.Errorln("could not retrieve any remote disk state connection info")
+					continue
+				}
+				// a Resource can have multiple connection with different nodes
+				for _, conn := range resource.Connections {
+					// []string{"resource_name", "peer_node_id", "peer_role", "volume", "peer_disk_state"})
+					// pro resource go through the volume of peer and its peer state
+					if len(conn.PeerDevices) == 0 {
+						log.Errorln("could not retrieve any peer Devices metric")
+						continue
+					}
+					for _, peerDev := range conn.PeerDevices {
+						drbdDiskState.WithLabelValues(resource.Name, strconv.Itoa(conn.PeerNodeID), conn.PeerRole, strconv.Itoa(peerDev.Volume), strings.ToLower(peerDev.PeerDiskState)).Set(float64(1))
+					}
 				}
 			}
 		}
@@ -218,12 +231,8 @@ func main() {
 
 		log.Infoln("Starting SBD metrics collector...")
 
-
 		for {
-		
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
-	
-		
 			// read configuration of SBD
 			sbdConfiguration, err := readSdbFile()
 			if err != nil {
@@ -261,7 +270,7 @@ func main() {
 
 		for {
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
-					
+
 			log.Infoln("Reading ring status...")
 			ringStatus := getCorosyncRingStatus()
 			ringErrorsTotal, err := parseRingStatus(ringStatus)
@@ -279,8 +288,6 @@ func main() {
 
 		for {
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
-		
-			
 
 			log.Infoln("Reading quorum status...")
 			quoromStatus := getQuoromClusterInfo()
@@ -314,11 +321,9 @@ func main() {
 	go func() {
 		log.Infoln("Starting pacemaker metrics collector...")
 
-	
 		for {
-		
+
 			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
-		
 
 			// remove all global state contained by metrics
 			err := resetClusterMetrics()
