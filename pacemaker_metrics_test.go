@@ -68,11 +68,29 @@ func TestParsePacemakerXML(t *testing.T) {
 		</bans>
 	</crm_mon>`
 
-	status, _ := parsePacemakerStatus([]byte(pacemakerxml))
+	status, err := parsePacemakerStatus([]byte(pacemakerxml))
+	if err != nil {
+		t.Errorf("Unexpected error, got: %v", err)
+	}
+
+	if status.Version != "2.0.0" {
+		t.Errorf("Version was incorrect, got: %s, expected: %s ", status.Version, "2.0.0")
+	}
+
 	var expected int
 	expected = 3
+
 	if status.Summary.Resources.Number != expected {
 		t.Errorf("sbdDevice was incorrect, got: %d, expected: %d ", status.Summary.Resources.Number, expected)
+	}
+
+	expected = 0
+	if status.Summary.Resources.Disabled != expected {
+		t.Errorf("Disabled was incorrect, got: %d, expected: %d ", status.Summary.Resources.Disabled, expected)
+	}
+
+	if status.Summary.Resources.Blocked != expected {
+		t.Errorf("Blocked was incorrect, got: %d, expected: %d ", status.Summary.Resources.Blocked, expected)
 	}
 
 	expected = 2
@@ -84,8 +102,24 @@ func TestParsePacemakerXML(t *testing.T) {
 		t.Errorf("node should be called Hawk3-1 got instead: %s", status.Nodes.Node[0].Name)
 	}
 
+	if status.Nodes.Node[0].ID != "168430211" {
+		t.Errorf("node ID should be 168430211 got instead: %s", status.Nodes.Node[0].ID)
+	}
+
+	if status.Nodes.Node[0].Online != true {
+		t.Errorf("node should be online got instead: %t", status.Nodes.Node[0].Online)
+	}
+
 	if status.Nodes.Node[1].Name != "Hawk3-2" {
 		t.Errorf("node should be called Hawk3-2 got instead: %s", status.Nodes.Node[1].Name)
+	}
+
+	if status.Nodes.Node[1].ID != "168430212" {
+		t.Errorf("node ID should be 168430212 got instead: %s", status.Nodes.Node[1].ID)
+	}
+
+	if status.Nodes.Node[1].Online != true {
+		t.Errorf("node should be online got instead: %t", status.Nodes.Node[1].Online)
 	}
 
 }
