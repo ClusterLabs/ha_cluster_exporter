@@ -1,8 +1,8 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -12,11 +12,15 @@ import (
 // Quorum metrics
 
 // return the output of quorum in raw format
-func getQuoromClusterInfo() []byte {
+func getQuoromClusterInfo() ([]byte, error) {
 	// ignore error because If any interfaces are faulty, 1 is returned by the binary. If all interfaces
 	// are active 0 is returned to the shell.
+	if _, err := os.Stat("/usr/sbin/corosync-quorumtool"); os.IsNotExist(err) {
+		return nil, fmt.Errorf("could not find corosync-quromtool binary")
+	}
+
 	quorumInfoRaw, _ := exec.Command("/usr/sbin/corosync-quorumtool").Output()
-	return quorumInfoRaw
+	return quorumInfoRaw, nil
 }
 
 func parseQuoromStatus(quoromStatus []byte) (map[string]int, string, error) {
@@ -36,6 +40,14 @@ func parseQuoromStatus(quoromStatus []byte) (map[string]int, string, error) {
 	// and convert it to integer type
 	numberOnly := regexp.MustCompile("[0-9]+")
 	wordOnly := regexp.MustCompile("[a-zA-Z]+")
+	quoratePresent := regexp.MustCompile("Quorate:")
+
+	// In case of error, the binary is there but execution was erroring out, check output for quorate string.
+	quorateWordPresent := quoratePresent.FindString(string(quoromRaw))
+
+	if quorateWordPresent == "" {
+		return nil, "", fmt.Errorf("the quorum status output is not in parsable format as expected")
+	}
 
 	quorateRaw := wordOnly.FindString(strings.SplitAfterN(quoromRaw, "Quorate:", 2)[1])
 	quorate := strings.ToLower(quorateRaw)
@@ -52,7 +64,7 @@ func parseQuoromStatus(quoromStatus []byte) (map[string]int, string, error) {
 	}
 
 	if len(voteQuorumInfo) == 0 {
-		return voteQuorumInfo, quorate, errors.New("could not retrieve any quorum information")
+		return voteQuorumInfo, quorate, fmt.Errorf("could not retrieve any quorum information")
 	}
 
 	return voteQuorumInfo, quorate, nil
