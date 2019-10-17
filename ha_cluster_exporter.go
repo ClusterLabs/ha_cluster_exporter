@@ -170,7 +170,6 @@ func sleepDefaultTimeout(firstTime *bool) {
 }
 */
 var portNumber = flag.String("port", ":9002", "The port number to listen on for HTTP requests.")
-var timeoutSeconds = flag.Int("timeout", 5, "timeout seconds for exporter to wait to fetch new data")
 
 func main() {
 	// read cli option and setup initial stat
@@ -344,6 +343,5 @@ func main() {
 
 	*/
 	log.Infoln("Serving metrics on port", *portNumber)
-	log.Infoln("refreshing metric timeouts set to", *timeoutSeconds)
 	log.Fatal(http.ListenAndServe(*portNumber, nil))
 }
