@@ -15,16 +15,6 @@ type metricsGroup map[string]*prometheus.Desc
 
 var (
 /*
-	// corosync metrics
-	corosyncRingErrorsTotal = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ha_cluster_corosync_ring_errors_total",
-		Help: "Total number of ring errors in corosync",
-	})
-
-	corosyncQuorate = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ha_cluster_corosync_quorate",
-		Help: "shows if the cluster is quorate. 1 cluster is quorate, 0 not",
-	})
 	// sbd metrics
 	sbdDevStatus = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -32,12 +22,6 @@ var (
 			Help: "cluster sbd status for each SBD device. 1 is healthy device, 0 is not",
 		}, []string{"device_name"})
 
-	// corosync quorum
-	corosyncQuorum = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "ha_cluster_corosync_quorum",
-			Help: "cluster quorum information",
-		}, []string{"type"})
 
 	// drbd metrics
 	drbdDiskState = prometheus.NewGaugeVec(
@@ -256,64 +240,6 @@ func main() {
 						sbdDevStatus.WithLabelValues(sbdDev).Set(float64(0))
 					}
 				}
-			}
-		}()
-
-		// set corosync metrics: ring errors
-		go func() {
-			log.Infoln("Starting corosync ring errors collector...")
-			firstTime := true
-			for {
-
-				sleepDefaultTimeout(&firstTime)
-
-				log.Infoln("Reading ring status...")
-				ringStatus := getCorosyncRingStatus()
-				ringErrorsTotal, err := parseRingStatus(ringStatus)
-				if err != nil {
-					log.Warnln(err)
-					continue
-				}
-				corosyncRingErrorsTotal.Set(float64(ringErrorsTotal))
-			}
-		}()
-
-		// set corosync metrics: quorum metrics
-		go func() {
-			log.Infoln("Starting corosync quorum metrics collector...")
-			firstTime := true
-			for {
-				sleepDefaultTimeout(&firstTime)
-
-				log.Infoln("Reading quorum status...")
-				quoromStatus, err := getQuoromStatus()
-				if err != nil {
-					log.Warnln(err)
-					continue
-				}
-				voteQuorumInfo, quorate, err := parseQuoromStatus(quoromStatus)
-				if err != nil {
-					log.Warnln(err)
-					continue
-				}
-
-				// set metrics relative to quorum infos
-				corosyncQuorum.WithLabelValues("expected_votes").Set(float64(voteQuorumInfo["expectedVotes"]))
-				corosyncQuorum.WithLabelValues("highest_expected").Set(float64(voteQuorumInfo["highestExpected"]))
-				corosyncQuorum.WithLabelValues("total_votes").Set(float64(voteQuorumInfo["totalVotes"]))
-				corosyncQuorum.WithLabelValues("quorum").Set(float64(voteQuorumInfo["quorum"]))
-
-				// set metric if we have a quorate or not
-				// 1 means we have it
-				if quorate == "yes" {
-					corosyncQuorate.Set(float64(1))
-				}
-
-				if quorate == "no" {
-					corosyncQuorate.Set(float64(0))
-				}
-
-				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 			}
 		}()
 
