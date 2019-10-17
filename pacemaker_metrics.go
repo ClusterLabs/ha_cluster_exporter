@@ -85,11 +85,11 @@ var (
 
 func NewPacemakerCollector() (*pacemakerCollector, error) {
 	fileInfo, err := os.Stat(crmMonPath)
-	if os.IsNotExist(err) {
-		return nil, errors.Wrapf(err, "could not find '%s'", crmMonPath)
+	if err != nil || os.IsNotExist(err) {
+		return nil, errors.Wrapf(err, "'%s' not found", crmMonPath)
 	}
-	if fileInfo.Mode()&0111 != 0 {
-		return nil, errors.Wrapf(err, "'%s' is not executable", crmMonPath)
+	if (fileInfo.Mode() & 0111) == 0 {
+		return nil, errors.Errorf("'%s' is not executable", crmMonPath)
 	}
 
 	return &pacemakerCollector{metrics: pacemakerMetrics}, err

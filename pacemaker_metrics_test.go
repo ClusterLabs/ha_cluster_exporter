@@ -132,3 +132,27 @@ func TestNewPacemakerCollector(t *testing.T) {
 		t.Errorf("Unexpected error, got: %v", err)
 	}
 }
+
+func TestNewPacemakerCollectorChecksCrmMonExistence(t *testing.T) {
+	crmMonPath = "test/nonexistent"
+
+	_, err := NewPacemakerCollector()
+	if err == nil {
+		t.Error("a non nil error was expected")
+	}
+	if err.Error() != "'test/nonexistent' not found: stat test/nonexistent: no such file or directory" {
+		t.Errorf("Unexpected error: %v", err)
+	}
+}
+
+func TestNewPacemakerCollectorChecksCrmMonExecutableBits(t *testing.T) {
+	crmMonPath = "test/dummy"
+
+	_, err := NewPacemakerCollector()
+	if err == nil {
+		t.Error("a non nil error was expected")
+	}
+	if err.Error() != "'test/dummy' is not executable" {
+		t.Errorf("Unexpected error: %v", err)
+	}
+}
