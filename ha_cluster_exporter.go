@@ -143,12 +143,12 @@ func main() {
 		prometheus.MustRegister(pacemakerCollector)
 	}
 
-	//corosyncCollector, err := NewCorosyncCollector()
-	//if err != nil {
-	//	log.Warnln(err)
-	//} else {
-	//	prometheus.MustRegister(corosyncCollector)
-	//}
+	corosyncCollector, err := NewCorosyncCollector()
+	if err != nil {
+		log.Warnln(err)
+	} else {
+		prometheus.MustRegister(corosyncCollector)
+	}
 
 	http.Handle("/metrics", promhttp.Handler())
 
