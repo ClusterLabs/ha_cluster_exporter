@@ -3,10 +3,6 @@ package main
 import (
 	"flag"
 	"net/http"
-	"os"
-	"os/exec"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -14,6 +10,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 )
+
+const NAMESPACE = "ha_cluster"
 
 var (
 	// corosync metrics
@@ -82,16 +80,17 @@ var (
 )
 
 func init() {
-	prometheus.MustRegister(clusterNodes)
-	prometheus.MustRegister(nodeResources)
-	prometheus.MustRegister(clusterResourcesConf)
-	prometheus.MustRegister(clusterNodesConf)
-	prometheus.MustRegister(corosyncRingErrorsTotal)
-	prometheus.MustRegister(corosyncQuorum)
-	prometheus.MustRegister(corosyncQuorate)
-	prometheus.MustRegister(sbdDevStatus)
-	prometheus.MustRegister(drbdDiskState)
-	prometheus.MustRegister(remoteDrbdDiskState)
+	/*	prometheus.MustRegister(clusterNodes)
+		prometheus.MustRegister(nodeResources)
+		prometheus.MustRegister(clusterResourcesConf)
+		prometheus.MustRegister(clusterNodesConf)
+		prometheus.MustRegister(corosyncRingErrorsTotal)
+		prometheus.MustRegister(corosyncQuorum)
+		prometheus.MustRegister(corosyncQuorate)
+		prometheus.MustRegister(sbdDevStatus)
+		prometheus.MustRegister(drbdDiskState)
+		prometheus.MustRegister(remoteDrbdDiskState)*/
+	prometheus.MustRegister(NewPacemakerCollector())
 }
 
 // this function is for some cluster metrics which have resource as labels.
@@ -175,273 +174,274 @@ func main() {
 
 	// for each different metrics, handle it in differents gorutines, and use same timeout.
 
-	// set DRBD metrics
-	go func() {
-		if _, err := os.Stat("/sbin/drbdsetup"); os.IsNotExist(err) {
-			log.Warnln("drbdsetup binary not available, DRBD metrics won't be collected")
-			return
-		}
-
-		log.Infoln("Starting DRBD metrics collector...")
-		firstTime := true
-		for {
-			sleepDefaultTimeout(&firstTime)
-			log.Infoln("Reading DRBD status...")
-
-			// retrieve drbdInfos calling its binary
-			drbdStatusJSONRaw, err := getDrbdInfo()
-			if err != nil {
-				log.Warnf("Error by retrieving drbd infos %s", err)
-				continue
-			}
-			// populate structs and parse relevant info we will expose via metrics
-			drbdDev, err := parseDrbdStatus(drbdStatusJSONRaw)
-			if err != nil {
-				log.Warnf("Error by parsing drbd json: %s", err)
-				continue
+	/*
+		// set DRBD metrics
+		go func() {
+			if _, err := os.Stat("/sbin/drbdsetup"); os.IsNotExist(err) {
+				log.Warnln("drbdsetup binary not available, DRBD metrics won't be collected")
+				return
 			}
 
-			// reset metrics before setting news to remove any state information
-			err = resetDrbdMetrics()
-			if err != nil {
-				log.Warnf("Error by resetting drbd metrics %s", err)
-				continue
-			}
+			log.Infoln("Starting DRBD metrics collector...")
+			firstTime := true
+			for {
+				sleepDefaultTimeout(&firstTime)
+				log.Infoln("Reading DRBD status...")
 
-			// 1) ha_cluster_drbd_resource{resource_name="1-single-0", role="primary", volume="0",  disk_state="uptodate"} 1
-			// the metric is always set to 1 or is absent
-			for _, resource := range drbdDev {
-				for _, device := range resource.Devices {
-					drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume), strings.ToLower(resource.Devices[device.Volume].DiskState)).Set(float64(1))
-				}
-				// 2) ha_cluster_drbd_resource_remote_connection{resource_name="1-single-0", peer_node_id="1", role="primary", volume="0",  disk_state="uptodate"} 1
-				// a resource could not have any connection
-				if len(resource.Connections) == 0 {
-					log.Warnln("could not retrieve any remote disk state connection info")
+				// retrieve drbdInfos calling its binary
+				drbdStatusJSONRaw, err := getDrbdInfo()
+				if err != nil {
+					log.Warnf("Error by retrieving drbd infos %s", err)
 					continue
 				}
-				// a Resource can have multiple connection with different nodes
-				for _, conn := range resource.Connections {
-					// []string{"resource_name", "peer_node_id", "peer_role", "volume", "peer_disk_state"})
-					// pro resource go through the volume of peer and its peer state
-					if len(conn.PeerDevices) == 0 {
-						log.Warnln("could not retrieve any peer Devices metric")
+				// populate structs and parse relevant info we will expose via metrics
+				drbdDev, err := parseDrbdStatus(drbdStatusJSONRaw)
+				if err != nil {
+					log.Warnf("Error by parsing drbd json: %s", err)
+					continue
+				}
+
+				// reset metrics before setting news to remove any state information
+				err = resetDrbdMetrics()
+				if err != nil {
+					log.Warnf("Error by resetting drbd metrics %s", err)
+					continue
+				}
+
+				// 1) ha_cluster_drbd_resource{resource_name="1-single-0", role="primary", volume="0",  disk_state="uptodate"} 1
+				// the metric is always set to 1 or is absent
+				for _, resource := range drbdDev {
+					for _, device := range resource.Devices {
+						drbdDiskState.WithLabelValues(resource.Name, resource.Role, strconv.Itoa(device.Volume), strings.ToLower(resource.Devices[device.Volume].DiskState)).Set(float64(1))
+					}
+					// 2) ha_cluster_drbd_resource_remote_connection{resource_name="1-single-0", peer_node_id="1", role="primary", volume="0",  disk_state="uptodate"} 1
+					// a resource could not have any connection
+					if len(resource.Connections) == 0 {
+						log.Warnln("could not retrieve any remote disk state connection info")
 						continue
 					}
-					for _, peerDev := range conn.PeerDevices {
-						remoteDrbdDiskState.WithLabelValues(resource.Name, strconv.Itoa(conn.PeerNodeID), conn.PeerRole, strconv.Itoa(peerDev.Volume), strings.ToLower(peerDev.PeerDiskState)).Set(float64(1))
+					// a Resource can have multiple connection with different nodes
+					for _, conn := range resource.Connections {
+						// []string{"resource_name", "peer_node_id", "peer_role", "volume", "peer_disk_state"})
+						// pro resource go through the volume of peer and its peer state
+						if len(conn.PeerDevices) == 0 {
+							log.Warnln("could not retrieve any peer Devices metric")
+							continue
+						}
+						for _, peerDev := range conn.PeerDevices {
+							remoteDrbdDiskState.WithLabelValues(resource.Name, strconv.Itoa(conn.PeerNodeID), conn.PeerRole, strconv.Itoa(peerDev.Volume), strings.ToLower(peerDev.PeerDiskState)).Set(float64(1))
+						}
 					}
 				}
 			}
-		}
-	}()
+		}()
 
-	// set SBD device metrics
-	go func() {
-		firstTime := true
-		if _, err := os.Stat("/etc/sysconfig/sbd"); os.IsNotExist(err) {
-			log.Warnln("SBD configuration not available, SBD metrics won't be collected")
-			return
-		}
-
-		log.Infoln("Starting SBD metrics collector...")
-
-		for {
-			sleepDefaultTimeout(&firstTime)
-			// read configuration of SBD
-			sbdConfiguration, err := readSdbFile()
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
-			// retrieve a list of sbd devices
-			sbdDevices, err := getSbdDevices(sbdConfiguration)
-			// mostly, the sbd_device were not set in conf file for returning an error
-			if err != nil {
-				log.Warnln(err)
-				continue
+		// set SBD device metrics
+		go func() {
+			firstTime := true
+			if _, err := os.Stat("/etc/sysconfig/sbd"); os.IsNotExist(err) {
+				log.Warnln("SBD configuration not available, SBD metrics won't be collected")
+				return
 			}
 
-			// set and return a map of sbd devices with true if healthy, false if not
-			sbdStatus, err := getSbdDeviceHealth(sbdDevices)
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
-			for sbdDev, sbdStatusBool := range sbdStatus {
-				// true it means the sbd device is healthy
-				if sbdStatusBool == true {
-					sbdDevStatus.WithLabelValues(sbdDev).Set(float64(1))
-				} else {
-					sbdDevStatus.WithLabelValues(sbdDev).Set(float64(0))
+			log.Infoln("Starting SBD metrics collector...")
+
+			for {
+				sleepDefaultTimeout(&firstTime)
+				// read configuration of SBD
+				sbdConfiguration, err := readSdbFile()
+				if err != nil {
+					log.Warnln(err)
+					continue
 				}
-			}
-		}
-	}()
-
-	// set corosync metrics: ring errors
-	go func() {
-		log.Infoln("Starting corosync ring errors collector...")
-		firstTime := true
-		for {
-
-			sleepDefaultTimeout(&firstTime)
-
-			log.Infoln("Reading ring status...")
-			ringStatus := getCorosyncRingStatus()
-			ringErrorsTotal, err := parseRingStatus(ringStatus)
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
-			corosyncRingErrorsTotal.Set(float64(ringErrorsTotal))
-		}
-	}()
-
-	// set corosync metrics: quorum metrics
-	go func() {
-		log.Infoln("Starting corosync quorum metrics collector...")
-		firstTime := true
-		for {
-			sleepDefaultTimeout(&firstTime)
-
-			log.Infoln("Reading quorum status...")
-			quoromStatus, err := getQuoromClusterInfo()
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
-			voteQuorumInfo, quorate, err := parseQuoromStatus(quoromStatus)
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
-
-			// set metrics relative to quorum infos
-			corosyncQuorum.WithLabelValues("expected_votes").Set(float64(voteQuorumInfo["expectedVotes"]))
-			corosyncQuorum.WithLabelValues("highest_expected").Set(float64(voteQuorumInfo["highestExpected"]))
-			corosyncQuorum.WithLabelValues("total_votes").Set(float64(voteQuorumInfo["totalVotes"]))
-			corosyncQuorum.WithLabelValues("quorum").Set(float64(voteQuorumInfo["quorum"]))
-
-			// set metric if we have a quorate or not
-			// 1 means we have it
-			if quorate == "yes" {
-				corosyncQuorate.Set(float64(1))
-			}
-
-			if quorate == "no" {
-				corosyncQuorate.Set(float64(0))
-			}
-
-			time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
-		}
-	}()
-
-	// set cluster pacemaker metrics
-	go func() {
-		log.Infoln("Starting pacemaker metrics collector...")
-		firstTime := true
-		for {
-			sleepDefaultTimeout(&firstTime)
-
-			// remove all global state contained by metrics
-			err := resetClusterMetrics()
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
-
-			// get cluster status xml
-			log.Infoln("Reading cluster configuration with crm_mon..")
-			pacemakerXMLRaw, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
-
-			// parse raw XML returned from crm_mon and populate structs for metrics
-			status, err := parsePacemakerStatus(pacemakerXMLRaw)
-			if err != nil {
-				log.Warnln(err)
-				continue
-			}
-
-			clusterResourcesConf.Set(float64(status.Summary.Resources.Number))
-			clusterNodesConf.Set(float64(status.Summary.Nodes.Number))
-
-			// set node metrics
-			// cluster_nodes{node="dma-dog-hana01" type="master"} 1
-			for _, node := range status.Nodes.Node {
-				if node.Online {
-					clusterNodes.WithLabelValues(node.Name, "online").Set(float64(1))
+				// retrieve a list of sbd devices
+				sbdDevices, err := getSbdDevices(sbdConfiguration)
+				// mostly, the sbd_device were not set in conf file for returning an error
+				if err != nil {
+					log.Warnln(err)
+					continue
 				}
-				if node.Standby {
-					clusterNodes.WithLabelValues(node.Name, "standby").Set(float64(1))
-				}
-				if node.StandbyOnFail {
-					clusterNodes.WithLabelValues(node.Name, "standby_onfail").Set(float64(1))
-				}
-				if node.Maintenance {
-					clusterNodes.WithLabelValues(node.Name, "maintenance").Set(float64(1))
-				}
-				if node.Pending {
-					clusterNodes.WithLabelValues(node.Name, "pending").Set(float64(1))
-				}
-				if node.Unclean {
-					clusterNodes.WithLabelValues(node.Name, "unclean").Set(float64(1))
-				}
-				if node.Shutdown {
-					clusterNodes.WithLabelValues(node.Name, "shutdown").Set(float64(1))
-				}
-				if node.ExpectedUp {
-					clusterNodes.WithLabelValues(node.Name, "expected_up").Set(float64(1))
-				}
-				if node.DC {
-					clusterNodes.WithLabelValues(node.Name, "dc").Set(float64(1))
-				}
-				if node.Type == "member" {
-					clusterNodes.WithLabelValues(node.Name, "member").Set(float64(1))
-				} else if node.Type == "ping" {
-					clusterNodes.WithLabelValues(node.Name, "ping").Set(float64(1))
-				} else if node.Type == "remote" {
-					clusterNodes.WithLabelValues(node.Name, "remote").Set(float64(1))
-				} else {
-					clusterNodes.WithLabelValues(node.Name, "unknown").Set(float64(1))
-				}
-			}
 
-			// parse node status
-			// this produce a metric like:
-			//	cluster_node_resources{managed="false",node="dma-dog-hana01",resource_name="rsc_saphanatopology_prd_hdb00",role="started",status="active"} 1
-			//  cluster_node_resources{managed="true",node="dma-dog-hana01",resource_name="rsc_ip_prd_hdb00",role="started",status="active"} 1
-			for _, nod := range status.Nodes.Node {
-				for _, rsc := range nod.Resources {
-					if rsc.Active {
-						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
-							"active").Inc()
+				// set and return a map of sbd devices with true if healthy, false if not
+				sbdStatus, err := getSbdDeviceHealth(sbdDevices)
+				if err != nil {
+					log.Warnln(err)
+					continue
+				}
+				for sbdDev, sbdStatusBool := range sbdStatus {
+					// true it means the sbd device is healthy
+					if sbdStatusBool == true {
+						sbdDevStatus.WithLabelValues(sbdDev).Set(float64(1))
+					} else {
+						sbdDevStatus.WithLabelValues(sbdDev).Set(float64(0))
 					}
-					if rsc.Orphaned {
-						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
-							"orphaned").Inc()
+				}
+			}
+		}()
+
+		// set corosync metrics: ring errors
+		go func() {
+			log.Infoln("Starting corosync ring errors collector...")
+			firstTime := true
+			for {
+
+				sleepDefaultTimeout(&firstTime)
+
+				log.Infoln("Reading ring status...")
+				ringStatus := getCorosyncRingStatus()
+				ringErrorsTotal, err := parseRingStatus(ringStatus)
+				if err != nil {
+					log.Warnln(err)
+					continue
+				}
+				corosyncRingErrorsTotal.Set(float64(ringErrorsTotal))
+			}
+		}()
+
+		// set corosync metrics: quorum metrics
+		go func() {
+			log.Infoln("Starting corosync quorum metrics collector...")
+			firstTime := true
+			for {
+				sleepDefaultTimeout(&firstTime)
+
+				log.Infoln("Reading quorum status...")
+				quoromStatus, err := getQuoromClusterInfo()
+				if err != nil {
+					log.Warnln(err)
+					continue
+				}
+				voteQuorumInfo, quorate, err := parseQuoromStatus(quoromStatus)
+				if err != nil {
+					log.Warnln(err)
+					continue
+				}
+
+				// set metrics relative to quorum infos
+				corosyncQuorum.WithLabelValues("expected_votes").Set(float64(voteQuorumInfo["expectedVotes"]))
+				corosyncQuorum.WithLabelValues("highest_expected").Set(float64(voteQuorumInfo["highestExpected"]))
+				corosyncQuorum.WithLabelValues("total_votes").Set(float64(voteQuorumInfo["totalVotes"]))
+				corosyncQuorum.WithLabelValues("quorum").Set(float64(voteQuorumInfo["quorum"]))
+
+				// set metric if we have a quorate or not
+				// 1 means we have it
+				if quorate == "yes" {
+					corosyncQuorate.Set(float64(1))
+				}
+
+				if quorate == "no" {
+					corosyncQuorate.Set(float64(0))
+				}
+
+				time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
+			}
+		}()
+
+		// set cluster pacemaker metrics
+		go func() {
+			log.Infoln("Starting pacemaker metrics collector...")
+			firstTime := true
+			for {
+				sleepDefaultTimeout(&firstTime)
+
+				// remove all global state contained by metrics
+				err := resetClusterMetrics()
+				if err != nil {
+					log.Warnln(err)
+					continue
+				}
+
+				// get cluster status xml
+				log.Infoln("Reading cluster configuration with crm_mon..")
+				pacemakerXMLRaw, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
+				if err != nil {
+					log.Warnln(err)
+					continue
+				}
+
+				// parse raw XML returned from crm_mon and populate structs for metrics
+				status, err := parsePacemakerStatus(pacemakerXMLRaw)
+				if err != nil {
+					log.Warnln(err)
+					continue
+				}
+
+				clusterResourcesConf.Set(float64(status.Summary.Resources.Number))
+				clusterNodesConf.Set(float64(status.Summary.Nodes.Number))
+
+				// set node metrics
+				// cluster_nodes{node="dma-dog-hana01" type="master"} 1
+				for _, node := range status.Nodes.Node {
+					if node.Online {
+						clusterNodes.WithLabelValues(node.Name, "online").Set(float64(1))
 					}
-					if rsc.Blocked {
-						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
-							"blocked").Inc()
+					if node.Standby {
+						clusterNodes.WithLabelValues(node.Name, "standby").Set(float64(1))
 					}
-					if rsc.Failed {
-						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
-							"failed").Inc()
+					if node.StandbyOnFail {
+						clusterNodes.WithLabelValues(node.Name, "standby_onfail").Set(float64(1))
 					}
-					if rsc.FailureIgnored {
-						nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
-							"failed_ignored").Inc()
+					if node.Maintenance {
+						clusterNodes.WithLabelValues(node.Name, "maintenance").Set(float64(1))
+					}
+					if node.Pending {
+						clusterNodes.WithLabelValues(node.Name, "pending").Set(float64(1))
+					}
+					if node.Unclean {
+						clusterNodes.WithLabelValues(node.Name, "unclean").Set(float64(1))
+					}
+					if node.Shutdown {
+						clusterNodes.WithLabelValues(node.Name, "shutdown").Set(float64(1))
+					}
+					if node.ExpectedUp {
+						clusterNodes.WithLabelValues(node.Name, "expected_up").Set(float64(1))
+					}
+					if node.DC {
+						clusterNodes.WithLabelValues(node.Name, "dc").Set(float64(1))
+					}
+					if node.Type == "member" {
+						clusterNodes.WithLabelValues(node.Name, "member").Set(float64(1))
+					} else if node.Type == "ping" {
+						clusterNodes.WithLabelValues(node.Name, "ping").Set(float64(1))
+					} else if node.Type == "remote" {
+						clusterNodes.WithLabelValues(node.Name, "remote").Set(float64(1))
+					} else {
+						clusterNodes.WithLabelValues(node.Name, "unknown").Set(float64(1))
 					}
 				}
 
-			}
-		}
-	}()
+				// parse node status
+				// this produce a metric like:
+				//	cluster_node_resources{managed="false",node="dma-dog-hana01",resource_name="rsc_saphanatopology_prd_hdb00",role="started",status="active"} 1
+				//  cluster_node_resources{managed="true",node="dma-dog-hana01",resource_name="rsc_ip_prd_hdb00",role="started",status="active"} 1
+				for _, nod := range status.Nodes.Node {
+					for _, rsc := range nod.Resources {
+						if rsc.Active {
+							nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
+								"active").Inc()
+						}
+						if rsc.Orphaned {
+							nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
+								"orphaned").Inc()
+						}
+						if rsc.Blocked {
+							nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
+								"blocked").Inc()
+						}
+						if rsc.Failed {
+							nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
+								"failed").Inc()
+						}
+						if rsc.FailureIgnored {
+							nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
+								"failed_ignored").Inc()
+						}
+					}
 
+				}
+			}
+		}()
+	*/
 	log.Infoln("Serving metrics on port", *portNumber)
 	log.Infoln("refreshing metric timeouts set to", *timeoutSeconds)
 	log.Fatal(http.ListenAndServe(*portNumber, nil))
