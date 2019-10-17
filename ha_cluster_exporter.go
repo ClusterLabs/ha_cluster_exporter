@@ -82,17 +82,19 @@ var (
 )
 
 func init() {
-	/*	prometheus.MustRegister(clusterNodes)
-		prometheus.MustRegister(nodeResources)
-		prometheus.MustRegister(clusterResourcesConf)
-		prometheus.MustRegister(clusterNodesConf)
+	/*
 		prometheus.MustRegister(corosyncRingErrorsTotal)
 		prometheus.MustRegister(corosyncQuorum)
 		prometheus.MustRegister(corosyncQuorate)
 		prometheus.MustRegister(sbdDevStatus)
 		prometheus.MustRegister(drbdDiskState)
 		prometheus.MustRegister(remoteDrbdDiskState)*/
-	prometheus.MustRegister(NewPacemakerCollector())
+	pacemakerCollector, err := NewPacemakerCollector("/usr/sbin/crm_mon")
+	if err != nil {
+		log.Warnln(err)
+	} else {
+		prometheus.MustRegister(pacemakerCollector)
+	}
 }
 
 /*
@@ -340,110 +342,6 @@ func main() {
 			}
 		}()
 
-		// set cluster pacemaker metrics
-		go func() {
-			log.Infoln("Starting pacemaker metrics collector...")
-			firstTime := true
-			for {
-				sleepDefaultTimeout(&firstTime)
-
-				// remove all global state contained by metrics
-				err := resetClusterMetrics()
-				if err != nil {
-					log.Warnln(err)
-					continue
-				}
-
-				// get cluster status xml
-				log.Infoln("Reading cluster configuration with crm_mon..")
-				pacemakerXMLRaw, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
-				if err != nil {
-					log.Warnln(err)
-					continue
-				}
-
-				// parse raw XML returned from crm_mon and populate structs for metrics
-				status, err := parsePacemakerStatus(pacemakerXMLRaw)
-				if err != nil {
-					log.Warnln(err)
-					continue
-				}
-
-				clusterResourcesConf.Set(float64(status.Summary.Resources.Number))
-				clusterNodesConf.Set(float64(status.Summary.Nodes.Number))
-
-				// set node metrics
-				// cluster_nodes{node="dma-dog-hana01" type="master"} 1
-				for _, node := range status.Nodes.Node {
-					if node.Online {
-						clusterNodes.WithLabelValues(node.Name, "online").Set(float64(1))
-					}
-					if node.Standby {
-						clusterNodes.WithLabelValues(node.Name, "standby").Set(float64(1))
-					}
-					if node.StandbyOnFail {
-						clusterNodes.WithLabelValues(node.Name, "standby_onfail").Set(float64(1))
-					}
-					if node.Maintenance {
-						clusterNodes.WithLabelValues(node.Name, "maintenance").Set(float64(1))
-					}
-					if node.Pending {
-						clusterNodes.WithLabelValues(node.Name, "pending").Set(float64(1))
-					}
-					if node.Unclean {
-						clusterNodes.WithLabelValues(node.Name, "unclean").Set(float64(1))
-					}
-					if node.Shutdown {
-						clusterNodes.WithLabelValues(node.Name, "shutdown").Set(float64(1))
-					}
-					if node.ExpectedUp {
-						clusterNodes.WithLabelValues(node.Name, "expected_up").Set(float64(1))
-					}
-					if node.DC {
-						clusterNodes.WithLabelValues(node.Name, "dc").Set(float64(1))
-					}
-					if node.Type == "member" {
-						clusterNodes.WithLabelValues(node.Name, "member").Set(float64(1))
-					} else if node.Type == "ping" {
-						clusterNodes.WithLabelValues(node.Name, "ping").Set(float64(1))
-					} else if node.Type == "remote" {
-						clusterNodes.WithLabelValues(node.Name, "remote").Set(float64(1))
-					} else {
-						clusterNodes.WithLabelValues(node.Name, "unknown").Set(float64(1))
-					}
-				}
-
-				// parse node status
-				// this produce a metric like:
-				//	cluster_node_resources{managed="false",node="dma-dog-hana01",resource_name="rsc_saphanatopology_prd_hdb00",role="started",status="active"} 1
-				//  cluster_node_resources{managed="true",node="dma-dog-hana01",resource_name="rsc_ip_prd_hdb00",role="started",status="active"} 1
-				for _, nod := range status.Nodes.Node {
-					for _, rsc := range nod.Resources {
-						if rsc.Active {
-							nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
-								"active").Inc()
-						}
-						if rsc.Orphaned {
-							nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
-								"orphaned").Inc()
-						}
-						if rsc.Blocked {
-							nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
-								"blocked").Inc()
-						}
-						if rsc.Failed {
-							nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
-								"failed").Inc()
-						}
-						if rsc.FailureIgnored {
-							nodeResources.WithLabelValues(strings.ToLower(nod.Name), strings.ToLower(rsc.ID), strings.ToLower(rsc.Role), strconv.FormatBool(rsc.Managed),
-								"failed_ignored").Inc()
-						}
-					}
-
-				}
-			}
-		}()
 	*/
 	log.Infoln("Serving metrics on port", *portNumber)
 	log.Infoln("refreshing metric timeouts set to", *timeoutSeconds)
