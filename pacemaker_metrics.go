@@ -73,9 +73,9 @@ type resource struct {
 var pacemakerMetrics = metricsGroup{
 	// the map key will function as an identifier of the metric throughout the rest of the code;
 	// it is arbitrary, but by convention we use the actual metric name
-	"nodes":           newPacemakerMetric("nodes", "Describes each cluster node", []string{"name", "type", "status"}),
+	"nodes":           newPacemakerMetric("nodes", "Describes each cluster node, with multiple lines per status", []string{"name", "type", "status"}),
 	"nodes_total":     newPacemakerMetric("nodes_total", "Total number of nodes in the cluster", nil),
-	"resources":       newPacemakerMetric("resources", "Describes each cluster resource", []string{"node", "id", "role", "managed", "status"}),
+	"resources":       newPacemakerMetric("resources", "Describes each cluster resource, with multiple lines per status", []string{"node", "id", "role", "managed", "status"}),
 	"resources_total": newPacemakerMetric("resources_total", "Total number of resources in the cluster", nil),
 }
 
