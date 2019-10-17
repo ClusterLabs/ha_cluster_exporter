@@ -73,14 +73,10 @@ type resource struct {
 var pacemakerMetrics = metricsGroup{
 	// the map key will function as an identifier of the metric throughout the rest of the code;
 	// it is arbitrary, but by convention we use the actual metric name
-	"nodes":           newPacemakerMetric("nodes", "Describes each cluster node, with multiple lines per status", []string{"name", "type", "status"}),
-	"nodes_total":     newPacemakerMetric("nodes_total", "Total number of nodes in the cluster", nil),
-	"resources":       newPacemakerMetric("resources", "Describes each cluster resource, with multiple lines per status", []string{"node", "id", "role", "managed", "status"}),
-	"resources_total": newPacemakerMetric("resources_total", "Total number of resources in the cluster", nil),
-}
-
-func newPacemakerMetric(name, help string, variableLabels []string) *prometheus.Desc {
-	return prometheus.NewDesc(prometheus.BuildFQName(NAMESPACE, "pacemaker", name), help, variableLabels, nil)
+	"nodes":           newMetricDesc("pacemaker", "nodes", "Describes each cluster node, with multiple lines per status", []string{"name", "type", "status"}),
+	"nodes_total":     newMetricDesc("pacemaker", "nodes_total", "Total number of nodes in the cluster", nil),
+	"resources":       newMetricDesc("pacemaker", "resources", "Describes each cluster resource, with multiple lines per status", []string{"node", "id", "role", "managed", "status"}),
+	"resources_total": newMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
 }
 
 func NewPacemakerCollector(crmMonPath string) (*pacemakerCollector, error) {
@@ -120,8 +116,7 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 	ch <- c.makeMetric("nodes_total", prometheus.GaugeValue, float64(pacemakerStatus.Summary.Nodes.Number))
 	ch <- c.makeMetric("resources_total", prometheus.GaugeValue, float64(pacemakerStatus.Summary.Resources.Number))
 
-	c.recordNodesMetrics(pacemakerStatus, ch)
-	c.recordResourcesMetrics(pacemakerStatus, ch)
+	c.recordNodeMetrics(pacemakerStatus, ch)
 }
 
 func (c *pacemakerCollector) makeMetric(metricKey string, valueType prometheus.ValueType, value float64, labelValues ...string) prometheus.Metric {
@@ -157,7 +152,7 @@ func parsePacemakerStatus(pacemakerXMLRaw []byte) (pacemakerStatus, error) {
 	return pacemakerStatus, nil
 }
 
-func (c *pacemakerCollector) recordNodesMetrics(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {
+func (c *pacemakerCollector) recordNodeMetrics(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {
 	for _, node := range pacemakerStatus.Nodes.Node {
 		nodeStatuses := map[string]bool{
 			"online":         node.Online,
@@ -185,31 +180,31 @@ func (c *pacemakerCollector) recordNodesMetrics(pacemakerStatus pacemakerStatus,
 				ch <- c.makeMetric("nodes", prometheus.GaugeValue, float64(1), node.Name, nodeType, nodeStatus)
 			}
 		}
+
+		c.recordResourcesMetrics(node, ch)
 	}
 }
 
-func (c *pacemakerCollector) recordResourcesMetrics(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {
-	for _, node := range pacemakerStatus.Nodes.Node {
-		for _, resource := range node.Resources {
-			resourceStatuses := map[string]bool{
-				"active":          resource.Active,
-				"orphaned":        resource.Orphaned,
-				"blocked":         resource.Blocked,
-				"failed":          resource.Failed,
-				"failure_ignored": resource.FailureIgnored,
-			}
-			for resourceStatus, isActive := range resourceStatuses {
-				if isActive {
-					ch <- c.makeMetric(
-						"resources",
-						prometheus.GaugeValue,
-						float64(1),
-						node.Name,
-						strings.ToLower(resource.ID),
-						strings.ToLower(resource.Role),
-						strconv.FormatBool(resource.Managed),
-						resourceStatus)
-				}
+func (c *pacemakerCollector) recordResourcesMetrics(node node, ch chan<- prometheus.Metric) {
+	for _, resource := range node.Resources {
+		resourceStatuses := map[string]bool{
+			"active":          resource.Active,
+			"orphaned":        resource.Orphaned,
+			"blocked":         resource.Blocked,
+			"failed":          resource.Failed,
+			"failure_ignored": resource.FailureIgnored,
+		}
+		for resourceStatus, isActive := range resourceStatuses {
+			if isActive {
+				ch <- c.makeMetric(
+					"resources",
+					prometheus.GaugeValue,
+					float64(1),
+					node.Name,
+					strings.ToLower(resource.ID),
+					strings.ToLower(resource.Role),
+					strconv.FormatBool(resource.Managed),
+					resourceStatus)
 			}
 		}
 	}
