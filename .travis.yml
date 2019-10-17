@@ -9,5 +9,9 @@ git:
   depth: 1
   go_import_path: github.com/Clusterlab/ha_cluster_exporter
 
-script:
-  - make 
+jobs:
+  include:
+    - stage: Go fmt
+    - script: ./go_lint.sh
+    - stage: Build
+    - script: make
