@@ -3,9 +3,7 @@ package main
 import (
 	"flag"
 	"net/http"
-	"time"
 
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
@@ -13,7 +11,10 @@ import (
 
 const NAMESPACE = "ha_cluster"
 
+type metricsGroup map[string]*prometheus.Desc
+
 var (
+/*
 	// corosync metrics
 	corosyncRingErrorsTotal = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "ha_cluster_corosync_ring_errors_total",
@@ -77,6 +78,7 @@ var (
 			Name: "ha_cluster_drbd_resources_remote_connection",
 			Help: "show per remote connection resource name, its role, peer-id , the volume and disk_state (Diskless,Attaching, Failed, Negotiating, Inconsistent, Outdated, DUnknown, Consistent, UpToDate)",
 		}, []string{"resource_name", "peer_node_id", "peer_role", "volume", "peer_disk_state"})
+*/
 )
 
 func init() {
@@ -93,6 +95,7 @@ func init() {
 	prometheus.MustRegister(NewPacemakerCollector())
 }
 
+/*
 // this function is for some cluster metrics which have resource as labels.
 // since we cannot be sure a resource exists always, we need to destroy the metrics at each iteration
 // otherwise we will have wrong metrics ( thinking a resource exist when not)
@@ -163,7 +166,7 @@ func sleepDefaultTimeout(firstTime *bool) {
 	}
 	time.Sleep(time.Duration(int64(*timeoutSeconds)) * time.Second)
 }
-
+*/
 var portNumber = flag.String("port", ":9002", "The port number to listen on for HTTP requests.")
 var timeoutSeconds = flag.Int("timeout", 5, "timeout seconds for exporter to wait to fetch new data")
 

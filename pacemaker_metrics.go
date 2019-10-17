@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/xml"
 	"os/exec"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -65,6 +66,16 @@ type resource struct {
 	NodesRunningOn int    `xml:"nodes_running_on,attr"`
 }
 
+type pacemakerCollector struct {
+	metrics metricsGroup
+	mutex sync.RWMutex
+}
+
+var pacemakerMetrics = metricsGroup {
+	"nodes_total": prometheus.NewDesc(prometheus.BuildFQName(NAMESPACE, "nodes", "total"), "Total number of nodes in the cluster", nil, nil),
+	"nodes":       prometheus.NewDesc(prometheus.BuildFQName(NAMESPACE, "", "nodes"), "Describes each cluster node", []string{"name", "type", "status"}, nil),
+}
+
 func parsePacemakerStatus(pacemakerXMLRaw []byte) (pacemakerStatus, error) {
 	var pacemakerStat pacemakerStatus
 	err := xml.Unmarshal(pacemakerXMLRaw, &pacemakerStat)
@@ -74,26 +85,12 @@ func parsePacemakerStatus(pacemakerXMLRaw []byte) (pacemakerStatus, error) {
 	return pacemakerStat, nil
 }
 
-type metricsGroup map[string]*prometheus.Desc
-
-type pacemakerCollector struct {
-	metrics metricsGroup
-}
-
 func NewPacemakerCollector() *pacemakerCollector {
-	return &pacemakerCollector{
-		metrics: metricsGroup{
-			"nodes_total": prometheus.NewDesc(prometheus.BuildFQName(NAMESPACE, "nodes", "total"), "Total number of nodes in the cluster", nil, nil),
-		},
-	}
+	return &pacemakerCollector{metrics: pacemakerMetrics}
 }
 
-func (c *pacemakerCollector) makeMetric(metricKey string, valueType prometheus.ValueType, value float64) (prometheus.Metric, error) {
-	metric, err := prometheus.NewConstMetric(c.metrics[metricKey], valueType, value)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not build a new metric")
-	}
-	return prometheus.NewMetricWithTimestamp(time.Now(), metric), nil
+func (c *pacemakerCollector) makeMetric(metricKey string, valueType prometheus.ValueType, value float64, labelValues ...string) prometheus.Metric {
+	return prometheus.NewMetricWithTimestamp(time.Now(), prometheus.MustNewConstMetric(c.metrics[metricKey], valueType, value, labelValues...))
 }
 
 func (c *pacemakerCollector) Describe(ch chan<- *prometheus.Desc) {
@@ -103,6 +100,9 @@ func (c *pacemakerCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
 	// get cluster status xml
 	log.Infoln("Reading cluster status with crm_mon...")
 	pacemakerXMLRaw, err := exec.Command("/usr/sbin/crm_mon", "-1", "--as-xml", "--group-by-node", "--inactive").Output()
@@ -118,11 +118,38 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 
-	nodesTotal, err := prometheus.NewConstMetric(c.metrics["nodes_total"], prometheus.GaugeValue, float64(data.Summary.Nodes.Number))
-	nodesTotal = prometheus.NewMetricWithTimestamp(time.Now(), nodesTotal)
-	if err != nil {
-		log.Warnln(err)
-		return
+	ch <- c.makeMetric("nodes_total", prometheus.GaugeValue, float64(data.Summary.Nodes.Number))
+
+	c.recordClusterNodes(data, ch)
+}
+
+func (c *pacemakerCollector) recordClusterNodes(data pacemakerStatus, ch chan<- prometheus.Metric) {
+	for _, node := range data.Nodes.Node {
+		nodeStatuses := map[string]bool{
+			"online":         node.Online,
+			"standby":        node.Standby,
+			"standby_onfail": node.StandbyOnFail,
+			"maintenance":    node.Maintenance,
+			"pending":        node.Pending,
+			"unclean":        node.Unclean,
+			"shutdown":       node.Shutdown,
+			"expected_up":    node.ExpectedUp,
+			"dc":             node.DC,
+		}
+
+		var nodeType string
+		switch node.Type {
+		case "member", "ping", "remote":
+			nodeType = node.Type
+			break
+		default:
+			nodeType = "unknown"
+		}
+
+		for nodeStatus, isActive := range nodeStatuses {
+			if isActive {
+				ch <- c.makeMetric("nodes", prometheus.GaugeValue, float64(1), node.Name, nodeType, nodeStatus)
+			}
+		}
 	}
-	ch <- nodesTotal
 }
