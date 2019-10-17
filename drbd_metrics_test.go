@@ -123,6 +123,14 @@ func TestDrbdParsing(t *testing.T) {
 		t.Errorf("disk-states doesn't correspond! fail got %s", drbdDevs[0].Devices[0].DiskState)
 	}
 
+	if 1 != drbdDevs[0].Connections[0].PeerNodeID {
+		t.Errorf("peerNodeID doesn't correspond! fail got %d", drbdDevs[0].Connections[0].PeerNodeID)
+	}
+
+	if "UpToDate" != drbdDevs[0].Connections[0].PeerDevices[0].PeerDiskState {
+		t.Errorf("peerDiskState doesn't correspond! fail got %s", drbdDevs[0].Connections[0].PeerDevices[0].PeerDiskState)
+	}
+
 	if 0 != drbdDevs[0].Devices[0].Volume {
 		t.Errorf("volumes should be 0")
 	}
