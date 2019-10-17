@@ -71,6 +71,8 @@ type resource struct {
 // ***
 
 var pacemakerMetrics = metricsGroup{
+	// the map key will function as an identifier of the metric throughout the rest of the code;
+	// it is arbitrary, but by convention we use the actual metric name
 	"nodes":           newPacemakerMetric("nodes", "Describes each cluster node", []string{"name", "type", "status"}),
 	"nodes_total":     newPacemakerMetric("nodes_total", "Total number of nodes in the cluster", nil),
 	"resources":       newPacemakerMetric("resources", "Describes each cluster resource", []string{"node", "id", "role", "managed", "status"}),
@@ -107,7 +109,7 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
-	log.Debugln("Collecting pacemaker metrics...")
+	log.Infoln("Collecting pacemaker metrics...")
 
 	pacemakerStatus, err := fetchPacemakerStatus(c.crmMonPath)
 	if err != nil {
@@ -116,17 +118,23 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	ch <- c.makeMetric("nodes_total", prometheus.GaugeValue, float64(pacemakerStatus.Summary.Nodes.Number))
-	ch <- c.makeMetric("resource_total", prometheus.GaugeValue, float64(pacemakerStatus.Summary.Resources.Number))
+	ch <- c.makeMetric("resources_total", prometheus.GaugeValue, float64(pacemakerStatus.Summary.Resources.Number))
 
 	c.recordNodesMetrics(pacemakerStatus, ch)
 	c.recordResourcesMetrics(pacemakerStatus, ch)
 }
 
 func (c *pacemakerCollector) makeMetric(metricKey string, valueType prometheus.ValueType, value float64, labelValues ...string) prometheus.Metric {
-	return prometheus.NewMetricWithTimestamp(time.Now(), prometheus.MustNewConstMetric(c.metrics[metricKey], valueType, value, labelValues...))
+	desc, ok := c.metrics[metricKey]
+	if !ok {
+		// we hard panic on this because it's most certainly a coding error
+		panic(errors.Errorf("undeclared metric '%s'", metricKey))
+	}
+	return prometheus.NewMetricWithTimestamp(time.Now(), prometheus.MustNewConstMetric(desc, valueType, value, labelValues...))
 }
 
-func fetchPacemakerStatus(crmMonPath string) (pacemakerStatus pacemakerStatus, err error) {
+func fetchPacemakerStatus(crmMonPath string) (pacemakerStatus, error) {
+	var pacemakerStatus pacemakerStatus
 	pacemakerStatusXML, err := exec.Command(crmMonPath, "-X", "--group-by-node", "--inactive").Output()
 	if err != nil {
 		return pacemakerStatus, errors.Wrap(err, "error while executing crm_mon")
@@ -141,12 +149,12 @@ func fetchPacemakerStatus(crmMonPath string) (pacemakerStatus pacemakerStatus, e
 }
 
 func parsePacemakerStatus(pacemakerXMLRaw []byte) (pacemakerStatus, error) {
-	var pacemakerStat pacemakerStatus
-	err := xml.Unmarshal(pacemakerXMLRaw, &pacemakerStat)
+	var pacemakerStatus pacemakerStatus
+	err := xml.Unmarshal(pacemakerXMLRaw, &pacemakerStatus)
 	if err != nil {
-		return pacemakerStat, errors.Wrap(err, "could not parse Pacemaker status from XML")
+		return pacemakerStatus, errors.Wrap(err, "could not parse Pacemaker status from XML")
 	}
-	return pacemakerStat, nil
+	return pacemakerStatus, nil
 }
 
 func (c *pacemakerCollector) recordNodesMetrics(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {
