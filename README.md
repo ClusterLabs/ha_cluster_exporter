@@ -9,8 +9,9 @@ It should run inside a node of the cluster or both.
 ## Table of Contents:
 1. [Usage](#Usage)
 2. [Features](#Features)
-3. [Devel](#Devel)
-4. [Design](#Design)
+4. [Metrics Specification](#Metrics-specifications)
+5. [Devel](#Devel)
+6. [Design](#Design)
 
 ## Usage:
 
@@ -33,6 +34,13 @@ For a terraform deployment you can also read: https://github.com/SUSE/ha-sap-ter
 - show corosync metrics (ring errors, quorum metrics)
 
 - show SBD disk health metrics
+
+- show DRBD metrics (local and remote disks resource metrics)
+
+
+## Metrics Specification
+
+We mantain a complete list of the [metric specification](doc/metric_spec.md), usage and possible values.
 
 ## Devel:
 
