@@ -123,3 +123,12 @@ func TestParsePacemakerXML(t *testing.T) {
 	}
 
 }
+
+func TestNewPacemakerCollector(t *testing.T) {
+	crmMonPath = "test/fake_crm_mon.sh"
+
+	_, err := NewPacemakerCollector()
+	if err != nil {
+		t.Errorf("Unexpected error, got: %v", err)
+	}
+}

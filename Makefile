@@ -20,4 +20,4 @@ coverage:
 	go test -cover -coverprofile=coverage.out
 	go tool cover -html=coverage.out
 
-.PHONY: build install vet-check
+.PHONY: build install vet-check test

@@ -70,29 +70,34 @@ type resource struct {
 
 // ***
 
-var pacemakerMetrics = metricsGroup{
-	// the map key will function as an identifier of the metric throughout the rest of the code;
-	// it is arbitrary, but by convention we use the actual metric name
-	"nodes":           newMetricDesc("pacemaker", "nodes", "Describes each cluster node, with multiple lines per status", []string{"name", "type", "status"}),
-	"nodes_total":     newMetricDesc("pacemaker", "nodes_total", "Total number of nodes in the cluster", nil),
-	"resources":       newMetricDesc("pacemaker", "resources", "Describes each cluster resource, with multiple lines per status", []string{"node", "id", "role", "managed", "status"}),
-	"resources_total": newMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
-}
-
-func NewPacemakerCollector(crmMonPath string) (*pacemakerCollector, error) {
-	if _, err := os.Stat(crmMonPath); os.IsNotExist(err) {
-		return nil, errors.Wrapf(err, "could not find crm_mon at '%s'", crmMonPath)
+var (
+	pacemakerMetrics = metricsGroup{
+		// the map key will function as an identifier of the metric throughout the rest of the code;
+		// it is arbitrary, but by convention we use the actual metric name
+		"nodes":           newMetricDesc("pacemaker", "nodes", "Describes each cluster node, with multiple lines per status", []string{"name", "type", "status"}),
+		"nodes_total":     newMetricDesc("pacemaker", "nodes_total", "Total number of nodes in the cluster", nil),
+		"resources":       newMetricDesc("pacemaker", "resources", "Describes each cluster resource, with multiple lines per status", []string{"node", "id", "role", "managed", "status"}),
+		"resources_total": newMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
 	}
-	return &pacemakerCollector{
-		metrics:    pacemakerMetrics,
-		crmMonPath: crmMonPath,
-	}, nil
+
+	crmMonPath = "/usr/sbin/crm_mon"
+)
+
+func NewPacemakerCollector() (*pacemakerCollector, error) {
+	fileInfo, err := os.Stat(crmMonPath)
+	if os.IsNotExist(err) {
+		return nil, errors.Wrapf(err, "could not find '%s'", crmMonPath)
+	}
+	if fileInfo.Mode()&0111 != 0 {
+		return nil, errors.Wrapf(err, "'%s' is not executable", crmMonPath)
+	}
+
+	return &pacemakerCollector{metrics: pacemakerMetrics}, err
 }
 
 type pacemakerCollector struct {
-	metrics    metricsGroup
-	mutex      sync.RWMutex
-	crmMonPath string
+	metrics metricsGroup
+	mutex   sync.RWMutex
 }
 
 func (c *pacemakerCollector) Describe(ch chan<- *prometheus.Desc) {
@@ -107,7 +112,7 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 
 	log.Infoln("Collecting pacemaker metrics...")
 
-	pacemakerStatus, err := fetchPacemakerStatus(c.crmMonPath)
+	pacemakerStatus, err := getPacemakerStatus()
 	if err != nil {
 		log.Warnln(err)
 		return
@@ -128,7 +133,7 @@ func (c *pacemakerCollector) makeMetric(metricKey string, valueType prometheus.V
 	return prometheus.NewMetricWithTimestamp(time.Now(), prometheus.MustNewConstMetric(desc, valueType, value, labelValues...))
 }
 
-func fetchPacemakerStatus(crmMonPath string) (pacemakerStatus, error) {
+func getPacemakerStatus() (pacemakerStatus, error) {
 	var pacemakerStatus pacemakerStatus
 	pacemakerStatusXML, err := exec.Command(crmMonPath, "-X", "--group-by-node", "--inactive").Output()
 	if err != nil {
