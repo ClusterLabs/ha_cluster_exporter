@@ -34,6 +34,10 @@ For a terraform deployment you can also read: https://github.com/SUSE/ha-sap-ter
 
 - show SBD disk health metrics
 
+- show DRBD metrics (local and remote disks resource metrics)
+
+We mantain a complete list of the [metric specification](doc/metric_spec.md), usage and possible values.
+
 ## Devel:
 
 Build the binary with `make` and run it inside a node of the ha cluster, it will show the metrics on port `9002` by default.
