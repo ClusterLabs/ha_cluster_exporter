@@ -25,20 +25,6 @@ var (
 		Name: "ha_cluster_corosync_quorate",
 		Help: "shows if the cluster is quorate. 1 cluster is quorate, 0 not",
 	})
-
-	// cluster metrics
-	clusterNodesConf = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ha_cluster_nodes_configured_total",
-		Help: "Number of nodes configured in ha cluster",
-	})
-
-	clusterResourcesConf = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ha_cluster_resources_configured_total",
-		Help: "Number of total configured resources in ha cluster",
-	})
-
-	// metrics with labels
-
 	// sbd metrics
 	sbdDevStatus = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -52,19 +38,6 @@ var (
 			Name: "ha_cluster_corosync_quorum",
 			Help: "cluster quorum information",
 		}, []string{"type"})
-
-	// cluster metrics
-	clusterNodes = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "ha_cluster_nodes",
-			Help: "cluster nodes metrics for all of them",
-		}, []string{"node_name", "type"})
-
-	nodeResources = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "ha_cluster_node_resources",
-			Help: "metric inherent per node resources",
-		}, []string{"node_name", "resource_name", "role", "managed", "status"})
 
 	// drbd metrics
 	drbdDiskState = prometheus.NewGaugeVec(
@@ -80,6 +53,10 @@ var (
 		}, []string{"resource_name", "peer_node_id", "peer_role", "volume", "peer_disk_state"})
 */
 )
+
+func newMetricDesc(subsystem, name, help string, variableLabels []string) *prometheus.Desc {
+	return prometheus.NewDesc(prometheus.BuildFQName(NAMESPACE, subsystem, name), help, variableLabels, nil)
+}
 
 func init() {
 	/*
