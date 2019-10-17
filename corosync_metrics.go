@@ -36,8 +36,8 @@ func NewCorosyncCollector() (*corosyncCollector, error) {
 		if os.IsNotExist(err) {
 			return nil, errors.Wrapf(err, "could not find '%s'", toolPath)
 		}
-		if fileInfo.Mode()&0111 != 0 {
-			return nil, errors.Wrapf(err, "'%s' is not executable", toolPath)
+		if (fileInfo.Mode() & 0111) == 0 {
+			return nil, errors.Errorf("'%s' is not executable", crmMonPath)
 		}
 	}
 
