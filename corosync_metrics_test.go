@@ -32,7 +32,6 @@ func TestQuoromMetricParsing(t *testing.T) {
 	1084780052          1 dma-dog-hana02
 	dma-dog-hana01:~ # 
 	`
-	getQuoromClusterInfo()
 	voteQuorumInfo, quorate, _ := parseQuoromStatus([]byte(quoromStatus))
 
 	if voteQuorumInfo["expectedVotes"] != 232 {
@@ -50,10 +49,9 @@ func TestQuoromMetricParsing(t *testing.T) {
 		t.Errorf("expectedVotes should be 421 got instead: %d", voteQuorumInfo["quorum"])
 	}
 
-	if quorate != "yes" {
-		t.Errorf("quorate should be set to Yes, got %s", quorate)
+	if quorate != 1 {
+		t.Errorf("quorate should be 1, got %v", quorate)
 	}
-
 }
 
 // TEST group RING metrics
@@ -125,9 +123,7 @@ func TestMultipleRingErrors(t *testing.T) {
 			id      = 172.16.0.1
 			status  = ring 1 active with no faults
 																											   
-			`
-
-	getCorosyncRingStatus()
+	`
 	ringErrorsTotal, err := parseRingStatus([]byte(ringStatusWithOneError))
 	if err != nil {
 		t.Error(err)

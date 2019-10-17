@@ -58,22 +58,6 @@ func newMetricDesc(subsystem, name, help string, variableLabels []string) *prome
 	return prometheus.NewDesc(prometheus.BuildFQName(NAMESPACE, subsystem, name), help, variableLabels, nil)
 }
 
-func init() {
-	/*
-		prometheus.MustRegister(corosyncRingErrorsTotal)
-		prometheus.MustRegister(corosyncQuorum)
-		prometheus.MustRegister(corosyncQuorate)
-		prometheus.MustRegister(sbdDevStatus)
-		prometheus.MustRegister(drbdDiskState)
-		prometheus.MustRegister(remoteDrbdDiskState)*/
-	pacemakerCollector, err := NewPacemakerCollector("/usr/sbin/crm_mon")
-	if err != nil {
-		log.Warnln(err)
-	} else {
-		prometheus.MustRegister(pacemakerCollector)
-	}
-}
-
 /*
 // this function is for some cluster metrics which have resource as labels.
 // since we cannot be sure a resource exists always, we need to destroy the metrics at each iteration
@@ -151,6 +135,21 @@ var portNumber = flag.String("port", ":9002", "The port number to listen on for 
 func main() {
 	// read cli option and setup initial stat
 	flag.Parse()
+
+	pacemakerCollector, err := NewPacemakerCollector()
+	if err != nil {
+		log.Warnln(err)
+	} else {
+		prometheus.MustRegister(pacemakerCollector)
+	}
+
+	//corosyncCollector, err := NewCorosyncCollector()
+	//if err != nil {
+	//	log.Warnln(err)
+	//} else {
+	//	prometheus.MustRegister(corosyncCollector)
+	//}
+
 	http.Handle("/metrics", promhttp.Handler())
 
 	// for each different metrics, handle it in differents gorutines, and use same timeout.
@@ -287,7 +286,7 @@ func main() {
 				sleepDefaultTimeout(&firstTime)
 
 				log.Infoln("Reading quorum status...")
-				quoromStatus, err := getQuoromClusterInfo()
+				quoromStatus, err := getQuoromStatus()
 				if err != nil {
 					log.Warnln(err)
 					continue
