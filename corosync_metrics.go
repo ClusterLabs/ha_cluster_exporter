@@ -35,7 +35,7 @@ func NewCorosyncCollector() (*corosyncCollector, error) {
 			return nil, errors.Wrapf(err, "'%s' not found", toolPath)
 		}
 		if (fileInfo.Mode() & 0111) == 0 {
-			return nil, errors.Errorf("'%s' is not executable", crmMonPath)
+			return nil, errors.Errorf("'%s' is not executable", toolPath)
 		}
 	}
 
@@ -135,10 +135,10 @@ func parseQuoromStatus(quoromStatusRaw []byte) (quorumStatus map[string]int, isQ
 	quorum, _ := strconv.Atoi(numberOnly.FindString(strings.SplitAfterN(quoromRaw, "Quorum:", 2)[1]))
 
 	quorumVotes := map[string]int{
-		"expectedVotes":   expVotes,
-		"highestExpected": highVotes,
-		"totalVotes":      totalVotes,
-		"quorum":          quorum,
+		"expected_votes":   expVotes,
+		"highest_expected": highVotes,
+		"total_votes":      totalVotes,
+		"quorum":           quorum,
 	}
 
 	if len(quorumVotes) == 0 {

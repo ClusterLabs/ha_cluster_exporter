@@ -229,7 +229,7 @@ func TestNewSbdCollectorChecksSbdConfigExistence(t *testing.T) {
 
 	_, err := NewSbdCollector()
 	if err == nil {
-		t.Error("a non nil error was expected")
+		t.Fatal("a non nil error was expected")
 	}
 	if err.Error() != "'test/nonexistent' not found: stat test/nonexistent: no such file or directory" {
 		t.Errorf("Unexpected error: %v", err)
@@ -242,7 +242,7 @@ func TestNewSbdCollectorChecksSbdExistence(t *testing.T) {
 
 	_, err := NewSbdCollector()
 	if err == nil {
-		t.Error("a non nil error was expected")
+		t.Fatal("a non nil error was expected")
 	}
 	if err.Error() != "'test/nonexistent' not found: stat test/nonexistent: no such file or directory" {
 		t.Errorf("Unexpected error: %v", err)
