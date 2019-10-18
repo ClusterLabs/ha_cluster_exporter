@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -52,7 +53,7 @@ func NewMetricDesc(subsystem, name, help string, variableLabels []string) *prome
 
 var (
 	clock      Clock = &SystemClock{}
-	portNumber       = flag.String("port", ":9002", "The port number to listen on for HTTP requests.")
+	portNumber       = flag.String("port", "9002", "The port number to listen on for HTTP requests.")
 )
 
 func main() {
@@ -61,33 +62,33 @@ func main() {
 
 	pacemakerCollector, err := NewPacemakerCollector()
 	if err != nil {
-		log.Warnln(err)
+		log.Warnf("Could not register Pacemaker collector: %v\n", err)
 	} else {
 		prometheus.MustRegister(pacemakerCollector)
 	}
 
 	corosyncCollector, err := NewCorosyncCollector()
 	if err != nil {
-		log.Warnln(err)
+		log.Warnf("Could not register Corosync collector: %v\n", err)
 	} else {
 		prometheus.MustRegister(corosyncCollector)
 	}
 
 	sbdCollector, err := NewSbdCollector()
 	if err != nil {
-		log.Warnln(err)
+		log.Warnf("Could not register SBD collector: %v\n", err)
 	} else {
 		prometheus.MustRegister(sbdCollector)
 	}
 
 	drbdCollector, err := NewDrbdCollector()
 	if err != nil {
-		log.Warnln(err)
+		log.Warnf("Could not register DRBD collector: %v\n", err)
 	} else {
 		prometheus.MustRegister(drbdCollector)
 	}
 
 	http.Handle("/metrics", promhttp.Handler())
 	log.Infoln("Serving metrics on port", *portNumber)
-	log.Fatal(http.ListenAndServe(*portNumber, nil))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", *portNumber), nil))
 }
