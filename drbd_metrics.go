@@ -34,16 +34,8 @@ var (
 	drbdMetrics = metricDescriptors{
 		// the map key will function as an identifier of the metric throughout the rest of the code;
 		// it is arbitrary, but by convention we use the actual metric name
-		"resources": NewMetricDesc(
-			"drbd",
-			"resources",
-			"Describes each DRBD resource; 1 line per resource_name",
-			[]string{"resource_name", "role", "volume", "disk_state"}),
-		"resources_remote_connections": NewMetricDesc(
-			"drbd",
-			"resources_remote_connections",
-			"Describes each DRBD resource connection; 1 line per peer device",
-			[]string{"resource_name", "peer_node_id", "peer_role", "volume", "peer_disk_state"}),
+		"resources":                    NewMetricDesc("drbd", "resources", "Describes each DRBD resource; 1 line per resource_name", []string{"resource_name", "role", "volume", "disk_state"}),
+		"resources_remote_connections": NewMetricDesc("drbd", "resources_remote_connections", "Describes each DRBD resource connection; 1 line per peer device", []string{"resource_name", "peer_node_id", "peer_role", "volume", "peer_disk_state"}),
 	}
 	drbdsetupPath = "/usr/sbin/drbdsetup"
 )
