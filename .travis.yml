@@ -12,6 +12,6 @@ git:
 jobs:
   include:
     - stage: Go fmt
-    - script: ./go_lint.sh
+    - script: ./.ci/go_lint.sh
     - stage: Build
     - script: make
