@@ -62,13 +62,13 @@ func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	quorumStatusRaw := getQuoromStatus()
-	quorumStatus, isQuorate, err := parseQuoromStatus(quorumStatusRaw)
+	quorumStatus, quorate, err := parseQuoromStatus(quorumStatusRaw)
 	if err != nil {
 		log.Warnln(err)
 		return
 	}
 
-	ch <- c.makeGaugeMetric("quorate", isQuorate)
+	ch <- c.makeGaugeMetric("quorate", quorate)
 
 	for voteType, value := range quorumStatus {
 		ch <- c.makeGaugeMetric("quorum_votes", float64(value), voteType)
@@ -94,7 +94,7 @@ func getQuoromStatus() []byte {
 	return quorumInfoRaw
 }
 
-func parseQuoromStatus(quoromStatusRaw []byte) (quorumStatus map[string]int, isQuorate float64, err error) {
+func parseQuoromStatus(quoromStatusRaw []byte) (quorumStatus map[string]int, quorate float64, err error) {
 	quoromRaw := string(quoromStatusRaw)
 	// Quorate:          Yes
 
@@ -113,20 +113,20 @@ func parseQuoromStatus(quoromStatusRaw []byte) (quorumStatus map[string]int, isQ
 	wordOnly := regexp.MustCompile("[a-zA-Z]+")
 	quoratePresent := regexp.MustCompile("Quorate:")
 
-	// In case of error, the binary is there but execution was erroring out, check output for isQuorate string.
+	// In case of error, the binary is there but execution was erroring out, check output for quorate string.
 	quorateWordPresent := quoratePresent.FindString(string(quoromRaw))
 
 	// check the case there is an sbd_config but the SBD_DEVICE is not set
 
 	if quorateWordPresent == "" {
-		return nil, isQuorate, fmt.Errorf("the quorum status output is not in parsable format as expected")
+		return nil, quorate, fmt.Errorf("the quorum status output is not in parsable format as expected")
 	}
 
 	quorateRaw := wordOnly.FindString(strings.SplitAfterN(quoromRaw, "Quorate:", 2)[1])
 	quorateString := strings.ToLower(quorateRaw)
 
 	if quorateString == "yes" {
-		isQuorate = 1
+		quorate = 1
 	}
 
 	expVotes, _ := strconv.Atoi(numberOnly.FindString(strings.SplitAfterN(quoromRaw, "Expected votes:", 2)[1]))
@@ -142,10 +142,10 @@ func parseQuoromStatus(quoromStatusRaw []byte) (quorumStatus map[string]int, isQ
 	}
 
 	if len(quorumVotes) == 0 {
-		return quorumVotes, isQuorate, fmt.Errorf("could not retrieve any quorum information")
+		return quorumVotes, quorate, fmt.Errorf("could not retrieve any quorum information")
 	}
 
-	return quorumVotes, isQuorate, nil
+	return quorumVotes, quorate, nil
 }
 
 // get status ring and return it as bytes
