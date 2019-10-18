@@ -3,7 +3,10 @@ package main
 import (
 	"flag"
 	"net/http"
+	"sync"
+	"time"
 
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
@@ -11,18 +14,46 @@ import (
 
 const NAMESPACE = "ha_cluster"
 
-type metricsGroup map[string]*prometheus.Desc
+type Clock interface {
+	Now() time.Time
+}
+
+type SystemClock struct{}
+
+func (SystemClock) Now() time.Time {
+	return time.Now()
+}
+
+type metricDescriptors map[string]*prometheus.Desc
+
+type DefaultCollector struct {
+	metrics metricDescriptors
+	mutex   sync.RWMutex
+}
+
+func (c *DefaultCollector) Describe(ch chan<- *prometheus.Desc) {
+	for _, metric := range c.metrics {
+		ch <- metric
+	}
+}
+
+func (c *DefaultCollector) makeMetric(metricKey string, valueType prometheus.ValueType, value float64, labelValues ...string) prometheus.Metric {
+	desc, ok := c.metrics[metricKey]
+	if !ok {
+		// we hard panic on this because it's most certainly a coding error
+		panic(errors.Errorf("undeclared metric '%s'", metricKey))
+	}
+	return prometheus.NewMetricWithTimestamp(clock.Now(), prometheus.MustNewConstMetric(desc, valueType, value, labelValues...))
+}
+
+func NewMetricDesc(subsystem, name, help string, variableLabels []string) *prometheus.Desc {
+	return prometheus.NewDesc(prometheus.BuildFQName(NAMESPACE, subsystem, name), help, variableLabels, nil)
+}
 
 var (
+	clock Clock = &SystemClock{}
+
 /*
-	// sbd metrics
-	sbdDevStatus = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "ha_cluster_sbd_device_status",
-			Help: "cluster sbd status for each SBD device. 1 is healthy device, 0 is not",
-		}, []string{"device_name"})
-
-
 	// drbd metrics
 	drbdDiskState = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -38,43 +69,7 @@ var (
 */
 )
 
-func newMetricDesc(subsystem, name, help string, variableLabels []string) *prometheus.Desc {
-	return prometheus.NewDesc(prometheus.BuildFQName(NAMESPACE, subsystem, name), help, variableLabels, nil)
-}
-
 /*
-// this function is for some cluster metrics which have resource as labels.
-// since we cannot be sure a resource exists always, we need to destroy the metrics at each iteration
-// otherwise we will have wrong metrics ( thinking a resource exist when not)
-func resetClusterMetrics() error {
-	// We want to reset certains metrics to 0 each time for removing the state.
-	// since we have complex/nested metrics with multiples labels, unregistering/re-registering is the cleanest way.
-	prometheus.Unregister(nodeResources)
-	// overwrite metric with an empty one
-	nodeResources = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "ha_cluster_node_resources",
-			Help: "metric inherent per node resources",
-		}, []string{"node_name", "resource_name", "role", "managed", "status"})
-	err := prometheus.Register(nodeResources)
-	if err != nil {
-		return errors.Wrap(err, "failed to register NodeResource metric. Perhaps another exporter is already running?")
-	}
-
-	prometheus.Unregister(clusterNodes)
-	// overwrite metric with an empty one
-	clusterNodes = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "ha_cluster_nodes",
-			Help: "cluster nodes metrics for all of them",
-		}, []string{"node_name", "type"})
-
-	err = prometheus.Register(clusterNodes)
-	if err != nil {
-		return errors.Wrap(err, "failed to register clusterNode metric. Perhaps another exporter is already running?")
-	}
-	return nil
-}
 
 func resetDrbdMetrics() error {
 	// for Drbd we need to reset remove metrics state because some disk could be removed during cluster lifecycle
@@ -132,6 +127,13 @@ func main() {
 		log.Warnln(err)
 	} else {
 		prometheus.MustRegister(corosyncCollector)
+	}
+
+	sbdCollector, err := NewSbdCollector()
+	if err != nil {
+		log.Warnln(err)
+	} else {
+		prometheus.MustRegister(sbdCollector)
 	}
 
 	http.Handle("/metrics", promhttp.Handler())
@@ -195,49 +197,6 @@ func main() {
 						for _, peerDev := range conn.PeerDevices {
 							remoteDrbdDiskState.WithLabelValues(resource.Name, strconv.Itoa(conn.PeerNodeID), conn.PeerRole, strconv.Itoa(peerDev.Volume), strings.ToLower(peerDev.PeerDiskState)).Set(float64(1))
 						}
-					}
-				}
-			}
-		}()
-
-		// set SBD device metrics
-		go func() {
-			firstTime := true
-			if _, err := os.Stat("/etc/sysconfig/sbd"); os.IsNotExist(err) {
-				log.Warnln("SBD configuration not available, SBD metrics won't be collected")
-				return
-			}
-
-			log.Infoln("Starting SBD metrics collector...")
-
-			for {
-				sleepDefaultTimeout(&firstTime)
-				// read configuration of SBD
-				sbdConfiguration, err := readSdbFile()
-				if err != nil {
-					log.Warnln(err)
-					continue
-				}
-				// retrieve a list of sbd devices
-				sbdDevices, err := getSbdDevices(sbdConfiguration)
-				// mostly, the sbd_device were not set in conf file for returning an error
-				if err != nil {
-					log.Warnln(err)
-					continue
-				}
-
-				// set and return a map of sbd devices with true if healthy, false if not
-				sbdStatus, err := getSbdDeviceHealth(sbdDevices)
-				if err != nil {
-					log.Warnln(err)
-					continue
-				}
-				for sbdDev, sbdStatusBool := range sbdStatus {
-					// true it means the sbd device is healthy
-					if sbdStatusBool == true {
-						sbdDevStatus.WithLabelValues(sbdDev).Set(float64(1))
-					} else {
-						sbdDevStatus.WithLabelValues(sbdDev).Set(float64(0))
 					}
 				}
 			}

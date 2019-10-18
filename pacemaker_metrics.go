@@ -6,7 +6,6 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -71,13 +70,13 @@ type resource struct {
 // ***
 
 var (
-	pacemakerMetrics = metricsGroup{
+	pacemakerMetrics = metricDescriptors{
 		// the map key will function as an identifier of the metric throughout the rest of the code;
 		// it is arbitrary, but by convention we use the actual metric name
-		"nodes":           newMetricDesc("pacemaker", "nodes", "Describes each cluster node, with multiple lines per status", []string{"name", "type", "status"}),
-		"nodes_total":     newMetricDesc("pacemaker", "nodes_total", "Total number of nodes in the cluster", nil),
-		"resources":       newMetricDesc("pacemaker", "resources", "Describes each cluster resource, with multiple lines per status", []string{"node", "id", "role", "managed", "status"}),
-		"resources_total": newMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
+		"nodes":           NewMetricDesc("pacemaker", "nodes", "Describes each cluster node, with multiple lines per status", []string{"name", "type", "status"}),
+		"nodes_total":     NewMetricDesc("pacemaker", "nodes_total", "Total number of nodes in the cluster", nil),
+		"resources":       NewMetricDesc("pacemaker", "resources", "Describes each cluster resource, with multiple lines per status", []string{"node", "id", "role", "managed", "status"}),
+		"resources_total": NewMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
 	}
 
 	crmMonPath = "/usr/sbin/crm_mon"
@@ -92,18 +91,15 @@ func NewPacemakerCollector() (*pacemakerCollector, error) {
 		return nil, errors.Errorf("'%s' is not executable", crmMonPath)
 	}
 
-	return &pacemakerCollector{metrics: pacemakerMetrics}, err
+	return &pacemakerCollector{
+		DefaultCollector{
+			metrics: pacemakerMetrics,
+		},
+	}, nil
 }
 
 type pacemakerCollector struct {
-	metrics metricsGroup
-	mutex   sync.RWMutex
-}
-
-func (c *pacemakerCollector) Describe(ch chan<- *prometheus.Desc) {
-	for _, metric := range c.metrics {
-		ch <- metric
-	}
+	DefaultCollector
 }
 
 func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
