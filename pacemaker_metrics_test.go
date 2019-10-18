@@ -156,3 +156,12 @@ func TestNewPacemakerCollectorChecksCrmMonExecutableBits(t *testing.T) {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
+
+func TestPacemakerCollector(t *testing.T) {
+	clock = StoppedClock{}
+	crmMonPath = "test/fake_crm_mon.sh"
+
+	collector, _ := NewPacemakerCollector()
+	expectMetrics(t, collector, "pacemaker.metrics")
+}
+

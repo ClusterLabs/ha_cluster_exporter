@@ -253,9 +253,9 @@ func TestNewSbdCollectorChecksSbdExecutableBits(t *testing.T) {
 	sbdConfigPath = "test/fake_sbdconfig"
 	sbdPath = "test/dummy"
 
-	_, err := NewPacemakerCollector()
+	_, err := NewSbdCollector()
 	if err == nil {
-		t.Error("a non nil error was expected")
+		t.Fatalf("a non nil error was expected")
 	}
 	if err.Error() != "'test/dummy' is not executable" {
 		t.Errorf("Unexpected error: %v", err)

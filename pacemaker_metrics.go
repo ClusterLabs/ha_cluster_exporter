@@ -6,7 +6,6 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -118,15 +117,6 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 	ch <- c.makeMetric("resources_total", prometheus.GaugeValue, float64(pacemakerStatus.Summary.Resources.Number))
 
 	c.recordNodeMetrics(pacemakerStatus, ch)
-}
-
-func (c *pacemakerCollector) makeMetric(metricKey string, valueType prometheus.ValueType, value float64, labelValues ...string) prometheus.Metric {
-	desc, ok := c.metrics[metricKey]
-	if !ok {
-		// we hard panic on this because it's most certainly a coding error
-		panic(errors.Errorf("undeclared metric '%s'", metricKey))
-	}
-	return prometheus.NewMetricWithTimestamp(time.Now(), prometheus.MustNewConstMetric(desc, valueType, value, labelValues...))
 }
 
 func getPacemakerStatus() (pacemakerStatus, error) {
