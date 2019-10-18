@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -69,14 +68,10 @@ func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 
-	ch <- c.makeMetric("quorate", prometheus.GaugeValue, isQuorate)
+	ch <- c.makeGaugeMetric("quorate", isQuorate)
 
 	for voteType, value := range quorumStatus {
-		ch <- c.makeMetric(
-			"quorum_votes",
-			prometheus.GaugeValue,
-			float64(value),
-			voteType)
+		ch <- c.makeGaugeMetric("quorum_votes", float64(value), voteType)
 	}
 }
 
@@ -87,18 +82,9 @@ func (c *corosyncCollector) collectRingErrorsTotal(ch chan<- prometheus.Metric) 
 		return errors.Wrap(err, "cannot parse ring status")
 	}
 
-	ch <- c.makeMetric("ring_errors_total", prometheus.GaugeValue, float64(ringErrorsTotal))
+	ch <- c.makeGaugeMetric("ring_errors_total", float64(ringErrorsTotal))
 
 	return nil
-}
-
-func (c *corosyncCollector) makeMetric(metricKey string, valueType prometheus.ValueType, value float64, labelValues ...string) prometheus.Metric {
-	desc, ok := c.metrics[metricKey]
-	if !ok {
-		// we hard panic on this because it's most certainly a coding error
-		panic(errors.Errorf("undeclared metric '%s'", metricKey))
-	}
-	return prometheus.NewMetricWithTimestamp(time.Now(), prometheus.MustNewConstMetric(desc, valueType, value, labelValues...))
 }
 
 func getQuoromStatus() []byte {

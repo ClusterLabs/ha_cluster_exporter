@@ -164,4 +164,3 @@ func TestPacemakerCollector(t *testing.T) {
 	collector, _ := NewPacemakerCollector()
 	expectMetrics(t, collector, "pacemaker.metrics")
 }
-

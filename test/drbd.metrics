@@ -1,0 +1,8 @@
+# HELP ha_cluster_drbd_resources Describes each DRBD resource; 1 line per resource_name
+# TYPE ha_cluster_drbd_resources gauge
+ha_cluster_drbd_resources{disk_state="uptodate",resource_name="1-single-0",role="Secondary",volume="0"} 1 1
+ha_cluster_drbd_resources{disk_state="uptodate",resource_name="1-single-1",role="Secondary",volume="0"} 1 1
+# HELP ha_cluster_drbd_resources_remote_connections Describes each DRBD resource connection; 1 line per peer device
+# TYPE ha_cluster_drbd_resources_remote_connections gauge
+ha_cluster_drbd_resources_remote_connections{peer_disk_state="uptodate",peer_node_id="1",peer_role="Primary",resource_name="1-single-0",volume="0"} 1 1
+ha_cluster_drbd_resources_remote_connections{peer_disk_state="uptodate",peer_node_id="1",peer_role="Primary",resource_name="1-single-1",volume="0"} 1 1
