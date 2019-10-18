@@ -1,0 +1,12 @@
+# HELP ha_cluster_corosync_quorate Whether or not the cluster is quorate
+# TYPE ha_cluster_corosync_quorate gauge
+ha_cluster_corosync_quorate 1 1
+# HELP ha_cluster_corosync_quorum_votes Cluster quorum votes; one line per type
+# TYPE ha_cluster_corosync_quorum_votes gauge
+ha_cluster_corosync_quorum_votes{type="expected_votes"} 2 1
+ha_cluster_corosync_quorum_votes{type="highest_expected"} 2 1
+ha_cluster_corosync_quorum_votes{type="quorum"} 1 1
+ha_cluster_corosync_quorum_votes{type="total_votes"} 2 1
+# HELP ha_cluster_corosync_ring_errors_total Total number of corosync ring errors
+# TYPE ha_cluster_corosync_ring_errors_total gauge
+ha_cluster_corosync_ring_errors_total 1 1
