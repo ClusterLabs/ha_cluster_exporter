@@ -62,28 +62,28 @@ func main() {
 
 	pacemakerCollector, err := NewPacemakerCollector()
 	if err != nil {
-		log.Warnf("Could not register Pacemaker collector: %v\n", err)
+		log.Warnf("Could not initialize Pacemaker collector: %v\n", err)
 	} else {
 		prometheus.MustRegister(pacemakerCollector)
 	}
 
 	corosyncCollector, err := NewCorosyncCollector()
 	if err != nil {
-		log.Warnf("Could not register Corosync collector: %v\n", err)
+		log.Warnf("Could not initialize Corosync collector: %v\n", err)
 	} else {
 		prometheus.MustRegister(corosyncCollector)
 	}
 
 	sbdCollector, err := NewSbdCollector()
 	if err != nil {
-		log.Warnf("Could not register SBD collector: %v\n", err)
+		log.Warnf("Could not initialize SBD collector: %v\n", err)
 	} else {
 		prometheus.MustRegister(sbdCollector)
 	}
 
 	drbdCollector, err := NewDrbdCollector()
 	if err != nil {
-		log.Warnf("Could not register DRBD collector: %v\n", err)
+		log.Warnf("Could not initialize DRBD collector: %v\n", err)
 	} else {
 		prometheus.MustRegister(drbdCollector)
 	}
