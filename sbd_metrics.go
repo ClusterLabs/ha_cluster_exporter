@@ -76,7 +76,7 @@ func (c *sbdCollector) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 	for sbdDev, sbdStatus := range sbdStatuses {
-		ch <- c.makeMetric("device_status", prometheus.GaugeValue, sbdStatus, sbdDev)
+		ch <- c.makeGaugeMetric("device_status", sbdStatus, sbdDev)
 	}
 }
 

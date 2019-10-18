@@ -113,8 +113,8 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 
-	ch <- c.makeMetric("nodes_total", prometheus.GaugeValue, float64(pacemakerStatus.Summary.Nodes.Number))
-	ch <- c.makeMetric("resources_total", prometheus.GaugeValue, float64(pacemakerStatus.Summary.Resources.Number))
+	ch <- c.makeGaugeMetric("nodes_total", float64(pacemakerStatus.Summary.Nodes.Number))
+	ch <- c.makeGaugeMetric("resources_total", float64(pacemakerStatus.Summary.Resources.Number))
 
 	c.recordNodeMetrics(pacemakerStatus, ch)
 }
@@ -168,7 +168,7 @@ func (c *pacemakerCollector) recordNodeMetrics(pacemakerStatus pacemakerStatus, 
 
 		for nodeStatus, isActive := range nodeStatuses {
 			if isActive {
-				ch <- c.makeMetric("nodes", prometheus.GaugeValue, float64(1), node.Name, nodeType, nodeStatus)
+				ch <- c.makeGaugeMetric("nodes", float64(1), node.Name, nodeType, nodeStatus)
 			}
 		}
 
@@ -187,9 +187,8 @@ func (c *pacemakerCollector) recordResourcesMetrics(node node, ch chan<- prometh
 		}
 		for resourceStatus, isActive := range resourceStatuses {
 			if isActive {
-				ch <- c.makeMetric(
+				ch <- c.makeGaugeMetric(
 					"resources",
-					prometheus.GaugeValue,
 					float64(1),
 					node.Name,
 					strings.ToLower(resource.ID),
