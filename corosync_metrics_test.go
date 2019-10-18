@@ -151,7 +151,6 @@ func TestSystemUnexpectedError(t *testing.T) {
 	}
 }
 
-
 func TestNewCorosyncCollector(t *testing.T) {
 	corosyncTools["cfgtool"] = "test/fake_corosync-cfgtool.sh"
 	corosyncTools["quorumtool"] = "test/fake_corosync-quorumtool.sh"
