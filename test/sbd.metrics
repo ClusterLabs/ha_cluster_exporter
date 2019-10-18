@@ -1,0 +1,4 @@
+# HELP ha_cluster_sbd_device_status Health status for each SBD device; 1 is healthy, 0 is not
+# TYPE ha_cluster_sbd_device_status gauge
+ha_cluster_sbd_device_status{device_name="/dev/vdc"} 1 1
+ha_cluster_sbd_device_status{device_name="/dev/vdd"} 0 1

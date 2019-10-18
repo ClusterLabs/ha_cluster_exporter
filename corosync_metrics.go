@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -16,12 +15,12 @@ import (
 )
 
 var (
-	corosyncMetrics = metricsGroup{
+	corosyncMetrics = metricDescriptors{
 		// the map key will function as an identifier of the metric throughout the rest of the code;
 		// it is arbitrary, but by convention we use the actual metric name
-		"quorate":           newMetricDesc("corosync", "quorate", "Whether or not the cluster is quorate", nil),
-		"ring_errors_total": newMetricDesc("corosync", "ring_errors_total", "Total number of corosync ring errors", nil),
-		"quorum_votes":      newMetricDesc("corosync", "quorum_votes", "Cluster quorum votes; one line per type", []string{"type"}),
+		"quorate":           NewMetricDesc("corosync", "quorate", "Whether or not the cluster is quorate", nil),
+		"ring_errors_total": NewMetricDesc("corosync", "ring_errors_total", "Total number of corosync ring errors", nil),
+		"quorum_votes":      NewMetricDesc("corosync", "quorum_votes", "Cluster quorum votes; one line per type", []string{"type"}),
 	}
 
 	corosyncTools = map[string]string{
@@ -34,25 +33,22 @@ func NewCorosyncCollector() (*corosyncCollector, error) {
 	for _, toolPath := range corosyncTools {
 		fileInfo, err := os.Stat(toolPath)
 		if os.IsNotExist(err) {
-			return nil, errors.Wrapf(err, "could not find '%s'", toolPath)
+			return nil, errors.Wrapf(err, "'%s' not found", toolPath)
 		}
 		if (fileInfo.Mode() & 0111) == 0 {
 			return nil, errors.Errorf("'%s' is not executable", crmMonPath)
 		}
 	}
 
-	return &corosyncCollector{metrics: corosyncMetrics}, nil
+	return &corosyncCollector{
+		DefaultCollector{
+			metrics: corosyncMetrics,
+		},
+	}, nil
 }
 
 type corosyncCollector struct {
-	metrics metricsGroup
-	mutex   sync.RWMutex
-}
-
-func (c *corosyncCollector) Describe(ch chan<- *prometheus.Desc) {
-	for _, metric := range c.metrics {
-		ch <- metric
-	}
+	DefaultCollector
 }
 
 func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {
