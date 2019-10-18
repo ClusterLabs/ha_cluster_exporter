@@ -94,7 +94,7 @@ func getQuoromStatus() []byte {
 	return quorumInfoRaw
 }
 
-func parseQuoromStatus(quoromStatusRaw []byte) (quorumStatus map[string]int, quorate float64, err error) {
+func parseQuoromStatus(quoromStatusRaw []byte) (quorumVotes map[string]int, quorate float64, err error) {
 	quoromRaw := string(quoromStatusRaw)
 	// Quorate:          Yes
 
@@ -134,7 +134,7 @@ func parseQuoromStatus(quoromStatusRaw []byte) (quorumStatus map[string]int, quo
 	totalVotes, _ := strconv.Atoi(numberOnly.FindString(strings.SplitAfterN(quoromRaw, "Total votes:", 2)[1]))
 	quorum, _ := strconv.Atoi(numberOnly.FindString(strings.SplitAfterN(quoromRaw, "Quorum:", 2)[1]))
 
-	quorumVotes := map[string]int{
+	quorumVotes = map[string]int{
 		"expected_votes":   expVotes,
 		"highest_expected": highVotes,
 		"total_votes":      totalVotes,
