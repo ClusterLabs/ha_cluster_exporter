@@ -214,6 +214,7 @@ func TestNewCorosyncCollectorChecksQuorumtoolExecutableBits(t *testing.T) {
 }
 
 func TestCorosyncCollector(t *testing.T) {
+	clock = StoppedClock{}
 	corosyncTools["cfgtool"] = "test/fake_corosync-cfgtool.sh"
 	corosyncTools["quorumtool"] = "test/fake_corosync-quorumtool.sh"
 

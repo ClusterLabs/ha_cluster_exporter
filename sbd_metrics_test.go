@@ -263,6 +263,7 @@ func TestNewSbdCollectorChecksSbdExecutableBits(t *testing.T) {
 }
 
 func TestSBDCollector(t *testing.T) {
+	clock = StoppedClock{}
 	sbdConfigPath = "test/fake_sbdconfig"
 	sbdPath = "test/fake_sbd.sh"
 
