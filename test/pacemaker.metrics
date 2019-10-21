@@ -19,6 +19,3 @@ ha_cluster_pacemaker_resources{id="stonith-sbd",managed="true",node="hana01",rol
 # HELP ha_cluster_pacemaker_resources_total Total number of resources in the cluster
 # TYPE ha_cluster_pacemaker_resources_total gauge
 ha_cluster_pacemaker_resources_total 6 1
-# HELP ha_cluster_pacemaker_stonith_enabled Wether or not stonith is enabled for the cluster; 1 is yes, 0 is no
-# TYPE ha_cluster_pacemaker_stonith_enabled gauge
-ha_cluster_pacemaker_stonith_enabled 1 1
