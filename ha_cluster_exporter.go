@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -14,16 +13,6 @@ import (
 )
 
 const NAMESPACE = "ha_cluster"
-
-type Clock interface {
-	Now() time.Time
-}
-
-type SystemClock struct{}
-
-func (SystemClock) Now() time.Time {
-	return time.Now()
-}
 
 type metricDescriptors map[string]*prometheus.Desc
 
@@ -44,7 +33,7 @@ func (c *DefaultCollector) makeGaugeMetric(metricKey string, value float64, labe
 		// we hard panic on this because it's most certainly a coding error
 		panic(errors.Errorf("undeclared metric '%s'", metricKey))
 	}
-	return prometheus.NewMetricWithTimestamp(clock.Now(), prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, value, labelValues...))
+	return prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, value, labelValues...)
 }
 
 func NewMetricDesc(subsystem, name, help string, variableLabels []string) *prometheus.Desc {
@@ -52,8 +41,7 @@ func NewMetricDesc(subsystem, name, help string, variableLabels []string) *prome
 }
 
 var (
-	clock      Clock = &SystemClock{}
-	portNumber       = flag.String("port", "9002", "The port number to listen on for HTTP requests.")
+	portNumber = flag.String("port", "9002", "The port number to listen on for HTTP requests.")
 )
 
 func main() {

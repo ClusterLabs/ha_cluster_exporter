@@ -185,7 +185,6 @@ func TestNewDrbdCollectorChecksDrbdsetupExecutableBits(t *testing.T) {
 }
 
 func TestDRBDCollector(t *testing.T) {
-	clock = StoppedClock{}
 	drbdsetupPath = "test/fake_drbdsetup.sh"
 
 	collector, _ := NewDrbdCollector()
