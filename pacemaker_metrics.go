@@ -23,8 +23,7 @@ type summary struct {
 	Nodes struct {
 		Number int `xml:"number,attr"`
 	} `xml:"nodes_configured"`
-	Resources      resourcesConfigured `xml:"resources_configured"`
-	ClusterOptions clusterOptions      `xml:"cluster_options"`
+	Resources resourcesConfigured `xml:"resources_configured"`
 }
 
 type resourcesConfigured struct {
@@ -35,10 +34,6 @@ type resourcesConfigured struct {
 
 type nodes struct {
 	Node []node `xml:"node"`
-}
-
-type clusterOptions struct {
-	StonithEnabled bool `xml:"stonith-enabled,attr"`
 }
 
 type node struct {
@@ -81,7 +76,6 @@ var (
 		"nodes_total":     NewMetricDesc("pacemaker", "nodes_total", "Total number of nodes in the cluster", nil),
 		"resources":       NewMetricDesc("pacemaker", "resources", "Describes each cluster resource, with multiple lines per status", []string{"node", "id", "role", "managed", "status"}),
 		"resources_total": NewMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
-		"stonith_enabled": NewMetricDesc("pacemaker", "stonith_enabled", "Wether or not stonith is enabled for the cluster; 1 is yes, 0 is no", nil),
 	}
 
 	crmMonPath = "/usr/sbin/crm_mon"
@@ -119,14 +113,8 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 
-	var stonithEnabled float64
-	if pacemakerStatus.Summary.ClusterOptions.StonithEnabled {
-		stonithEnabled = 1
-	}
-
 	ch <- c.makeGaugeMetric("nodes_total", float64(pacemakerStatus.Summary.Nodes.Number))
 	ch <- c.makeGaugeMetric("resources_total", float64(pacemakerStatus.Summary.Resources.Number))
-	ch <- c.makeGaugeMetric("stonith_enabled", stonithEnabled)
 
 	c.recordNodeMetrics(pacemakerStatus, ch)
 }
