@@ -142,14 +142,14 @@ https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a3
 
 ## SBD
 
-The SBD subsystems collect devices stats by parsing its configuration and parsing the output of `sbd --dump`.
+The SBD subsystems collect devices stats by parsing its configuration the output of `sbd --dump`.
 
 
 ### `ha_cluster_sbd_device_status`
 
 #### Description
 
-Whether or not an SBD device is healthy. One line per `device`  
+Whether or not an SBD device is healthy. One line per `device`.  
 Value is either `1` or `0`.
 
 #### Labels

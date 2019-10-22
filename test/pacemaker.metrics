@@ -1,4 +1,4 @@
-# HELP ha_cluster_pacemaker_nodes Describes each cluster node, with multiple lines per status
+# HELP ha_cluster_pacemaker_nodes The nodes in the cluster; one line per name, per status
 # TYPE ha_cluster_pacemaker_nodes gauge
 ha_cluster_pacemaker_nodes{name="hana01",status="dc",type="member"} 1
 ha_cluster_pacemaker_nodes{name="hana01",status="expected_up",type="member"} 1
@@ -8,7 +8,7 @@ ha_cluster_pacemaker_nodes{name="hana02",status="online",type="member"} 1
 # HELP ha_cluster_pacemaker_nodes_total Total number of nodes in the cluster
 # TYPE ha_cluster_pacemaker_nodes_total gauge
 ha_cluster_pacemaker_nodes_total 2
-# HELP ha_cluster_pacemaker_resources Describes each cluster resource, with multiple lines per status
+# HELP ha_cluster_pacemaker_resources The resources in the cluster; one line per id, per status
 # TYPE ha_cluster_pacemaker_resources gauge
 ha_cluster_pacemaker_resources{id="rsc_ip_prd_hdb00",managed="true",node="hana01",role="started",status="active"} 1
 ha_cluster_pacemaker_resources{id="rsc_saphana_prd_hdb00",managed="true",node="hana01",role="master",status="active"} 1

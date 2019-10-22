@@ -20,7 +20,7 @@ var (
 	sbdMetrics = metricDescriptors{
 		// the map key will function as an identifier of the metric throughout the rest of the code;
 		// it is arbitrary, but by convention we use the actual metric name
-		"device_status": NewMetricDesc("sbd", "device_status", "Health status for each SBD device; 1 is healthy, 0 is not", []string{"device"}),
+		"device_status": NewMetricDesc("sbd", "device_status", "Whether or not an SBD device is healthy; one line per device", []string{"device"}),
 	}
 
 	sbdConfigPath = "/etc/sysconfig/sbd"

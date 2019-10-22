@@ -74,7 +74,7 @@ var (
 		// it is arbitrary, but by convention we use the actual metric name
 		"nodes":           NewMetricDesc("pacemaker", "nodes", "The nodes in the cluster; one line per name, per status", []string{"name", "type", "status"}),
 		"nodes_total":     NewMetricDesc("pacemaker", "nodes_total", "Total number of nodes in the cluster", nil),
-		"resources":       NewMetricDesc("pacemaker", "resources", "Describes each cluster resource; one line per id, per status", []string{"node", "id", "role", "managed", "status"}),
+		"resources":       NewMetricDesc("pacemaker", "resources", "The resources in the cluster; one line per id, per status", []string{"node", "id", "role", "managed", "status"}),
 		"resources_total": NewMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
 	}
 
