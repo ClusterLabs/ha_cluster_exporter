@@ -1,112 +1,105 @@
-# Metrics specification:
+# Metrics specification
 
-This is a specification of metrics exposed by the ha_cluster exporter.
+This document describes the metrics exposed by `ha_cluster_exporter`.
 
-All metrics from the exporter start with the prefix `ha_cluster`
+General notes:
+- All the metrics are _namespaced_ with the prefix `ha_cluster`, which is followed by a _subsystem_, and both are in turn composed into a _Fully Qualified Name_ (FQN) of each metrics.
+- All the metrics and labels _names_ are in snake_case, as conventional with Prometheus. That said, as much as we'll try to keep this consistent throughout the project, the label _values_ may not actually follow this convention, though (e.g. value is a hostname).
+- All the metrics are timestamped with the Unix epoch time in milliseconds; in the provided examples, this value will always be `1234`.
+- Some metrics, like `ha_cluster_pacemaker_nodes`, `ha_cluster_pacemaker_resources`, share common traits:
+  - their labels contain the relevant data you may want to track or use for aggregation and filtering;
+  - either their value is set to `1`, or the line is absent altogether; this is because each line represents one entity of the cluster, but the exporter itself is stateless, i.e. we don't track the life-cycle of entities that do not exist anymore in the cluster.
 
-Below you have a complete specification, ordered by component.
+
+These are the currently implemented subsystems.
 
 1. [pacemaker](#pacemaker)
 2. [drbd](#drbd)
 3. [sbd](#sbd)
-4. [corosyncl](#corosync)
-
-# Pacemaker 
-
-The Pacemaker cluster metrics are atomic metrics and represent and updated snapshot of the HA cluster, retrieved fetching the XML CIB of pacemaker.
-
-Some of the pacemaker metrics like `ha_cluster_node_resources` and `ha_cluster_nodes` metrics with labels share a common trait:
- 
-they can be either set to `1` or they are absent, this is because they track the real state of the cluster resources monitored.
-
-1. [ha_cluster_node_resources](#ha_cluster_node_resources)
-2. [ha_cluster_nodes](#ha_cluster_nodes)
-3. [ha_cluster_nodes_configured_total](#ha_cluster_nodes_configured_total)
-4. [ha_cluster_resources_configured_total](#ha_cluster_resources_configured_total)
+4. [corosync](#corosync)
 
 
+## Pacemaker 
 
-## ha_cluster_node_resources
+The Pacemaker subsystem collects an atomic snapshot of the HA cluster directly from the XML CIB of Pacemaker.
 
-This metric show the current status of a cluster resource. 
-
-A resource that previously was in the cluster but isn't anymore, will not monitored. Example:
-
-```ha_cluster_node_resources{managed="true",node_name="1b115",resource_name="cluster_md",role="started",status="active"} 1```
-
-The metric will absent and not `0`
+1. [ha_cluster_pacemaker_nodes](#ha_cluster_pacemaker__pacemaker_nodes)
+2. [ha_cluster_pacemaker_nodes_total](#ha_cluster_pacemaker__nodes_configured_total)
+3. [ha_cluster_pacemaker_resources](#ha_cluster_pacemaker_resources)
+4. [ha_cluster_pacemaker_resources_total](#ha_cluster_pacemaker__resources_configured_total)
 
 
-All the values are 1:1 with Pacemaker schema.
+### `ha_cluster_pacemaker_nodes`
 
-- `managed`: indicates `true` or `false` if the resource is managed in cluster
-- `node_name`: name of node of cluster
-- `resource_name`: resource id/name of the CIB pacemaker
-- `role`:  allowed values `Started/Stopped/Master/Slave` or pending state `Starting/Stopping/Migrating/Promoting/Demoting` which are same as pacemaker roles for resources.
-- `status` allowed values `active/orphaned/blocked/failed/failureIgnored/` status of resource from pacemaker XML.
-           Additionaly for the same resource we can have a combination of status.
+#### Description
+The nodes in the cluster; one line per `name`, per `status`.  
+Either the value is set to `1`, or the line is absent altogether.
 
-Example:
+#### Labels
 
-```
-ha_cluster_node_resources{managed="true",node_name="1b115",resource_name="cluster_md",role="started",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b115",resource_name="clvm",role="started",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b115",resource_name="dlm",role="started",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b115",resource_name="drbd_passive",role="master",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b115",resource_name="fs_cluster_md",role="started",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b115",resource_name="fs_drbd_passive",role="started",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b115",resource_name="stonith-sbd",role="started",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b115",resource_name="vg_cluster_md",role="started",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b211",resource_name="dlm",role="started",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b211",resource_name="fs_cluster_md",role="stopped",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b211",resource_name="vg_cluster_md",role="stopped",status="active"} 1
-```
+- `name`: name of the node (usually the hostname). There will be at least one line for each different value.
+- `status`: one or more of `online|standby|standby_onfail|maintanance|pending|unclean|shutdown|expected_up|dc`. There will be at least one line each different value. 
+- `type`: one of `member|ping|remote`, exclusively.
 
-## ha_cluster_nodes
+The total number of lines for this metric will be the cardinality of `name` times the cardinality of `status`.
 
-- `node_name`: name of cluster node
-- `type`: allowed values  `online/standby/standby_onfail/maintanance/pending/unclean/shutdown/expected_up/dc/member/ping/remote/`. This are the possible type of pacemaker ha cluster
+#### Example
 
-Again here, when the resource is absent will be not showed. There is no `0` value, since it is a real snapshot from the HA cluster.
-Examples:
-```
-ha_cluster_nodes{node_name="1b115",type="dc"} 1
-ha_cluster_nodes{node_name="1b115",type="expected_up"} 1
-ha_cluster_nodes{node_name="1b115",type="member"} 1
-ha_cluster_nodes{node_name="1b115",type="online"} 1
-ha_cluster_nodes{node_name="1b211",type="expected_up"} 1
-ha_cluster_nodes{node_name="1b211",type="member"} 1
-ha_cluster_nodes{node_name="1b211",type="online"} 1
-```
-
-## ha_cluster_nodes_configured_total 
-
-Show the total number of configured noded in the HA cluster
-
-Example:
-
-```
-ha_cluster_nodes_configured_total 2
-```
+https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/pacemaker.metrics#L1-L7
 
 
-## ha_cluster_resources_configured_total 
+### `ha_cluster_pacemaker_nodes_total` 
 
-Show the total number of resource configured in HA cluster
-Example:
-```
-ha_cluster_resources_configured_total 14
-```
+#### Description
+
+The total number of *configured* nodes in the cluster. This value is mostly static and *does not* take into account the status of the nodes. It only changes when the Pacemaker configuration changes.
+
+#### Example
+
+https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/pacemaker.metrics#L8-L10
 
 
-# Corosync
+### `ha_cluster_pacemaker_resources` 
+
+#### Description
+
+The resources in the cluster; one line per `id`, per `status`.  
+Either the value is set to `1`, or the line is absent altogether.
+
+#### Labels
+
+- `id`: the unique resource name.
+- `node`: name of the node hosting the resource. 
+- `managed`: either `true` or `false`.
+- `role`:  either one of `started|stopped|master|slave` or one of `starting|stopping|migrating|promoting|demoting`.
+- `status` one of `active|orphaned|blocked|failed|failure_ignored`.
+
+The total number of lines for this metric will be the cardinality of `id` times the cardinality of `status`.
+
+#### Example
+
+https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/pacemaker.metrics#L11-L18
+
+
+### `ha_cluster_resources_total` 
+
+#### Description
+
+The total number of *configured* resources in the cluster. This value is mostly static and *does not* take into account the status of the resources. It only changes when the Pacemaker configuration changes.
+
+#### Example
+
+https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/pacemaker.metrics#L19-L21
+
+
+## Corosync
 
 `TODO`
 
-# Drbd
+## DRBD
 
-`TODO`@MalloZup
+`TODO`
 
-# SBD
+## SBD
 
 `TODO`
