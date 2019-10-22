@@ -21,17 +21,18 @@ These are the currently implemented subsystems.
 
 ## Pacemaker 
 
-The Pacemaker subsystem collects an atomic snapshot of the HA cluster directly from the XML CIB of Pacemaker.
+The Pacemaker subsystem collects an atomic snapshot of the HA cluster directly from the XML CIB of Pacemaker via `crm_mon`.
 
-1. [ha_cluster_pacemaker_nodes](#ha_cluster_pacemaker__pacemaker_nodes)
-2. [ha_cluster_pacemaker_nodes_total](#ha_cluster_pacemaker__nodes_configured_total)
+1. [ha_cluster_pacemaker_nodes](#ha_cluster_pacemaker_nodes)
+2. [ha_cluster_pacemaker_nodes_total](#ha_cluster_pacemaker_nodes_total)
 3. [ha_cluster_pacemaker_resources](#ha_cluster_pacemaker_resources)
-4. [ha_cluster_pacemaker_resources_total](#ha_cluster_pacemaker__resources_configured_total)
+4. [ha_cluster_pacemaker_resources_total](#ha_cluster_pacemaker_resources_total)
 
 
 ### `ha_cluster_pacemaker_nodes`
 
 #### Description
+
 The nodes in the cluster; one line per `name`, per `status`.  
 Either the value is `1`, or the line is absent altogether.
 
@@ -94,12 +95,67 @@ https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a3
 
 ## Corosync
 
-`TODO`
+The Corosync subsystem collects cluster quorum votes and ring status by parsing the output of `corosync-quorumtool` and `corosync-cfgtool`.
 
-## DRBD
+1. [ha_cluster_corosync_quorate](#ha_cluster_corosync_quorate)
+2. [ha_cluster_corosync_quorum_votes](#ha_cluster_corosync_quorum_votes)
+3. [ha_cluster_corosync_ring_errors_total](#ha_cluster_corosync_ring_errors_total)
 
-`TODO`
+
+### `ha_cluster_corosync_quorate`
+
+#### Description
+
+Whether or not the cluster is quorate.  
+Value is either `1` or `0`.
+
+#### Example
+
+https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/corosync.metrics#L1-L3
+
+
+### `ha_cluster_corosync_quorum_votes`
+
+#### Description
+
+Cluster quorum votes; one line per type.
+
+#### Labels
+
+- `type`: one of `expected_votes|highest_expected|total_votes|quorum`
+
+#### Example
+
+https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/corosync.metrics#L4-L9
+
+
+### `ha_cluster_corosync_ring_errors_total`
+
+#### Description
+
+Total number of corosync ring errors.
+
+#### Example
+
+https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/corosync.metrics#L10-L2
+
 
 ## SBD
+
+The SBD subsystems collect devices stats by parsing its configuration and parsing the output of `sbd --dump`.
+
+
+### `ha_cluster_sbd_device_status`
+
+#### Description
+
+Health status for each SBD device; 1 is healthy, 0 is not.
+
+#### Example
+
+https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/sbd.metrics#L1-L4
+
+
+## DRBD
 
 `TODO`
