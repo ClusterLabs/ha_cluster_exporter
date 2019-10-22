@@ -70,7 +70,7 @@ Either the value is `1`, or the line is absent altogether.
 #### Labels
 
 - `id`: the unique resource name.
-- `node`: name of the node hosting the resource. 
+- `node`: the name of the node hosting the resource.
 - `managed`: either `true` or `false`.
 - `role`:  one of `started|stopped|master|slave` or one of `starting|stopping|migrating|promoting|demoting`.
 - `status` one of `active|orphaned|blocked|failed|failure_ignored`.
@@ -149,7 +149,14 @@ The SBD subsystems collect devices stats by parsing its configuration and parsin
 
 #### Description
 
-Health status for each SBD device; 1 is healthy, 0 is not.
+Whether or not an SBD device is healthy. One line per `device`  
+Value is either `1` or `0`.
+
+#### Labels
+
+- `device`: the path of the device.
+
+The total number of lines for this metric will be the cardinality of `device`.
 
 #### Example
 
