@@ -8,15 +8,15 @@ General notes:
 - All the metrics are timestamped with the Unix epoch time in milliseconds; in the provided examples, this value will always be `1234`.
 - Some metrics, like `ha_cluster_pacemaker_nodes`, `ha_cluster_pacemaker_resources`, share common traits:
   - their labels contain the relevant data you may want to track or use for aggregation and filtering;
-  - either their value is set to `1`, or the line is absent altogether; this is because each line represents one entity of the cluster, but the exporter itself is stateless, i.e. we don't track the life-cycle of entities that do not exist anymore in the cluster.
+  - either their value is `1`, or the line is absent altogether; this is because each line represents one entity of the cluster, but the exporter itself is stateless, i.e. we don't track the life-cycle of entities that do not exist anymore in the cluster.
 
 
 These are the currently implemented subsystems.
 
-1. [pacemaker](#pacemaker)
-2. [drbd](#drbd)
-3. [sbd](#sbd)
-4. [corosync](#corosync)
+1. [Pacemaker](#pacemaker)
+2. [Corosync](#corosync)
+3. [SBD](#sbd)
+4. [DRBD](#drbd)
 
 
 ## Pacemaker 
@@ -33,13 +33,13 @@ The Pacemaker subsystem collects an atomic snapshot of the HA cluster directly f
 
 #### Description
 The nodes in the cluster; one line per `name`, per `status`.  
-Either the value is set to `1`, or the line is absent altogether.
+Either the value is `1`, or the line is absent altogether.
 
 #### Labels
 
-- `name`: name of the node (usually the hostname). There will be at least one line for each different value.
-- `status`: one or more of `online|standby|standby_onfail|maintanance|pending|unclean|shutdown|expected_up|dc`. There will be at least one line each different value. 
-- `type`: one of `member|ping|remote`, exclusively.
+- `name`: name of the node (usually the hostname).
+- `status`: one of `online|standby|standby_onfail|maintanance|pending|unclean|shutdown|expected_up|dc`. 
+- `type`: one of `member|ping|remote`.
 
 The total number of lines for this metric will be the cardinality of `name` times the cardinality of `status`.
 
@@ -64,14 +64,14 @@ https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a3
 #### Description
 
 The resources in the cluster; one line per `id`, per `status`.  
-Either the value is set to `1`, or the line is absent altogether.
+Either the value is `1`, or the line is absent altogether.
 
 #### Labels
 
 - `id`: the unique resource name.
 - `node`: name of the node hosting the resource. 
 - `managed`: either `true` or `false`.
-- `role`:  either one of `started|stopped|master|slave` or one of `starting|stopping|migrating|promoting|demoting`.
+- `role`:  one of `started|stopped|master|slave` or one of `starting|stopping|migrating|promoting|demoting`.
 - `status` one of `active|orphaned|blocked|failed|failure_ignored`.
 
 The total number of lines for this metric will be the cardinality of `id` times the cardinality of `status`.
@@ -81,7 +81,7 @@ The total number of lines for this metric will be the cardinality of `id` times 
 https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/pacemaker.metrics#L11-L18
 
 
-### `ha_cluster_resources_total` 
+### `ha_cluster_pacemaker_resources_total` 
 
 #### Description
 
