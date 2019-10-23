@@ -123,3 +123,43 @@ func TestParsePacemakerXML(t *testing.T) {
 	}
 
 }
+
+func TestNewPacemakerCollector(t *testing.T) {
+	crmMonPath = "test/fake_crm_mon.sh"
+
+	_, err := NewPacemakerCollector()
+	if err != nil {
+		t.Errorf("Unexpected error, got: %v", err)
+	}
+}
+
+func TestNewPacemakerCollectorChecksCrmMonExistence(t *testing.T) {
+	crmMonPath = "test/nonexistent"
+
+	_, err := NewPacemakerCollector()
+	if err == nil {
+		t.Fatal("a non nil error was expected")
+	}
+	if err.Error() != "'test/nonexistent' not found: stat test/nonexistent: no such file or directory" {
+		t.Errorf("Unexpected error: %v", err)
+	}
+}
+
+func TestNewPacemakerCollectorChecksCrmMonExecutableBits(t *testing.T) {
+	crmMonPath = "test/dummy"
+
+	_, err := NewPacemakerCollector()
+	if err == nil {
+		t.Fatal("a non nil error was expected")
+	}
+	if err.Error() != "'test/dummy' is not executable" {
+		t.Errorf("Unexpected error: %v", err)
+	}
+}
+
+func TestPacemakerCollector(t *testing.T) {
+	crmMonPath = "test/fake_crm_mon.sh"
+
+	collector, _ := NewPacemakerCollector()
+	expectMetrics(t, collector, "pacemaker.metrics")
+}

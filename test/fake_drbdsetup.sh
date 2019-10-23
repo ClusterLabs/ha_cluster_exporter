@@ -1,11 +1,6 @@
-package main
+#!/usr/bin/env bash
 
-import (
-	"testing"
-)
-
-func TestDrbdParsing(t *testing.T) {
-	var drbdDataRaw = []byte(`
+cat <<EOF
 [
   {
     "name": "1-single-0",
@@ -109,84 +104,5 @@ func TestDrbdParsing(t *testing.T) {
       }
     ]
   }
-]`)
-
-	drbdDevs, err := parseDrbdStatus(drbdDataRaw)
-	if err != nil {
-		t.Error(err)
-	}
-
-	// test attributes
-
-	if "1-single-0" != drbdDevs[0].Name {
-		t.Errorf("name doesn't correspond! fail got %s", drbdDevs[0].Name)
-	}
-
-	if "Secondary" != drbdDevs[0].Role {
-		t.Errorf("role doesn't correspond! fail got %s", drbdDevs[0].Role)
-	}
-
-	if "UpToDate" != drbdDevs[0].Devices[0].DiskState {
-		t.Errorf("disk-states doesn't correspond! fail got %s", drbdDevs[0].Devices[0].DiskState)
-	}
-
-	if 1 != drbdDevs[0].Connections[0].PeerNodeID {
-		t.Errorf("peerNodeID doesn't correspond! fail got %d", drbdDevs[0].Connections[0].PeerNodeID)
-	}
-
-	if "UpToDate" != drbdDevs[0].Connections[0].PeerDevices[0].PeerDiskState {
-		t.Errorf("peerDiskState doesn't correspond! fail got %s", drbdDevs[0].Connections[0].PeerDevices[0].PeerDiskState)
-	}
-
-	if 0 != drbdDevs[0].Devices[0].Volume {
-		t.Errorf("volumes should be 0")
-	}
-}
-
-func TestDrbdInfoError(t *testing.T) {
-	drbdsetupPath = "test/nonexistent"
-	_, err := getDrbdInfo()
-	if err == nil {
-		t.Errorf("a non nil error was expected")
-	}
-}
-
-func TestNewDrbdCollector(t *testing.T) {
-	drbdsetupPath = "test/fake_drbdsetup.sh"
-
-	_, err := NewDrbdCollector()
-	if err != nil {
-		t.Errorf("Unexpected error, got: %v", err)
-	}
-}
-
-func TestNewDrbdCollectorChecksDrbdsetupExistence(t *testing.T) {
-	drbdsetupPath = "test/nonexistent"
-
-	_, err := NewDrbdCollector()
-	if err == nil {
-		t.Error("a non nil error was expected")
-	}
-	if err.Error() != "'test/nonexistent' not found: stat test/nonexistent: no such file or directory" {
-		t.Errorf("Unexpected error: %v", err)
-	}
-}
-
-func TestNewDrbdCollectorChecksDrbdsetupExecutableBits(t *testing.T) {
-	drbdsetupPath = "test/dummy"
-
-	_, err := NewDrbdCollector()
-	if err == nil {
-		t.Fatalf("a non nil error was expected")
-	}
-	if err.Error() != "'test/dummy' is not executable" {
-		t.Errorf("Unexpected error: %v", err)
-	}
-}
-
-func TestDRBDCollector(t *testing.T) {
-	drbdsetupPath = "test/fake_drbdsetup.sh"
-
-	collector, _ := NewDrbdCollector()
-	expectMetrics(t, collector, "drbd.metrics")
-}
+]
+EOF

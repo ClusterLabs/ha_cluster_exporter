@@ -211,5 +211,61 @@ func TestOnlyOneDeviceSbd(t *testing.T) {
 	if len(sbdDevices) != 1 {
 		t.Errorf("length of SbdDevice should be 1 got %d", len(sbdDevices))
 	}
+}
 
+func TestNewSbdCollector(t *testing.T) {
+	sbdConfigPath = "test/fake_sbdconfig"
+	sbdPath = "test/fake_sbd.sh"
+
+	_, err := NewSbdCollector()
+	if err != nil {
+		t.Errorf("Unexpected error, got: %v", err)
+	}
+}
+
+func TestNewSbdCollectorChecksSbdConfigExistence(t *testing.T) {
+	sbdConfigPath = "test/nonexistent"
+	sbdPath = "test/fake_sbd.sh"
+
+	_, err := NewSbdCollector()
+	if err == nil {
+		t.Fatal("a non nil error was expected")
+	}
+	if err.Error() != "'test/nonexistent' not found: stat test/nonexistent: no such file or directory" {
+		t.Errorf("Unexpected error: %v", err)
+	}
+}
+
+func TestNewSbdCollectorChecksSbdExistence(t *testing.T) {
+	sbdConfigPath = "test/fake_sbdconfig"
+	sbdPath = "test/nonexistent"
+
+	_, err := NewSbdCollector()
+	if err == nil {
+		t.Fatal("a non nil error was expected")
+	}
+	if err.Error() != "'test/nonexistent' not found: stat test/nonexistent: no such file or directory" {
+		t.Errorf("Unexpected error: %v", err)
+	}
+}
+
+func TestNewSbdCollectorChecksSbdExecutableBits(t *testing.T) {
+	sbdConfigPath = "test/fake_sbdconfig"
+	sbdPath = "test/dummy"
+
+	_, err := NewSbdCollector()
+	if err == nil {
+		t.Fatalf("a non nil error was expected")
+	}
+	if err.Error() != "'test/dummy' is not executable" {
+		t.Errorf("Unexpected error: %v", err)
+	}
+}
+
+func TestSBDCollector(t *testing.T) {
+	sbdConfigPath = "test/fake_sbdconfig"
+	sbdPath = "test/fake_sbd.sh"
+
+	collector, _ := NewSbdCollector()
+	expectMetrics(t, collector, "sbd.metrics")
 }

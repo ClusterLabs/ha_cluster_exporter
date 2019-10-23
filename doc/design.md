@@ -1,37 +1,30 @@
-# Design:
+# Design Notes
 
-THe global design of the exporter is following:
+This document describes the rationale behind design decisions takend during the development of this project.
 
-![design](design.jpeg)
+## Goals
 
-First in the `main` function we setup the Prometheus exporter metrics constructs. A metric hold a state. You can imagine them as global mutable variables which are served over http at the end.
+- Export runtime statistics about the various HA cluster components from existing data sources, to be consumed in a Prometheus monitoring stack.
 
-The main functionality of the exporter is executed in a golang routine. Each golang routine retrieve data about some component(SBD, pacemaker, corosync) and they are indipendent each others.
+## Non-goals
 
-On the layout of the project, when you add a new go routine aka a new metric/component, create a new file seperately from the exporter main.
-
-
-Only the cluster metrics retrieved with crm_mon are contained in the `ha_cluster_exporter.go` since they are the principal metrics.
+- Maintain an internal, consistent, persisting representation of the cluster state; since the original source of truth is distributed, we want to avoid the complexity of a stateful middleware.
 
 
+## Structure
 
-# A Detailed Example: (crm_mon)
+The project consist in a small HTTP application that exposes runtime data in a line protocol.
 
-Lets take an example:
+A series of `prometheus.Collector` implementations, one for each cluster component (that we'll call _subsystems_) are instantiated in the main application entry point, registered with the Prometheus client, and then exposed via its HTTP handler.
 
-![detailed](cluster_metrics_detailed.jpeg)
- 
- At the begin of the loop most of all metrics are "reset", so all the old information/state is removed. 
-(this is done to clean up metrics who have complex labels)
+Each collector `Collect` method will be called concurrently by the client itself in an internal worker goroutine.
 
-The `cluster` state is retrieved by the  `crm_mon` command. Since the data is XML struct, the `crm_mon` is just a connector. Other commands could be used to get the state as "connector".
+The sources hence are read every time an HTTP request comes, and the collected data is not shared: its lifecycle corresponds with the request's.
 
-Once the data is retrieved, this the golang types are popoulated. 
+To avoid concurrent reads of the same source, all `Collect` methods are serialized with a mutex.
 
-Within this we set the various metrics (gauge, gaugeVec). 
+## Collectors
 
-THe loops sleep a X timeout . Finally the loop start to the begin again. 
+The collectors are very simple: they usually just invoke a bunch of system commands, then parse the output into bespoke data structures that can be used to build Prometheus metrics.
 
-The metric are served via http.
-
-THe data/metrics retrivial is done in a gorutine async from the serving of metrics.
+More details about these metrics can be found in the [metrics specification document](metric_spec.md).

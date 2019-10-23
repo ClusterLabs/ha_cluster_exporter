@@ -1,112 +1,179 @@
-# Metrics specification:
+# Metrics specification
 
-This is a specification of metrics exposed by the ha_cluster exporter.
+This document describes the metrics exposed by `ha_cluster_exporter`.
 
-All metrics from the exporter start with the prefix `ha_cluster`
-
-Below you have a complete specification, ordered by component.
-
-1. [pacemaker](#pacemaker)
-2. [drbd](#drbd)
-3. [sbd](#sbd)
-4. [corosyncl](#corosync)
-
-# Pacemaker 
-
-The Pacemaker cluster metrics are atomic metrics and represent and updated snapshot of the HA cluster, retrieved fetching the XML CIB of pacemaker.
-
-Some of the pacemaker metrics like `ha_cluster_node_resources` and `ha_cluster_nodes` metrics with labels share a common trait:
- 
-they can be either set to `1` or they are absent, this is because they track the real state of the cluster resources monitored.
-
-1. [ha_cluster_node_resources](#ha_cluster_node_resources)
-2. [ha_cluster_nodes](#ha_cluster_nodes)
-3. [ha_cluster_nodes_configured_total](#ha_cluster_nodes_configured_total)
-4. [ha_cluster_resources_configured_total](#ha_cluster_resources_configured_total)
+General notes:
+- All the metrics are _namespaced_ with the prefix `ha_cluster`, which is followed by a _subsystem_, and both are in turn composed into a _Fully Qualified Name_ (FQN) of each metrics.
+- All the metrics and labels _names_ are in snake_case, as conventional with Prometheus. That said, as much as we'll try to keep this consistent throughout the project, the label _values_ may not actually follow this convention, though (e.g. value is a hostname).
+- All the metrics are timestamped with the Unix epoch time in milliseconds; in the provided examples, this value will always be `1234`.
+- Some metrics, like `ha_cluster_pacemaker_nodes`, `ha_cluster_pacemaker_resources`, share common traits:
+  - their labels contain the relevant data you may want to track or use for aggregation and filtering;
+  - either their value is `1`, or the line is absent altogether; this is because each line represents one entity of the cluster, but the exporter itself is stateless, i.e. we don't track the life-cycle of entities that do not exist anymore in the cluster.
 
 
+These are the currently implemented subsystems.
 
-## ha_cluster_node_resources
-
-This metric show the current status of a cluster resource. 
-
-A resource that previously was in the cluster but isn't anymore, will not monitored. Example:
-
-```ha_cluster_node_resources{managed="true",node_name="1b115",resource_name="cluster_md",role="started",status="active"} 1```
-
-The metric will absent and not `0`
+1. [Pacemaker](#pacemaker)
+2. [Corosync](#corosync)
+3. [SBD](#sbd)
+4. [DRBD](#drbd)
 
 
-All the values are 1:1 with Pacemaker schema.
+## Pacemaker 
 
-- `managed`: indicates `true` or `false` if the resource is managed in cluster
-- `node_name`: name of node of cluster
-- `resource_name`: resource id/name of the CIB pacemaker
-- `role`:  allowed values `Started/Stopped/Master/Slave` or pending state `Starting/Stopping/Migrating/Promoting/Demoting` which are same as pacemaker roles for resources.
-- `status` allowed values `active/orphaned/blocked/failed/failureIgnored/` status of resource from pacemaker XML.
-           Additionaly for the same resource we can have a combination of status.
+The Pacemaker subsystem collects an atomic snapshot of the HA cluster directly from the XML CIB of Pacemaker via `crm_mon`.
 
-Example:
-
-```
-ha_cluster_node_resources{managed="true",node_name="1b115",resource_name="cluster_md",role="started",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b115",resource_name="clvm",role="started",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b115",resource_name="dlm",role="started",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b115",resource_name="drbd_passive",role="master",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b115",resource_name="fs_cluster_md",role="started",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b115",resource_name="fs_drbd_passive",role="started",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b115",resource_name="stonith-sbd",role="started",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b115",resource_name="vg_cluster_md",role="started",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b211",resource_name="dlm",role="started",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b211",resource_name="fs_cluster_md",role="stopped",status="active"} 1
-ha_cluster_node_resources{managed="true",node_name="1b211",resource_name="vg_cluster_md",role="stopped",status="active"} 1
-```
-
-## ha_cluster_nodes
-
-- `node_name`: name of cluster node
-- `type`: allowed values  `online/standby/standby_onfail/maintanance/pending/unclean/shutdown/expected_up/dc/member/ping/remote/`. This are the possible type of pacemaker ha cluster
-
-Again here, when the resource is absent will be not showed. There is no `0` value, since it is a real snapshot from the HA cluster.
-Examples:
-```
-ha_cluster_nodes{node_name="1b115",type="dc"} 1
-ha_cluster_nodes{node_name="1b115",type="expected_up"} 1
-ha_cluster_nodes{node_name="1b115",type="member"} 1
-ha_cluster_nodes{node_name="1b115",type="online"} 1
-ha_cluster_nodes{node_name="1b211",type="expected_up"} 1
-ha_cluster_nodes{node_name="1b211",type="member"} 1
-ha_cluster_nodes{node_name="1b211",type="online"} 1
-```
-
-## ha_cluster_nodes_configured_total 
-
-Show the total number of configured noded in the HA cluster
-
-Example:
-
-```
-ha_cluster_nodes_configured_total 2
-```
+0. [Sample](../test/pacemaker.metrics)
+1. [`ha_cluster_pacemaker_nodes`](#ha_cluster_pacemaker_nodes)
+2. [`ha_cluster_pacemaker_nodes_total`](#ha_cluster_pacemaker_nodes_total)
+3. [`ha_cluster_pacemaker_resources`](#ha_cluster_pacemaker_resources)
+4. [`ha_cluster_pacemaker_resources_total`](#ha_cluster_pacemaker_resources_total)
 
 
-## ha_cluster_resources_configured_total 
+### `ha_cluster_pacemaker_nodes`
 
-Show the total number of resource configured in HA cluster
-Example:
-```
-ha_cluster_resources_configured_total 14
-```
+#### Description
+
+The nodes in the cluster; one line per `name`, per `status`.  
+Either the value is `1`, or the line is absent altogether.
+
+#### Labels
+
+- `name`: name of the node (usually the hostname).
+- `status`: one of `online|standby|standby_onfail|maintanance|pending|unclean|shutdown|expected_up|dc`. 
+- `type`: one of `member|ping|remote`.
+
+The total number of lines for this metric will be the cardinality of `name` times the cardinality of `status`.
 
 
-# Corosync
+### `ha_cluster_pacemaker_nodes_total` 
 
-`TODO`
+#### Description
 
-# Drbd
+The total number of *configured* nodes in the cluster. This value is mostly static and *does not* take into account the status of the nodes. It only changes when the Pacemaker configuration changes.
 
-`TODO`@MalloZup
 
-# SBD
+### `ha_cluster_pacemaker_resources` 
 
-`TODO`
+#### Description
+
+The resources in the cluster; one line per `id`, per `status`.  
+Either the value is `1`, or the line is absent altogether.
+
+#### Labels
+
+- `id`: the unique resource name.
+- `node`: the name of the node hosting the resource.
+- `managed`: either `true` or `false`.
+- `role`:  one of `started|stopped|master|slave` or one of `starting|stopping|migrating|promoting|demoting`.
+- `status` one of `active|orphaned|blocked|failed|failure_ignored`.
+
+The total number of lines for this metric will be the cardinality of `id` times the cardinality of `status`.
+
+
+### `ha_cluster_pacemaker_resources_total` 
+
+#### Description
+
+The total number of *configured* resources in the cluster. This value is mostly static and *does not* take into account the status of the resources. It only changes when the Pacemaker configuration changes.
+
+
+## Corosync
+
+The Corosync subsystem collects cluster quorum votes and ring status by parsing the output of `corosync-quorumtool` and `corosync-cfgtool`.
+
+0. [Sample](../test/corosync.metrics)
+1. [`ha_cluster_corosync_quorate`](#ha_cluster_corosync_quorate)
+2. [`ha_cluster_corosync_quorum_votes`](#ha_cluster_corosync_quorum_votes)
+3. [`ha_cluster_corosync_ring_errors_total`](#ha_cluster_corosync_ring_errors_total)
+
+
+### `ha_cluster_corosync_quorate`
+
+#### Description
+
+Whether or not the cluster is quorate.  
+Value is either `1` or `0`.
+
+
+### `ha_cluster_corosync_quorum_votes`
+
+#### Description
+
+Cluster quorum votes; one line per type.
+
+#### Labels
+
+- `type`: one of `expected_votes|highest_expected|total_votes|quorum`
+
+
+### `ha_cluster_corosync_ring_errors_total`
+
+#### Description
+
+Total number of corosync ring errors.
+
+
+## SBD
+
+The SBD subsystems collect devices stats by parsing its configuration the output of `sbd --dump`.
+
+0. [Sample](../test/sbd.metrics)
+1. [`ha_cluster_sbd_device_status`](#ha_cluster_sbd_device_status)
+
+### `ha_cluster_sbd_device_status`
+
+#### Description
+
+Whether or not an SBD device is healthy. One line per `device`.  
+Value is either `1` or `0`.
+
+#### Labels
+
+- `device`: the path of the device.
+
+The total number of lines for this metric will be the cardinality of `device`.
+
+
+## DRBD
+
+The DRBD subsystems collect devices stats by parsing its configuration the JSON output of `drbdsetup`.
+
+0. [Sample](../test/drbd.metrics)
+1. [`ha_cluster_drbd_resources`](#ha_cluster_drbd_resources)
+2. [`ha_cluster_drbd_connections`](#ha_cluster_drbd_connections)
+
+
+### `ha_cluster_drbd_connections`
+
+#### Description
+
+The DRBD resource connections; 1 line per per `resource`, per `peer_node_id`  
+Either the value is `1`, or the line is absent altogether.
+
+#### Labels
+
+- `resource`: the resource this connection is for.
+- `peer_node_id`: the id of the node this connection is for
+- `peer_role`: one of `primary|secondary|unknown`
+- `volume`: the volume number
+- `peer_disk_state`: one of `attaching|failed|negotiating|inconsistent|outdated|dunknown|consistent|uptodate`
+
+The total number of lines for this metric will be the cardinality of `resource` times the cardinality of `peer_node_id`.
+
+
+### `ha_cluster_drbd_resources`
+
+#### Description
+
+The DRBD resources; 1 line per `name`, per `volume`  
+Either the value is `1`, or the line is absent altogether.
+
+#### Labels
+
+- `name`: the name of the resource.
+- `role`: one of `primary|secondary|unknown`
+- `volume`: the volume number
+- `disk_state`: one of `attaching|failed|negotiating|inconsistent|outdated|dunknown|consistent|uptodate`
+
+The total number of lines for this metric will be the cardinality of `name` times the cardinality of `volume`.

@@ -1,0 +1,8 @@
+# HELP ha_cluster_drbd_connections The DRBD resource connections; 1 line per per resource, per peer_node_id
+# TYPE ha_cluster_drbd_connections gauge
+ha_cluster_drbd_connections{peer_disk_state="uptodate",peer_node_id="1",peer_role="Primary",resource="1-single-0",volume="0"} 1
+ha_cluster_drbd_connections{peer_disk_state="uptodate",peer_node_id="1",peer_role="Primary",resource="1-single-1",volume="0"} 1
+# HELP ha_cluster_drbd_resources The DRBD resources; 1 line per name, per volume
+# TYPE ha_cluster_drbd_resources gauge
+ha_cluster_drbd_resources{disk_state="uptodate",name="1-single-0",role="Secondary",volume="0"} 1
+ha_cluster_drbd_resources{disk_state="uptodate",name="1-single-1",role="Secondary",volume="0"} 1
