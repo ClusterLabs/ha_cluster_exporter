@@ -81,7 +81,7 @@ var (
 		"nodes_total":     NewMetricDesc("pacemaker", "nodes_total", "Total number of nodes in the cluster", nil),
 		"resources":       NewMetricDesc("pacemaker", "resources", "The resources in the cluster; one line per id, per status", []string{"node", "id", "role", "managed", "status"}),
 		"resources_total": NewMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
-		"stonith_enabled": NewMetricDesc("pacemaker", "stonith_enabled", "Wether or not stonith is enabled for the cluster; 1 is yes, 0 is no", nil),
+		"stonith_enabled": NewMetricDesc("pacemaker", "stonith_enabled", "Whether or not stonith is enabled", nil),
 	}
 
 	crmMonPath = "/usr/sbin/crm_mon"
