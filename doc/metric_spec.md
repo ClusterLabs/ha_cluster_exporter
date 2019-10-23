@@ -23,10 +23,11 @@ These are the currently implemented subsystems.
 
 The Pacemaker subsystem collects an atomic snapshot of the HA cluster directly from the XML CIB of Pacemaker via `crm_mon`.
 
-1. [ha_cluster_pacemaker_nodes](#ha_cluster_pacemaker_nodes)
-2. [ha_cluster_pacemaker_nodes_total](#ha_cluster_pacemaker_nodes_total)
-3. [ha_cluster_pacemaker_resources](#ha_cluster_pacemaker_resources)
-4. [ha_cluster_pacemaker_resources_total](#ha_cluster_pacemaker_resources_total)
+0. [Sample](../test/pacemaker.metrics)
+1. [`ha_cluster_pacemaker_nodes`](#ha_cluster_pacemaker_nodes)
+2. [`ha_cluster_pacemaker_nodes_total`](#ha_cluster_pacemaker_nodes_total)
+3. [`ha_cluster_pacemaker_resources`](#ha_cluster_pacemaker_resources)
+4. [`ha_cluster_pacemaker_resources_total`](#ha_cluster_pacemaker_resources_total)
 
 
 ### `ha_cluster_pacemaker_nodes`
@@ -44,20 +45,12 @@ Either the value is `1`, or the line is absent altogether.
 
 The total number of lines for this metric will be the cardinality of `name` times the cardinality of `status`.
 
-#### Example
-
-https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/pacemaker.metrics#L1-L7
-
 
 ### `ha_cluster_pacemaker_nodes_total` 
 
 #### Description
 
 The total number of *configured* nodes in the cluster. This value is mostly static and *does not* take into account the status of the nodes. It only changes when the Pacemaker configuration changes.
-
-#### Example
-
-https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/pacemaker.metrics#L8-L10
 
 
 ### `ha_cluster_pacemaker_resources` 
@@ -77,10 +70,6 @@ Either the value is `1`, or the line is absent altogether.
 
 The total number of lines for this metric will be the cardinality of `id` times the cardinality of `status`.
 
-#### Example
-
-https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/pacemaker.metrics#L11-L18
-
 
 ### `ha_cluster_pacemaker_resources_total` 
 
@@ -88,18 +77,15 @@ https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a3
 
 The total number of *configured* resources in the cluster. This value is mostly static and *does not* take into account the status of the resources. It only changes when the Pacemaker configuration changes.
 
-#### Example
-
-https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/pacemaker.metrics#L19-L21
-
 
 ## Corosync
 
 The Corosync subsystem collects cluster quorum votes and ring status by parsing the output of `corosync-quorumtool` and `corosync-cfgtool`.
 
-1. [ha_cluster_corosync_quorate](#ha_cluster_corosync_quorate)
-2. [ha_cluster_corosync_quorum_votes](#ha_cluster_corosync_quorum_votes)
-3. [ha_cluster_corosync_ring_errors_total](#ha_cluster_corosync_ring_errors_total)
+0. [Sample](../test/corosync.metrics)
+1. [`ha_cluster_corosync_quorate`](#ha_cluster_corosync_quorate)
+2. [`ha_cluster_corosync_quorum_votes`](#ha_cluster_corosync_quorum_votes)
+3. [`ha_cluster_corosync_ring_errors_total`](#ha_cluster_corosync_ring_errors_total)
 
 
 ### `ha_cluster_corosync_quorate`
@@ -108,10 +94,6 @@ The Corosync subsystem collects cluster quorum votes and ring status by parsing 
 
 Whether or not the cluster is quorate.  
 Value is either `1` or `0`.
-
-#### Example
-
-https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/corosync.metrics#L1-L3
 
 
 ### `ha_cluster_corosync_quorum_votes`
@@ -124,10 +106,6 @@ Cluster quorum votes; one line per type.
 
 - `type`: one of `expected_votes|highest_expected|total_votes|quorum`
 
-#### Example
-
-https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/corosync.metrics#L4-L9
-
 
 ### `ha_cluster_corosync_ring_errors_total`
 
@@ -135,15 +113,13 @@ https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a3
 
 Total number of corosync ring errors.
 
-#### Example
-
-https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/corosync.metrics#L10-L2
-
 
 ## SBD
 
 The SBD subsystems collect devices stats by parsing its configuration the output of `sbd --dump`.
 
+0. [Sample](../test/sbd.metrics)
+1. [`ha_cluster_sbd_device_status`](#ha_cluster_sbd_device_status)
 
 ### `ha_cluster_sbd_device_status`
 
@@ -158,17 +134,32 @@ Value is either `1` or `0`.
 
 The total number of lines for this metric will be the cardinality of `device`.
 
-#### Example
-
-https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/sbd.metrics#L1-L4
-
 
 ## DRBD
 
 The DRBD subsystems collect devices stats by parsing its configuration the JSON output of `drbdsetup`.
 
-1. [ha_cluster_drbd_resources](#ha_cluster_drbd_resources)
-2. [ha_cluster_drbd_remote_connections](#ha_cluster_drbd_remote_connections)
+0. [Sample](../test/drbd.metrics)
+1. [`ha_cluster_drbd_resources`](#ha_cluster_drbd_resources)
+2. [`ha_cluster_drbd_connections`](#ha_cluster_drbd_connections)
+
+
+### `ha_cluster_drbd_connections`
+
+#### Description
+
+The DRBD resource connections; 1 line per per `resource`, per `peer_node_id`  
+Either the value is `1`, or the line is absent altogether.
+
+#### Labels
+
+- `resource`: the resource this connection is for.
+- `peer_node_id`: the id of the node this connection is for
+- `peer_role`: one of `primary|secondary|unknown`
+- `volume`: the volume number
+- `peer_disk_state`: one of `attaching|failed|negotiating|inconsistent|outdated|dunknown|consistent|uptodate`
+
+The total number of lines for this metric will be the cardinality of `resource` times the cardinality of `peer_node_id`.
 
 
 ### `ha_cluster_drbd_resources`
@@ -186,29 +177,3 @@ Either the value is `1`, or the line is absent altogether.
 - `disk_state`: one of `attaching|failed|negotiating|inconsistent|outdated|dunknown|consistent|uptodate`
 
 The total number of lines for this metric will be the cardinality of `name` times the cardinality of `volume`.
-
-#### Example
-
-https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/drbd.metrics#L1-L4
-
-
-### `ha_cluster_drbd_remote_connections`
-
-#### Description
-
-The DRBD resource connections; 1 line per per `resource`, per `peer_node_id`  
-Either the value is `1`, or the line is absent altogether.
-
-#### Labels
-
-- `resource`: the resource this connection is for.
-- `peer_node_id`: the id of the node this connection is for
-- `peer_role`: one of `primary|secondary|unknown`
-- `volume`: the volume number
-- `peer_disk_state`: one of `attaching|failed|negotiating|inconsistent|outdated|dunknown|consistent|uptodate`
-
-The total number of lines for this metric will be the cardinality of `resource` times the cardinality of `peer_node_id`.
-
-#### Example
-
-https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/drbd.metrics#L5-L8
