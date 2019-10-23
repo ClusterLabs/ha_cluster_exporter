@@ -34,8 +34,8 @@ var (
 	drbdMetrics = metricDescriptors{
 		// the map key will function as an identifier of the metric throughout the rest of the code;
 		// it is arbitrary, but by convention we use the actual metric name
-		"resources":                    NewMetricDesc("drbd", "resources", "Describes each DRBD resource; 1 line per resource_name", []string{"resource_name", "role", "volume", "disk_state"}),
-		"resources_remote_connections": NewMetricDesc("drbd", "resources_remote_connections", "Describes each DRBD resource connection; 1 line per peer device", []string{"resource_name", "peer_node_id", "peer_role", "volume", "peer_disk_state"}),
+		"resources":   NewMetricDesc("drbd", "resources", "The DRBD resources; 1 line per name, per volume", []string{"name", "role", "volume", "disk_state"}),
+		"connections": NewMetricDesc("drbd", "connections", "The DRBD resource connections; 1 line per per resource, per peer_node_id", []string{"resource", "peer_node_id", "peer_role", "volume", "peer_disk_state"}),
 	}
 	drbdsetupPath = "/usr/sbin/drbdsetup"
 )
@@ -78,26 +78,23 @@ func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 
-	// the metric is always set to 1 or is absent
 	for _, resource := range drbdDev {
 		for _, device := range resource.Devices {
-			ch <- c.makeGaugeMetric("resources", float64(1), resource.Name, resource.Role, strconv.Itoa(device.Volume), strings.ToLower(resource.Devices[device.Volume].DiskState))
+			// the `resources` metric value is always 1, otherwise it's absent
+			ch <- c.makeGaugeMetric("resources", float64(1), resource.Name, resource.Role, strconv.Itoa(device.Volume), strings.ToLower(device.DiskState))
 		}
-		// 2) ha_cluster_drbd_resource_remote_connection{resource_name="1-single-0", peer_node_id="1", role="primary", volume="0",  disk_state="uptodate"} 1
-		// a resource could not have any connection
 		if len(resource.Connections) == 0 {
 			log.Warnf("Could not retrieve connection info for resource '%s'\n", resource.Name)
 			continue
 		}
 		// a Resource can have multiple connection with different nodes
 		for _, conn := range resource.Connections {
-			// pro resource go through the volume of peer and its peer state
 			if len(conn.PeerDevices) == 0 {
 				log.Warnf("Could not retrieve any peer device info for connection '%d'\n", conn.PeerNodeID)
 				continue
 			}
 			for _, peerDev := range conn.PeerDevices {
-				ch <- c.makeGaugeMetric("resources_remote_connections", float64(1), resource.Name, strconv.Itoa(conn.PeerNodeID), conn.PeerRole, strconv.Itoa(peerDev.Volume), strings.ToLower(peerDev.PeerDiskState))
+				ch <- c.makeGaugeMetric("connections", float64(1), resource.Name, strconv.Itoa(conn.PeerNodeID), conn.PeerRole, strconv.Itoa(peerDev.Volume), strings.ToLower(peerDev.PeerDiskState))
 			}
 		}
 	}

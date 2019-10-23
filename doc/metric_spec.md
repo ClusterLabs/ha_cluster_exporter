@@ -165,4 +165,50 @@ https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a3
 
 ## DRBD
 
-`TODO`
+The DRBD subsystems collect devices stats by parsing its configuration the JSON output of `drbdsetup`.
+
+1. [ha_cluster_drbd_resources](#ha_cluster_drbd_resources)
+2. [ha_cluster_drbd_remote_connections](#ha_cluster_drbd_remote_connections)
+
+
+### `ha_cluster_drbd_resources`
+
+#### Description
+
+The DRBD resources; 1 line per `name`, per `volume`  
+Either the value is `1`, or the line is absent altogether.
+
+#### Labels
+
+- `name`: the name of the resource.
+- `role`: one of `primary|secondary|unknown`
+- `volume`: the volume number
+- `disk_state`: one of `attaching|failed|negotiating|inconsistent|outdated|dunknown|consistent|uptodate`
+
+The total number of lines for this metric will be the cardinality of `name` times the cardinality of `volume`.
+
+#### Example
+
+https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/drbd.metrics#L1-L4
+
+
+### `ha_cluster_drbd_remote_connections`
+
+#### Description
+
+The DRBD resource connections; 1 line per per `resource`, per `peer_node_id`  
+Either the value is `1`, or the line is absent altogether.
+
+#### Labels
+
+- `resource`: the resource this connection is for.
+- `peer_node_id`: the id of the node this connection is for
+- `peer_role`: one of `primary|secondary|unknown`
+- `volume`: the volume number
+- `peer_disk_state`: one of `attaching|failed|negotiating|inconsistent|outdated|dunknown|consistent|uptodate`
+
+The total number of lines for this metric will be the cardinality of `resource` times the cardinality of `peer_node_id`.
+
+#### Example
+
+https://github.com/ClusterLabs/ha_cluster_exporter/blob/f4512578dc5bb6421a1813a378fff18acc27208d/test/drbd.metrics#L5-L8
