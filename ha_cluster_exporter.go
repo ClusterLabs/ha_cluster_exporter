@@ -36,6 +36,12 @@ func (c *DefaultCollector) makeGaugeMetric(metricKey string, value float64, labe
 	return prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, value, labelValues...)
 }
 
+// Convenience wrapper around Prometheus constructors.
+// Produces a metric with name `NAMESPACE_subsystem_name`.
+// `NAMESPACE` is a global project constant;
+// `subsystem` is an arbitrary name used to group related metrics under the same name prefix;
+// `name` is the last and most relevant part of the metrics Full Qualified Name;
+// `variableLabels` is a list of labels to declare. Use `nil` to declare no labels.
 func NewMetricDesc(subsystem, name, help string, variableLabels []string) *prometheus.Desc {
 	return prometheus.NewDesc(prometheus.BuildFQName(NAMESPACE, subsystem, name), help, variableLabels, nil)
 }
