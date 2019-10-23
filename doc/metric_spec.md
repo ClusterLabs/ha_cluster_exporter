@@ -28,6 +28,7 @@ The Pacemaker subsystem collects an atomic snapshot of the HA cluster directly f
 2. [`ha_cluster_pacemaker_nodes_total`](#ha_cluster_pacemaker_nodes_total)
 3. [`ha_cluster_pacemaker_resources`](#ha_cluster_pacemaker_resources)
 4. [`ha_cluster_pacemaker_resources_total`](#ha_cluster_pacemaker_resources_total)
+5. [`ha_cluster_pacemaker_stonith_enabled`](#ha_cluster_pacemaker_stonith_enabled)
 
 
 ### `ha_cluster_pacemaker_nodes`
@@ -77,6 +78,13 @@ The total number of lines for this metric will be the cardinality of `id` times 
 
 The total number of *configured* resources in the cluster. This value is mostly static and *does not* take into account the status of the resources. It only changes when the Pacemaker configuration changes.
 
+
+### `ha_cluster_pacemaker_stonith_enabled`
+
+#### Description
+
+Whether or not stonith is enabled in the cluster.  
+Value is either `1` or `0`.
 
 ## Corosync
 
