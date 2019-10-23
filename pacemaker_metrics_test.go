@@ -158,6 +158,7 @@ func TestNewPacemakerCollectorChecksCrmMonExecutableBits(t *testing.T) {
 }
 
 func TestPacemakerCollector(t *testing.T) {
+	clock = StoppedClock{}
 	crmMonPath = "test/fake_crm_mon.sh"
 
 	collector, _ := NewPacemakerCollector()
