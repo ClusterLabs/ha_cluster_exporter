@@ -121,7 +121,21 @@ func TestParsePacemakerXML(t *testing.T) {
 	if status.Nodes.Node[1].Online != true {
 		t.Errorf("node should be online got instead: %t", status.Nodes.Node[1].Online)
 	}
+	if status.NodeHistory.Node[0].Name != "Hawk3-2" {
+		t.Errorf("node should be called Hawk3-2 got instead: %s", status.NodeHistory.Node[0].Name)
+	}
 
+	if status.NodeHistory.Node[0].ResourceHistory[0].MigrationThreshold != 3 {
+		t.Errorf("migration-treshold should be 3 got instead: %d", status.NodeHistory.Node[0].ResourceHistory[0].MigrationThreshold)
+	}
+
+	if status.NodeHistory.Node[0].ResourceHistory[1].FailCount != 1000000 {
+		t.Errorf("fail-count should be 1000000 got instead: %d", status.NodeHistory.Node[0].ResourceHistory[1].FailCount)
+	}
+
+	if status.NodeHistory.Node[0].ResourceHistory[0].Name != "vip1" {
+		t.Errorf("resource should be called vip1 got instead: %s", status.NodeHistory.Node[0].ResourceHistory[0].Name)
+	}
 }
 
 func TestNewPacemakerCollector(t *testing.T) {

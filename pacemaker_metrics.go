@@ -14,31 +14,37 @@ import (
 
 // *** crm_mon XML unserialization structures
 type pacemakerStatus struct {
-	Version string  `xml:"version,attr"`
-	Summary summary `xml:"summary"`
-	Nodes   nodes   `xml:"nodes"`
+	Version     string  `xml:"version,attr"`
+	Summary     summary `xml:"summary"`
+	Nodes       nodes   `xml:"nodes"`
+	NodeHistory struct {
+		Node []struct {
+			Name            string `xml:"name,attr"`
+			ResourceHistory []struct {
+				Name               string `xml:"id,attr"`
+				MigrationThreshold int    `xml:"migration-threshold,attr"`
+				FailCount          int    `xml:"fail-count,attr"`
+			} `xml:"resource_history"`
+		} `xml:"node"`
+	} `xml:"node_history"`
 }
 
 type summary struct {
 	Nodes struct {
 		Number int `xml:"number,attr"`
 	} `xml:"nodes_configured"`
-	Resources      resourcesConfigured `xml:"resources_configured"`
-	ClusterOptions clusterOptions      `xml:"cluster_options"`
-}
-
-type resourcesConfigured struct {
-	Number   int `xml:"number,attr"`
-	Disabled int `xml:"disabled,attr"`
-	Blocked  int `xml:"blocked,attr"`
+	Resources struct {
+		Number   int `xml:"number,attr"`
+		Disabled int `xml:"disabled,attr"`
+		Blocked  int `xml:"blocked,attr"`
+	} `xml:"resources_configured"`
+	ClusterOptions struct {
+		StonithEnabled bool `xml:"stonith-enabled,attr"`
+	} `xml:"cluster_options"`
 }
 
 type nodes struct {
 	Node []node `xml:"node"`
-}
-
-type clusterOptions struct {
-	StonithEnabled bool `xml:"stonith-enabled,attr"`
 }
 
 type node struct {
@@ -70,8 +76,6 @@ type resource struct {
 	FailureIgnored bool   `xml:"failure_ignored,attr"`
 	NodesRunningOn int    `xml:"nodes_running_on,attr"`
 }
-
-// ***
 
 var (
 	pacemakerMetrics = metricDescriptors{
