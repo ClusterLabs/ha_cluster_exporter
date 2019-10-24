@@ -72,7 +72,7 @@ cat <<EOF
             </resource_history>
         </node>
         <node name="hana02">
-            <resource_history id="rsc_SAPHana_PRD_HDB00" orphan="false" migration-threshold="5000">
+            <resource_history id="rsc_SAPHana_PRD_HDB00" orphan="false" migration-threshold="5000" fail-count="300" last-failure="Wed Oct 23 12:37:22 2019">
                 <operation_history call="22" task="start" last-rc-change="Thu Oct 17 15:22:40 2019" last-run="Thu Oct 17 15:22:40 2019" exec-time="44083ms" queue-time="0ms" rc="0" rc_text="ok" />
                 <operation_history call="23" task="monitor" interval="61000ms" last-rc-change="Thu Oct 17 15:23:24 2019" exec-time="2605ms" queue-time="0ms" rc="0" rc_text="ok" />
             </resource_history>

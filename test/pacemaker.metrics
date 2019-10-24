@@ -1,3 +1,11 @@
+# HELP ha_cluster_pacemaker_fail_count The Fail count number per node and resource id
+# TYPE ha_cluster_pacemaker_fail_count gauge
+ha_cluster_pacemaker_fail_count{node="hana01",resource="rsc_SAPHanaTopology_PRD_HDB00"} 0 1234
+ha_cluster_pacemaker_fail_count{node="hana01",resource="rsc_SAPHana_PRD_HDB00"} 1e+06 1234
+ha_cluster_pacemaker_fail_count{node="hana01",resource="rsc_ip_PRD_HDB00"} 2 1234
+ha_cluster_pacemaker_fail_count{node="hana01",resource="stonith-sbd"} 0 1234
+ha_cluster_pacemaker_fail_count{node="hana02",resource="rsc_SAPHanaTopology_PRD_HDB00"} 0 1234
+ha_cluster_pacemaker_fail_count{node="hana02",resource="rsc_SAPHana_PRD_HDB00"} 300 1234
 # HELP ha_cluster_pacemaker_nodes The nodes in the cluster; one line per name, per status
 # TYPE ha_cluster_pacemaker_nodes gauge
 ha_cluster_pacemaker_nodes{name="hana01",status="dc",type="member"} 1 1234

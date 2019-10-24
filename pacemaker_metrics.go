@@ -86,6 +86,7 @@ var (
 		"resources":       NewMetricDesc("pacemaker", "resources", "The resources in the cluster; one line per id, per status", []string{"node", "id", "role", "managed", "status"}),
 		"resources_total": NewMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
 		"stonith_enabled": NewMetricDesc("pacemaker", "stonith_enabled", "Whether or not stonith is enabled", nil),
+		"fail_count":      NewMetricDesc("pacemaker", "fail_count", "The Fail count number per node and resource id", []string{"node", "resource"}),
 	}
 
 	crmMonPath = "/usr/sbin/crm_mon"
@@ -133,6 +134,7 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 	ch <- c.makeGaugeMetric("stonith_enabled", stonithEnabled)
 
 	c.recordNodeMetrics(pacemakerStatus, ch)
+	c.recordFailCountMetrics(pacemakerStatus, ch)
 }
 
 func getPacemakerStatus() (pacemakerStatus, error) {
@@ -212,6 +214,15 @@ func (c *pacemakerCollector) recordResourcesMetrics(node node, ch chan<- prometh
 					strconv.FormatBool(resource.Managed),
 					resourceStatus)
 			}
+		}
+	}
+}
+
+func (c *pacemakerCollector) recordFailCountMetrics(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {
+	for _, node := range pacemakerStatus.NodeHistory.Node {
+		for _, resHistory := range node.ResourceHistory {
+			log.Println(float64(resHistory.FailCount))
+			ch <- c.makeGaugeMetric("fail_count", float64(resHistory.FailCount), node.Name, resHistory.Name)
 		}
 	}
 }

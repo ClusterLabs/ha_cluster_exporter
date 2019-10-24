@@ -47,7 +47,7 @@ func TestParsePacemakerXML(t *testing.T) {
 				</resource_history>
 			</node>
 			<node name="Hawk3-1">
-				<resource_history id="d1" orphan="false" migration-threshold="3">
+				<resource_history id="d1" orphan="false" migration-threshold="3" fail-count="300" last-failure="Tue Jan 15 22:20:00 2019">
 					<operation_history call="10" task="start" last-rc-change="Tue Jan 15 22:19:15 2019" last-run="Tue Jan 15 22:19:15 2019" exec-time="23ms" queue-time="0ms" rc="0" rc_text="ok" />
 				</resource_history>
 				<resource_history id="ddd" orphan="false" migration-threshold="3" fail-count="1000000" last-failure="Tue Jan 15 22:19:59 2019">
