@@ -57,6 +57,22 @@ func NewMetricDesc(subsystem, name, help string, variableLabels []string) *prome
 	return prometheus.NewDesc(prometheus.BuildFQName(NAMESPACE, subsystem, name), help, variableLabels, nil)
 }
 
+// Landing Page (for /)
+func landingpage(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(`<html>
+		<head>
+			<title>HACluster Exporter</title>
+		</head>
+		<body>
+			<h1>HACluster Exporter</h1>
+			<p><a href="metrics">Metrics</a></p>
+			<br />
+			<h2>More information:</h2>
+			<p><a href="https://github.com/ClusterLabs/ha_cluster_exporter">github.com/ClusterLabs/ha_cluster_exporter</a></p>
+		</body>
+		</html>`))
+}
+
 var (
 	clock      Clock = &SystemClock{}
 	portNumber       = flag.String("port", "9002", "The port number to listen on for HTTP requests.")
@@ -94,6 +110,7 @@ func main() {
 		prometheus.MustRegister(drbdCollector)
 	}
 
+	http.HandleFunc("/", landingpage)
 	http.Handle("/metrics", promhttp.Handler())
 	log.Infoln("Serving metrics on port", *portNumber)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", *portNumber), nil))
