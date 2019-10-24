@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/xml"
+	"math"
 	"os"
 	"os/exec"
 	"strconv"
@@ -81,12 +82,13 @@ var (
 	pacemakerMetrics = metricDescriptors{
 		// the map key will function as an identifier of the metric throughout the rest of the code;
 		// it is arbitrary, but by convention we use the actual metric name
-		"nodes":           NewMetricDesc("pacemaker", "nodes", "The nodes in the cluster; one line per name, per status", []string{"name", "type", "status"}),
-		"nodes_total":     NewMetricDesc("pacemaker", "nodes_total", "Total number of nodes in the cluster", nil),
-		"resources":       NewMetricDesc("pacemaker", "resources", "The resources in the cluster; one line per id, per status", []string{"node", "id", "role", "managed", "status"}),
-		"resources_total": NewMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
-		"stonith_enabled": NewMetricDesc("pacemaker", "stonith_enabled", "Whether or not stonith is enabled", nil),
-		"fail_count":      NewMetricDesc("pacemaker", "fail_count", "The Fail count number per node and resource id", []string{"node", "resource"}),
+		"nodes":               NewMetricDesc("pacemaker", "nodes", "The nodes in the cluster; one line per name, per status", []string{"name", "type", "status"}),
+		"nodes_total":         NewMetricDesc("pacemaker", "nodes_total", "Total number of nodes in the cluster", nil),
+		"resources":           NewMetricDesc("pacemaker", "resources", "The resources in the cluster; one line per id, per status", []string{"node", "id", "role", "managed", "status"}),
+		"resources_total":     NewMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
+		"stonith_enabled":     NewMetricDesc("pacemaker", "stonith_enabled", "Whether or not stonith is enabled", nil),
+		"fail_count":          NewMetricDesc("pacemaker", "fail_count", "The Fail count number per node and resource id", []string{"node", "resource"}),
+		"migration_threshold": NewMetricDesc("pacemaker", "migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"}),
 	}
 
 	crmMonPath = "/usr/sbin/crm_mon"
@@ -135,6 +137,7 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 
 	c.recordNodeMetrics(pacemakerStatus, ch)
 	c.recordFailCountMetrics(pacemakerStatus, ch)
+	c.recordMigrationThresholdMetrics(pacemakerStatus, ch)
 }
 
 func getPacemakerStatus() (pacemakerStatus, error) {
@@ -221,8 +224,23 @@ func (c *pacemakerCollector) recordResourcesMetrics(node node, ch chan<- prometh
 func (c *pacemakerCollector) recordFailCountMetrics(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {
 	for _, node := range pacemakerStatus.NodeHistory.Node {
 		for _, resHistory := range node.ResourceHistory {
-			log.Println(float64(resHistory.FailCount))
-			ch <- c.makeGaugeMetric("fail_count", float64(resHistory.FailCount), node.Name, resHistory.Name)
+			failCount := float64(resHistory.FailCount)
+
+			// if value is 1000000 this is a special value in pacemaker which is infinity fail count
+			if resHistory.FailCount >= 1000000 {
+				failCount = math.Inf(1)
+			}
+
+			ch <- c.makeGaugeMetric("fail_count", failCount, node.Name, resHistory.Name)
+
+		}
+	}
+}
+
+func (c *pacemakerCollector) recordMigrationThresholdMetrics(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {
+	for _, node := range pacemakerStatus.NodeHistory.Node {
+		for _, resHistory := range node.ResourceHistory {
+			ch <- c.makeGaugeMetric("migration_threshold", float64(resHistory.MigrationThreshold), node.Name, resHistory.Name)
 		}
 	}
 }
