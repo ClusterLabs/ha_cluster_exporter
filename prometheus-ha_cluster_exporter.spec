@@ -41,23 +41,36 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 %if ! %{defined _fillupdir}
   %define _fillupdir /var/adm/fillup-templates
 %endif
+
 %description
 Prometheus exporter for ha_cluster pacemaker metrics.
+
 %prep
-%setup -q -n %{name}-%{version}
+%setup -q # unpack project sources
+%setup -q -T -D -a 1 # unpack go dependencies in vendor.tar.gz, which was prepared by the source services
 
 %build
-%goprep github.com/ClusterLabs/ha_cluster_exporter
-%gobuild -mod=vendor ""
+# we don't use %go_* macros but explicit go build command, as illustrated in the go_modules source service example
+export VERSION=%{version}
+export COMMIT=%{commit}
+export CGO_ENABLED=0
+go build \
+   -mod=vendor \
+   -buildmode=pie \
+   -ldflags "-s -w -X main.gitCommit=$COMMIT -X main.version=$VERSION" \
+   -o %{name} ;
 
 %install
-%goinstall
-%gosrc
-install -D -m 0644 %{SOURCE1} %{buildroot}%{_unitdir}/%{name}.service
+
+# Install the binary.
+install -D -m 0755 %{name} "%{buildroot}/%{_bindir}/%{name}"
+
+# Install the systemd unit
+install -D -m 0644 %{name}.service %{buildroot}%{_unitdir}/%{name}.service
+
+# Install compat wrapper for legacy init systems
 install -Dd -m 0755 %{buildroot}%{_sbindir}
 ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rc%{name}
-%gofilelist
-%fdupes %{buildroot}
 
 %pre
 %service_add_pre %{name}.service
@@ -72,7 +85,7 @@ ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rc%{name}
 %postun
 %service_del_postun %{name}.service
 
-%files -f file.lst
+%files
 %defattr(-,root,root)
 %doc *.md
 %if 0%{?suse_version} >= 1500
