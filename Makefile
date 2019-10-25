@@ -14,7 +14,7 @@ install:
 
 static-checks: vet-check fmt-check
 
-vet-check:
+vet-check: download
 	go vet .
 
 fmt-check:
