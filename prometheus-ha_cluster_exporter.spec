@@ -60,7 +60,7 @@ go build \
 %install
 
 # Install the binary.
-install -D -m 0755 %{name} "%{buildroot}/%{_bindir}/%{binary_name}"
+install -D -m 0755 %{binary_name} "%{buildroot}%{_bindir}/%{binary_name}"
 
 # Install the systemd unit
 install -D -m 0644 %{name}.service %{buildroot}%{_unitdir}/%{name}.service
