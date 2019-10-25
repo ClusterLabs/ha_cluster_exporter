@@ -6,6 +6,6 @@ go:
 jobs:
   include:
     - stage: Go fmt
-    - script: make fmt-check
+      script: make fmt-check
     - stage: Test
-    - script: make test
+      script: make test
