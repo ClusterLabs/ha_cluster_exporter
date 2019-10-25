@@ -14,7 +14,5 @@ jobs:
       name: Unit tests
       script: make test
     - stage: Release
-      branches:
-        only:
-          - ^(\d*\.)+\d*$
       script: make release
+      if: tag IS present
