@@ -37,17 +37,14 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 # Make sure that the binary is not getting stripped.
 %{go_nostrip}
 
-#Compat macro for new _fillupdir macro introduced in Nov 2017
-%if ! %{defined _fillupdir}
-  %define _fillupdir /var/adm/fillup-templates
-%endif
-
 %description
 Prometheus exporter for ha_cluster pacemaker metrics.
 
 %prep
 %setup -q # unpack project sources
 %setup -q -T -D -a 1 # unpack go dependencies in vendor.tar.gz, which was prepared by the source services
+
+%define binary_name ha_cluster_exporter
 
 %build
 # we don't use %go_* macros but explicit go build command, as illustrated in the go_modules source service example
@@ -58,12 +55,12 @@ go build \
    -mod=vendor \
    -buildmode=pie \
    -ldflags "-s -w -X main.gitCommit=$COMMIT -X main.version=$VERSION" \
-   -o %{name} ;
+   -o %{binary_name} ;
 
 %install
 
 # Install the binary.
-install -D -m 0755 %{name} "%{buildroot}/%{_bindir}/%{name}"
+install -D -m 0755 %{name} "%{buildroot}/%{_bindir}/%{binary_name}"
 
 # Install the systemd unit
 install -D -m 0644 %{name}.service %{buildroot}%{_unitdir}/%{name}.service
@@ -77,7 +74,6 @@ ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rc%{name}
 
 %post
 %service_add_post %{name}.service
-%fillup_only -n %{name}
 
 %preun
 %service_del_preun %{name}.service
@@ -93,7 +89,7 @@ ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rc%{name}
 %else
 %doc LICENSE
 %endif
-%{_bindir}/ha_cluster_exporter
+%{_bindir}/%{binary_name}
 %{_unitdir}/%{name}.service
 %{_sbindir}/rc%{name}
 
