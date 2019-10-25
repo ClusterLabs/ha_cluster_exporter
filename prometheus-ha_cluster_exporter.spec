@@ -17,14 +17,16 @@
 
 
 Name:           prometheus-ha_cluster_exporter
-Version:        0.0 # will be processed by the set_version source service
+# will be processed by the set_version source service
+Version:        0.0
 Release:        0
 License:        Apache-2.0
 Summary:        Prometheus exporter for ha_cluster server metrics
 Group:          System/Monitoring
 Url:            https://github.com/ClusterLabs/ha_cluster_exporter
 Source:         %{name}-%{version}.tar.gz
-Source1:        vendor.tar.gz # prepared by the go_modules source service
+# prepared by the go_modules source service
+Source1:        vendor.tar.gz
 BuildRequires:  git-core
 BuildRequires:  fdupes
 BuildRequires:  golang-packaging
