@@ -5,7 +5,14 @@ go:
 
 jobs:
   include:
-    - stage: Go fmt
-      script: make fmt-check
     - stage: Test
+      name: Static checks
+      script: make static-checks
+    - stage: Test
+      name: Unit tests
       script: make test
+    - stage: Release
+      branches:
+        only:
+          - ^(\d*\.)+\d*$
+      script: make release
