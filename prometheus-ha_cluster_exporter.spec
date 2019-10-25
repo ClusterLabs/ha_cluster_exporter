@@ -26,6 +26,7 @@ Url:            https://github.com/ClusterLabs/ha_cluster_exporter
 Source:         %{name}-%{version}.tar.gz
 Source1:        vendor.tar.gz
 BuildRequires:  git-core
+BuildRequires:  fdupes
 BuildRequires:  golang-packaging
 BuildRequires:  go1.11
 Provides:       ha_cluster_exporter = %{version}-%{release}
@@ -66,6 +67,8 @@ install -D -m 0644 %{name}.service %{buildroot}%{_unitdir}/%{name}.service
 # Install compat wrapper for legacy init systems
 install -Dd -m 0755 %{buildroot}%{_sbindir}
 ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rc%{name}
+
+%fdupes %{buildroot}
 
 %pre
 %service_add_pre %{name}.service
