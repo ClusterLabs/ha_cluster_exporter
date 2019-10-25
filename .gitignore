@@ -13,3 +13,6 @@
 
 # ignore binary
 ha_cluster_exporter
+
+# we don't use vendoring
+/vendor
