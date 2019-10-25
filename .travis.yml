@@ -1,17 +1,18 @@
-dist:     xenial
 sudo:     false
 language: go
 go:
   - 1.11.x
 env:
-  - GO111MODULE=on GOFLAGS=-mod=vendor
-git:
-  depth: 1
-  go_import_path: github.com/Clusterlab/ha_cluster_exporter
+  - GO111MODULE=on
 
 jobs:
   include:
-    - stage: Go fmt
-    - script: ./.ci/go_lint.sh
-    - stage: Build
-    - script: make
+    - stage: Test
+      name: Static checks
+      script: make static-checks
+    - stage: Test
+      name: Unit tests
+      script: make test
+    - stage: Release
+      script: make release
+      if: tag IS present
