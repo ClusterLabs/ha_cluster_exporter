@@ -26,6 +26,7 @@ type drbdStatus struct {
 		PeerDevices []struct {
 			Volume        int    `json:"volume"`
 			PeerDiskState string `json:"peer-disk-state"`
+			PercentInSync int    `json:"percent-in-sync"`
 		} `json:"peer_devices"`
 	} `json:"connections"`
 }
@@ -34,8 +35,9 @@ var (
 	drbdMetrics = metricDescriptors{
 		// the map key will function as an identifier of the metric throughout the rest of the code;
 		// it is arbitrary, but by convention we use the actual metric name
-		"resources":   NewMetricDesc("drbd", "resources", "The DRBD resources; 1 line per name, per volume", []string{"name", "role", "volume", "disk_state"}),
-		"connections": NewMetricDesc("drbd", "connections", "The DRBD resource connections; 1 line per per resource, per peer_node_id", []string{"resource", "peer_node_id", "peer_role", "volume", "peer_disk_state"}),
+		"resources":        NewMetricDesc("drbd", "resources", "The DRBD resources; 1 line per name, per volume", []string{"name", "role", "volume", "disk_state"}),
+		"connections":      NewMetricDesc("drbd", "connections", "The DRBD resource connections; 1 line per per resource, per peer_node_id", []string{"resource", "peer_node_id", "peer_role", "volume", "peer_disk_state"}),
+		"connections_sync": NewMetricDesc("drbd", "connections_sync", "The in sync percentage value for DRBD resource connections", []string{"resource", "peer_node_id", "volume"}),
 	}
 	drbdsetupPath = "/usr/sbin/drbdsetup"
 )
@@ -94,7 +96,11 @@ func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
 				continue
 			}
 			for _, peerDev := range conn.PeerDevices {
-				ch <- c.makeGaugeMetric("connections", float64(1), resource.Name, strconv.Itoa(conn.PeerNodeID), conn.PeerRole, strconv.Itoa(peerDev.Volume), strings.ToLower(peerDev.PeerDiskState))
+				ch <- c.makeGaugeMetric("connections", float64(1), resource.Name, strconv.Itoa(conn.PeerNodeID),
+					conn.PeerRole, strconv.Itoa(peerDev.Volume), strings.ToLower(peerDev.PeerDiskState))
+
+				ch <- c.makeGaugeMetric("connections_sync", float64(peerDev.PercentInSync), resource.Name, strconv.Itoa(conn.PeerNodeID), strconv.Itoa(peerDev.Volume))
+
 			}
 		}
 	}

@@ -117,7 +117,6 @@ func TestDrbdParsing(t *testing.T) {
 	}
 
 	// test attributes
-
 	if "1-single-0" != drbdDevs[0].Name {
 		t.Errorf("name doesn't correspond! fail got %s", drbdDevs[0].Name)
 	}
@@ -141,6 +140,11 @@ func TestDrbdParsing(t *testing.T) {
 	if 0 != drbdDevs[0].Devices[0].Volume {
 		t.Errorf("volumes should be 0")
 	}
+
+	if 100 != drbdDevs[0].Connections[0].PeerDevices[0].PercentInSync {
+		t.Errorf("PercentInSync doesn't correspond! fail got %d", drbdDevs[0].Connections[0].PeerDevices[0].PercentInSync)
+	}
+
 }
 
 func TestDrbdInfoError(t *testing.T) {

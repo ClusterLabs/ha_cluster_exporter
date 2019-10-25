@@ -173,7 +173,7 @@ The DRBD subsystems collect devices stats by parsing its configuration the JSON 
 0. [Sample](../test/drbd.metrics)
 1. [`ha_cluster_drbd_resources`](#ha_cluster_drbd_resources)
 2. [`ha_cluster_drbd_connections`](#ha_cluster_drbd_connections)
-
+3. [`ha_cluster_drbd_connections_sync`](#ha_cluster_drbd_connections_sync`)
 
 ### `ha_cluster_drbd_connections`
 
@@ -192,6 +192,11 @@ Either the value is `1`, or the line is absent altogether.
 
 The total number of lines for this metric will be the cardinality of `resource` times the cardinality of `peer_node_id`.
 
+### `ha_cluster_drbd_connections_sync`
+
+#### Descriptions
+
+The DRBD disk connections in sync percentage. Values from 0 to 100.
 
 ### `ha_cluster_drbd_resources`
 
