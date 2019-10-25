@@ -35,6 +35,9 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 # Make sure that the binary is not getting stripped.
 %{go_nostrip}
 
+%description
+Prometheus exporter for ha_cluster pacemaker metrics.
+
 %prep
 %setup -q # unpack project sources
 %setup -q -T -D -a 1 # unpack go dependencies in vendor.tar.gz, which was prepared by the source services
