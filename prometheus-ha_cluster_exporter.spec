@@ -26,12 +26,10 @@ Url:            https://github.com/ClusterLabs/ha_cluster_exporter
 Source:         %{name}-%{version}.tar.gz
 Source1:        vendor.tar.gz
 BuildRequires:  git-core
-BuildRequires:  fdupes
 BuildRequires:  golang-packaging
 BuildRequires:  go1.11
 Provides:       ha_cluster_exporter = %{version}-%{release}
 Provides:       prometheus(ha_cluster_exporter) = %{version}-%{release}
-Requires(post): %fillup_prereq
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 %{go_provides}
 # Make sure that the binary is not getting stripped.
@@ -44,7 +42,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 %define binary_name ha_cluster_exporter
 
 %build
-# we don't use %go_* macros but explicit go build command, as illustrated in the go_modules source service example
+# we don't use OBS Go packaging macros but explicit go build command, as illustrated in the go_modules source service example
 export VERSION=%{version}
 export COMMIT=%{commit}
 export CGO_ENABLED=0
