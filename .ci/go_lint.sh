@@ -6,6 +6,6 @@
 # and then run gofmt on them
 GOFMT_FILE_LIST=$(gofmt -l . | grep -v vendor)
 if [ -n "${GOFMT_FILE_LIST}" ]; then
-  printf >&2 'gofmt failed for the following files:\n%s\n\nplease run "gofmt -w ." on your changes before committing.\n' "${GOFMT_FILE_LIST}"
+  printf >&2 'gofmt failed for the following files:\n%s\n\nplease run "go fmt".\n' "${GOFMT_FILE_LIST}"
   exit 1
 fi

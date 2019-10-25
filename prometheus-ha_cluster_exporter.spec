@@ -22,7 +22,7 @@ Release:        0
 License:        Apache-2.0
 Summary:        Prometheus exporter for ha_cluster server metrics
 Group:          System/Monitoring
-Url:            https://github.com/ClusterLabs
+Url:            https://github.com/ClusterLabs/ha_cluster_exporter
 Source:         %{name}-%{version}.tar.gz
 Source1:        vendor.tar.gz
 BuildRequires:  git-core
@@ -44,7 +44,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 %description
 Prometheus exporter for ha_cluster pacemaker metrics.
 %prep
-%setup -q -n ha_cluster_exporter-%{version}
+%setup -q -n %{name}-%{version}
 
 %build
 %goprep github.com/ClusterLabs/ha_cluster_exporter
@@ -53,24 +53,24 @@ Prometheus exporter for ha_cluster pacemaker metrics.
 %install
 %goinstall
 %gosrc
-install -D -m 0644 %{SOURCE1} %{buildroot}%{_unitdir}/prometheus-ha_cluster_exporter.service
+install -D -m 0644 %{SOURCE1} %{buildroot}%{_unitdir}/%{name}.service
 install -Dd -m 0755 %{buildroot}%{_sbindir}
-ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rcprometheus-ha_cluster_exporter
+ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rc%{name}
 %gofilelist
 %fdupes %{buildroot}
 
 %pre
-%service_add_pre prometheus-ha_cluster_exporter.service
+%service_add_pre %{name}.service
 
 %post
-%service_add_post prometheus-ha_cluster_exporter.service
-%fillup_only -n prometheus-ha_cluster_exporter
+%service_add_post %{name}.service
+%fillup_only -n %{name}
 
 %preun
-%service_del_preun prometheus-ha_cluster_exporter.service
+%service_del_preun %{name}.service
 
 %postun
-%service_del_postun prometheus-ha_cluster_exporter.service
+%service_del_postun %{name}.service
 
 %files -f file.lst
 %defattr(-,root,root)
@@ -81,7 +81,7 @@ ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rcprometheus-ha_cluster_exporter
 %doc LICENSE
 %endif
 %{_bindir}/ha_cluster_exporter
-%{_unitdir}/prometheus-ha_cluster_exporter.service
-%{_sbindir}/rcprometheus-ha_cluster_exporter
+%{_unitdir}/%{name}.service
+%{_sbindir}/rc%{name}
 
 %changelog
