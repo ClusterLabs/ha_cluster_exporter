@@ -47,7 +47,7 @@ func TestParsePacemakerXML(t *testing.T) {
 				</resource_history>
 			</node>
 			<node name="Hawk3-1">
-				<resource_history id="d1" orphan="false" migration-threshold="3">
+				<resource_history id="d1" orphan="false" migration-threshold="3" fail-count="300" last-failure="Tue Jan 15 22:20:00 2019">
 					<operation_history call="10" task="start" last-rc-change="Tue Jan 15 22:19:15 2019" last-run="Tue Jan 15 22:19:15 2019" exec-time="23ms" queue-time="0ms" rc="0" rc_text="ok" />
 				</resource_history>
 				<resource_history id="ddd" orphan="false" migration-threshold="3" fail-count="1000000" last-failure="Tue Jan 15 22:19:59 2019">
@@ -121,7 +121,21 @@ func TestParsePacemakerXML(t *testing.T) {
 	if status.Nodes.Node[1].Online != true {
 		t.Errorf("node should be online got instead: %t", status.Nodes.Node[1].Online)
 	}
+	if status.NodeHistory.Node[0].Name != "Hawk3-2" {
+		t.Errorf("node should be called Hawk3-2 got instead: %s", status.NodeHistory.Node[0].Name)
+	}
 
+	if status.NodeHistory.Node[0].ResourceHistory[0].MigrationThreshold != 3 {
+		t.Errorf("migration-treshold should be 3 got instead: %d", status.NodeHistory.Node[0].ResourceHistory[0].MigrationThreshold)
+	}
+
+	if status.NodeHistory.Node[0].ResourceHistory[1].FailCount != 1000000 {
+		t.Errorf("fail-count should be 1000000 got instead: %d", status.NodeHistory.Node[0].ResourceHistory[1].FailCount)
+	}
+
+	if status.NodeHistory.Node[0].ResourceHistory[0].Name != "vip1" {
+		t.Errorf("resource should be called vip1 got instead: %s", status.NodeHistory.Node[0].ResourceHistory[0].Name)
+	}
 }
 
 func TestNewPacemakerCollector(t *testing.T) {

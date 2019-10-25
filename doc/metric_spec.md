@@ -29,6 +29,8 @@ The Pacemaker subsystem collects an atomic snapshot of the HA cluster directly f
 3. [`ha_cluster_pacemaker_resources`](#ha_cluster_pacemaker_resources)
 4. [`ha_cluster_pacemaker_resources_total`](#ha_cluster_pacemaker_resources_total)
 5. [`ha_cluster_pacemaker_stonith_enabled`](#ha_cluster_pacemaker_stonith_enabled)
+6. [`ha_cluster_pacemaker_fail_count`](#ha_cluster_pacemaker_fail_count)
+7. [`ha_cluster_pacemaker_migration_threshold`](#ha_cluster_pacemaker_migration_threshold)
 
 
 ### `ha_cluster_pacemaker_nodes`
@@ -85,6 +87,21 @@ The total number of *configured* resources in the cluster. This value is mostly 
 
 Whether or not stonith is enabled in the cluster.  
 Value is either `1` or `0`.
+
+### `ha_cluster_pacemaker_fail_count`
+
+#### Description
+
+The number of fail count per node and resource ID.
+The value can vary from 0, 1 , 5 etc to `+Inf`, that  correspond to the infinity fail count. For more information about fail count refer to pacemaker upstream documentation.
+
+### `ha_cluster_pacemaker_migration_threshold`
+
+#### Description
+
+The number of migration threshold pro node and resource ID set by a pacemaker cluster. 
+Possible values are positive numbers.
+
 
 ## Corosync
 

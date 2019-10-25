@@ -54,29 +54,29 @@ cat <<EOF
     </node_attributes>
     <node_history>
         <node name="hana01">
-            <resource_history id="rsc_SAPHana_PRD_HDB00" orphan="false" migration-threshold="5000">
+            <resource_history id="rsc_SAPHana_PRD_HDB00" orphan="false" migration-threshold="5000" fail-count="1000000" last-failure="Wed Oct 23 12:37:22 2019">
                 <operation_history call="15" task="probe" last-rc-change="Thu Oct 10 12:57:33 2019" last-run="Thu Oct 10 12:57:33 2019" exec-time="4140ms" queue-time="0ms" rc="0" rc_text="ok" />
                 <operation_history call="31" task="promote" last-rc-change="Thu Oct 10 12:57:57 2019" last-run="Thu Oct 10 12:57:57 2019" exec-time="2015ms" queue-time="0ms" rc="0" rc_text="ok" />
                 <operation_history call="32" task="monitor" interval="60000ms" last-rc-change="Thu Oct 10 12:58:03 2019" exec-time="3589ms" queue-time="0ms" rc="8" rc_text="master" />
             </resource_history>
-            <resource_history id="rsc_ip_PRD_HDB00" orphan="false" migration-threshold="5000">
+            <resource_history id="rsc_ip_PRD_HDB00" orphan="false" migration-threshold="5000" fail-count="2" last-failure="Wed Oct 23 12:37:22 2019">
                 <operation_history call="21" task="start" last-rc-change="Thu Oct 10 12:57:33 2019" last-run="Thu Oct 10 12:57:33 2019" exec-time="130ms" queue-time="0ms" rc="0" rc_text="ok" />
                 <operation_history call="22" task="monitor" interval="10000ms" last-rc-change="Thu Oct 10 12:57:33 2019" exec-time="78ms" queue-time="0ms" rc="0" rc_text="ok" />
             </resource_history>
             <resource_history id="stonith-sbd" orphan="false" migration-threshold="5000">
                 <operation_history call="6" task="start" last-rc-change="Thu Oct 10 12:57:31 2019" last-run="Thu Oct 10 12:57:31 2019" exec-time="2201ms" queue-time="0ms" rc="0" rc_text="ok" />
             </resource_history>
-            <resource_history id="rsc_SAPHanaTopology_PRD_HDB00" orphan="false" migration-threshold="5000">
+            <resource_history id="rsc_SAPHanaTopology_PRD_HDB00" orphan="false" migration-threshold="1">
                 <operation_history call="24" task="start" last-rc-change="Thu Oct 10 12:57:39 2019" last-run="Thu Oct 10 12:57:39 2019" exec-time="4538ms" queue-time="0ms" rc="0" rc_text="ok" />
                 <operation_history call="26" task="monitor" interval="10000ms" last-rc-change="Thu Oct 10 12:57:46 2019" exec-time="4220ms" queue-time="0ms" rc="0" rc_text="ok" />
             </resource_history>
         </node>
         <node name="hana02">
-            <resource_history id="rsc_SAPHana_PRD_HDB00" orphan="false" migration-threshold="5000">
+            <resource_history id="rsc_SAPHana_PRD_HDB00" orphan="false" migration-threshold="50" fail-count="300" last-failure="Wed Oct 23 12:37:22 2019">
                 <operation_history call="22" task="start" last-rc-change="Thu Oct 17 15:22:40 2019" last-run="Thu Oct 17 15:22:40 2019" exec-time="44083ms" queue-time="0ms" rc="0" rc_text="ok" />
                 <operation_history call="23" task="monitor" interval="61000ms" last-rc-change="Thu Oct 17 15:23:24 2019" exec-time="2605ms" queue-time="0ms" rc="0" rc_text="ok" />
             </resource_history>
-            <resource_history id="rsc_SAPHanaTopology_PRD_HDB00" orphan="false" migration-threshold="5000">
+            <resource_history id="rsc_SAPHanaTopology_PRD_HDB00" orphan="false" migration-threshold="3">
                 <operation_history call="20" task="start" last-rc-change="Thu Oct 17 15:22:37 2019" last-run="Thu Oct 17 15:22:37 2019" exec-time="2905ms" queue-time="0ms" rc="0" rc_text="ok" />
                 <operation_history call="21" task="monitor" interval="10000ms" last-rc-change="Thu Oct 17 15:22:40 2019" exec-time="3347ms" queue-time="0ms" rc="0" rc_text="ok" />
             </resource_history>
