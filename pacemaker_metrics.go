@@ -82,13 +82,14 @@ var (
 	pacemakerMetrics = metricDescriptors{
 		// the map key will function as an identifier of the metric throughout the rest of the code;
 		// it is arbitrary, but by convention we use the actual metric name
-		"nodes":               NewMetricDesc("pacemaker", "nodes", "The nodes in the cluster; one line per name, per status", []string{"name", "type", "status"}),
-		"nodes_total":         NewMetricDesc("pacemaker", "nodes_total", "Total number of nodes in the cluster", nil),
-		"resources":           NewMetricDesc("pacemaker", "resources", "The resources in the cluster; one line per id, per status", []string{"node", "id", "role", "managed", "status"}),
-		"resources_total":     NewMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
-		"stonith_enabled":     NewMetricDesc("pacemaker", "stonith_enabled", "Whether or not stonith is enabled", nil),
-		"fail_count":          NewMetricDesc("pacemaker", "fail_count", "The Fail count number per node and resource id", []string{"node", "resource"}),
-		"migration_threshold": NewMetricDesc("pacemaker", "migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"}),
+		"nodes":                          NewMetricDesc("pacemaker", "nodes", "The nodes in the cluster; one line per name, per status", []string{"name", "type", "status"}),
+		"nodes_total":                    NewMetricDesc("pacemaker", "nodes_total", "Total number of nodes in the cluster", nil),
+		"resources":                      NewMetricDesc("pacemaker", "resources", "The resources in the cluster; one line per id, per status", []string{"node", "id", "role", "managed", "status"}),
+		"resources_total":                NewMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
+		"stonith_enabled":                NewMetricDesc("pacemaker", "stonith_enabled", "Whether or not stonith is enabled", nil),
+		"fail_count":                     NewMetricDesc("pacemaker", "fail_count", "The Fail count number per node and resource id", []string{"node", "resource"}),
+		"migration_threshold":            NewMetricDesc("pacemaker", "migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"}),
+		"resource_configuration_changes": NewMetricDesc("pacemaker", "resource_configuration_changes", "Indicate if a configuration of resource agent has changed in cluster", []string{}),
 	}
 
 	crmMonPath = "/usr/sbin/crm_mon"
@@ -138,6 +139,7 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 	c.recordNodeMetrics(pacemakerStatus, ch)
 	c.recordFailCountMetrics(pacemakerStatus, ch)
 	c.recordMigrationThresholdMetrics(pacemakerStatus, ch)
+	c.recordResourceAgentsChanges(pacemakerStatus, ch)
 }
 
 func getPacemakerStatus() (pacemakerStatus, error) {
@@ -235,6 +237,10 @@ func (c *pacemakerCollector) recordFailCountMetrics(pacemakerStatus pacemakerSta
 
 		}
 	}
+}
+
+func (c *pacemakerCollector) recordResourceAgentsChanges(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {
+	ch <- c.makeGaugeMetric("resource_configuration_changes", float64(1))
 }
 
 func (c *pacemakerCollector) recordMigrationThresholdMetrics(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {
