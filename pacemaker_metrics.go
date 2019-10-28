@@ -34,6 +34,9 @@ type summary struct {
 	Nodes struct {
 		Number int `xml:"number,attr"`
 	} `xml:"nodes_configured"`
+	LastChange struct {
+		Time string `xml:"time,attr"`
+	} `xml:"last_change"`
 	Resources struct {
 		Number   int `xml:"number,attr"`
 		Disabled int `xml:"disabled,attr"`

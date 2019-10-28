@@ -93,6 +93,10 @@ func TestParsePacemakerXML(t *testing.T) {
 		t.Errorf("Blocked was incorrect, got: %d, expected: %d ", status.Summary.Resources.Blocked, expected)
 	}
 
+	if status.Summary.LastChange.Time != "Tue Jan 15 22:19:59 2019" {
+		t.Errorf("Blocked was incorrect, got: %s, expected: Tue Jan 15 22:19:59 2019", status.Summary.LastChange.Time)
+	}
+
 	expected = 2
 	if status.Summary.Nodes.Number != expected {
 		t.Errorf("sbdDevice was incorrect, got: %d, expected: %d ", status.Summary.Nodes.Number, expected)
