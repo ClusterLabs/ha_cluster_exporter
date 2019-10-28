@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -243,7 +244,13 @@ func (c *pacemakerCollector) recordFailCountMetrics(pacemakerStatus pacemakerSta
 }
 
 func (c *pacemakerCollector) recordResourceAgentsChanges(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {
-	ch <- c.makeGaugeMetric("resource_configuration_changes", float64(1))
+	t, err := time.Parse(time.ANSIC, pacemakerStatus.Summary.LastChange.Time)
+	if err != nil {
+		log.Warnln(err)
+		return
+	}
+	// is the resource have changed we set a different timeout from pacemaker
+	ch <- c.makeGaugeMetric("resource_configuration_changes", float64(t.Unix()))
 }
 
 func (c *pacemakerCollector) recordMigrationThresholdMetrics(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {
