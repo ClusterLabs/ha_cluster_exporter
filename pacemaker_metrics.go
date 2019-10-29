@@ -86,14 +86,14 @@ var (
 	pacemakerMetrics = metricDescriptors{
 		// the map key will function as an identifier of the metric throughout the rest of the code;
 		// it is arbitrary, but by convention we use the actual metric name
-		"nodes":                          NewMetricDesc("pacemaker", "nodes", "The nodes in the cluster; one line per name, per status", []string{"name", "type", "status"}),
-		"nodes_total":                    NewMetricDesc("pacemaker", "nodes_total", "Total number of nodes in the cluster", nil),
-		"resources":                      NewMetricDesc("pacemaker", "resources", "The resources in the cluster; one line per id, per status", []string{"node", "id", "role", "managed", "status"}),
-		"resources_total":                NewMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
-		"stonith_enabled":                NewMetricDesc("pacemaker", "stonith_enabled", "Whether or not stonith is enabled", nil),
-		"fail_count":                     NewMetricDesc("pacemaker", "fail_count", "The Fail count number per node and resource id", []string{"node", "resource"}),
-		"migration_threshold":            NewMetricDesc("pacemaker", "migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"}),
-		"resource_configuration_changes": NewMetricDesc("pacemaker", "resource_configuration_changes", "Indicate if a configuration of resource agent has changed in cluster", []string{}),
+		"nodes":               NewMetricDesc("pacemaker", "nodes", "The nodes in the cluster; one line per name, per status", []string{"name", "type", "status"}),
+		"nodes_total":         NewMetricDesc("pacemaker", "nodes_total", "Total number of nodes in the cluster", nil),
+		"resources":           NewMetricDesc("pacemaker", "resources", "The resources in the cluster; one line per id, per status", []string{"node", "id", "role", "managed", "status"}),
+		"resources_total":     NewMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
+		"stonith_enabled":     NewMetricDesc("pacemaker", "stonith_enabled", "Whether or not stonith is enabled", nil),
+		"fail_count":          NewMetricDesc("pacemaker", "fail_count", "The Fail count number per node and resource id", []string{"node", "resource"}),
+		"migration_threshold": NewMetricDesc("pacemaker", "migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"}),
+		"config_last_change":  NewMetricDesc("pacemaker", "config_last_change", "Indicate if a configuration of resource has changed in cluster", []string{}),
 	}
 
 	crmMonPath = "/usr/sbin/crm_mon"
@@ -250,7 +250,7 @@ func (c *pacemakerCollector) recordResourceAgentsChanges(pacemakerStatus pacemak
 		return
 	}
 	// is the resource have changed we set a different timeout from pacemaker
-	ch <- c.makeGaugeMetric("resource_configuration_changes", float64(t.Unix()))
+	ch <- prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(c.metrics["config_last_change"], prometheus.CounterValue, 1))
 }
 
 func (c *pacemakerCollector) recordMigrationThresholdMetrics(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {

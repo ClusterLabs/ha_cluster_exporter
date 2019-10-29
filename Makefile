@@ -1,4 +1,4 @@
-default: clean static-checks test build
+default: clean static-checks test build post-build
 
 download:
 	go mod download
@@ -32,6 +32,9 @@ clean:
 	go clean
 	rm -f coverage.out
 
+post-build:
+	go mod tidy
+
 release:
 
-.PHONY: default download install static-checks vet-check fmt-check test clean release
+.PHONY: default download install static-checks vet-check fmt-check test clean release post-build
