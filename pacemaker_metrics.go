@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -34,6 +35,9 @@ type summary struct {
 	Nodes struct {
 		Number int `xml:"number,attr"`
 	} `xml:"nodes_configured"`
+	LastChange struct {
+		Time string `xml:"time,attr"`
+	} `xml:"last_change"`
 	Resources struct {
 		Number   int `xml:"number,attr"`
 		Disabled int `xml:"disabled,attr"`
@@ -89,6 +93,7 @@ var (
 		"stonith_enabled":     NewMetricDesc("pacemaker", "stonith_enabled", "Whether or not stonith is enabled", nil),
 		"fail_count":          NewMetricDesc("pacemaker", "fail_count", "The Fail count number per node and resource id", []string{"node", "resource"}),
 		"migration_threshold": NewMetricDesc("pacemaker", "migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"}),
+		"config_last_change":  NewMetricDesc("pacemaker", "config_last_change", "Indicate if a configuration of resource has changed in cluster", []string{}),
 	}
 
 	crmMonPath = "/usr/sbin/crm_mon"
@@ -138,6 +143,7 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 	c.recordNodeMetrics(pacemakerStatus, ch)
 	c.recordFailCountMetrics(pacemakerStatus, ch)
 	c.recordMigrationThresholdMetrics(pacemakerStatus, ch)
+	c.recordResourceAgentsChanges(pacemakerStatus, ch)
 }
 
 func getPacemakerStatus() (pacemakerStatus, error) {
@@ -235,6 +241,16 @@ func (c *pacemakerCollector) recordFailCountMetrics(pacemakerStatus pacemakerSta
 
 		}
 	}
+}
+
+func (c *pacemakerCollector) recordResourceAgentsChanges(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {
+	t, err := time.Parse(time.ANSIC, pacemakerStatus.Summary.LastChange.Time)
+	if err != nil {
+		log.Warnln(err)
+		return
+	}
+	// is the resource have changed we set a different timeout from pacemaker
+	ch <- prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(c.metrics["config_last_change"], prometheus.CounterValue, 1))
 }
 
 func (c *pacemakerCollector) recordMigrationThresholdMetrics(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {

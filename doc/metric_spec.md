@@ -31,7 +31,7 @@ The Pacemaker subsystem collects an atomic snapshot of the HA cluster directly f
 5. [`ha_cluster_pacemaker_stonith_enabled`](#ha_cluster_pacemaker_stonith_enabled)
 6. [`ha_cluster_pacemaker_fail_count`](#ha_cluster_pacemaker_fail_count)
 7. [`ha_cluster_pacemaker_migration_threshold`](#ha_cluster_pacemaker_migration_threshold)
-
+8. [`ha_cluster_pacemaker_config_last_change`](#ha_cluster_pacemaker_config_last_change)
 
 ### `ha_cluster_pacemaker_nodes`
 
@@ -102,6 +102,12 @@ The value can vary from 0, 1 , 5 etc to `+Inf`, that  correspond to the infinity
 The number of migration threshold pro node and resource ID set by a pacemaker cluster. 
 Possible values are positive numbers.
 
+### `ha_cluster_pacemaker_config_last_change`
+
+#### Description
+
+The relevant part of this metric is its timestamp, which corresponds to the last time Pacemaker configuration changed.
+The actual metric value will always be 1 and can be ignored.
 
 ## Corosync
 

@@ -1,3 +1,6 @@
+# HELP ha_cluster_pacemaker_config_last_change Indicate if a configuration of resource has changed in cluster
+# TYPE ha_cluster_pacemaker_config_last_change counter
+ha_cluster_pacemaker_config_last_change 1 1571399302000
 # HELP ha_cluster_pacemaker_fail_count The Fail count number per node and resource id
 # TYPE ha_cluster_pacemaker_fail_count gauge
 ha_cluster_pacemaker_fail_count{node="hana01",resource="rsc_SAPHanaTopology_PRD_HDB00"} 0 1234
