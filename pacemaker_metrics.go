@@ -29,6 +29,11 @@ type pacemakerStatus struct {
 			} `xml:"resource_history"`
 		} `xml:"node"`
 	} `xml:"node_history"`
+	Bans struct {
+		Ban []struct {
+			ID string `xml:"id,attr"`
+		} `xml:"ban"`
+	} `xml:"bans"`
 }
 
 type summary struct {
@@ -93,7 +98,8 @@ var (
 		"stonith_enabled":     NewMetricDesc("pacemaker", "stonith_enabled", "Whether or not stonith is enabled", nil),
 		"fail_count":          NewMetricDesc("pacemaker", "fail_count", "The Fail count number per node and resource id", []string{"node", "resource"}),
 		"migration_threshold": NewMetricDesc("pacemaker", "migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"}),
-		"config_last_change":  NewMetricDesc("pacemaker", "config_last_change", "Indicate if a configuration of resource has changed in cluster", []string{}),
+		"config_last_change":  NewMetricDesc("pacemaker", "config_last_change", "Indicate if a configuration of resource has changed in cluster", nil),
+		"constraints":         NewMetricDesc("pacemaker", "constraints", "Indicate if a constraints of specific type is present per resource ID", []string{"type", "id"}),
 	}
 
 	crmMonPath = "/usr/sbin/crm_mon"
@@ -144,6 +150,7 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 	c.recordFailCountMetrics(pacemakerStatus, ch)
 	c.recordMigrationThresholdMetrics(pacemakerStatus, ch)
 	c.recordResourceAgentsChanges(pacemakerStatus, ch)
+	c.recordMigrationConstraintsMetrics(pacemakerStatus, ch)
 }
 
 func getPacemakerStatus() (pacemakerStatus, error) {
@@ -258,5 +265,12 @@ func (c *pacemakerCollector) recordMigrationThresholdMetrics(pacemakerStatus pac
 		for _, resHistory := range node.ResourceHistory {
 			ch <- c.makeGaugeMetric("migration_threshold", float64(resHistory.MigrationThreshold), node.Name, resHistory.Name)
 		}
+	}
+}
+
+func (c *pacemakerCollector) recordMigrationConstraintsMetrics(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {
+	for _, ban := range pacemakerStatus.Bans.Ban {
+		// the ban constraints live in xml of pacemaker, where others constraints not
+		ch <- c.makeGaugeMetric("constraints", float64(1), "ban", ban.ID)
 	}
 }
