@@ -73,14 +73,33 @@ func landingpage(w http.ResponseWriter, r *http.Request) {
 		</html>`))
 }
 
+func loglevel(opt string) {
+	switch opt {
+	case "error":
+		log.SetLevel(log.ErrorLevel)
+	case "warn":
+		log.SetLevel(log.WarnLevel)
+	case "info":
+		log.SetLevel(log.InfoLevel)
+	case "debug":
+		log.SetLevel(log.DebugLevel)
+	default:
+		log.Warnln("Unrecognized log level, default to `info` level")
+	}
+}
+
 var (
 	clock      Clock = &SystemClock{}
 	portNumber       = flag.String("port", "9002", "The port number to listen on for HTTP requests.")
+	address          = flag.String("address", "0.0.0.0", "The address to listen on for HTTP requests.")
+	logLevel         = flag.String("level", "info", "The level of logs to log")
 )
 
 func main() {
 	// read cli option and setup initial stat
 	flag.Parse()
+
+	loglevel(*logLevel)
 
 	pacemakerCollector, err := NewPacemakerCollector()
 	if err != nil {
@@ -112,6 +131,6 @@ func main() {
 
 	http.HandleFunc("/", landingpage)
 	http.Handle("/metrics", promhttp.Handler())
-	log.Infoln("Serving metrics on port", *portNumber)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", *portNumber), nil))
+	log.Infof("Serving metrics on %s:%s", *address, *portNumber)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", *address, *portNumber), nil))
 }
