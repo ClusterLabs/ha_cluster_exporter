@@ -16,9 +16,11 @@ import (
 
 // *** crm_mon XML unserialization structures
 type pacemakerStatus struct {
-	Version     string  `xml:"version,attr"`
-	Summary     summary `xml:"summary"`
-	Nodes       nodes   `xml:"nodes"`
+	Version string  `xml:"version,attr"`
+	Summary summary `xml:"summary"`
+	Nodes   struct {
+		Node []node `xml:"node"`
+	} `xml:"nodes"`
 	NodeHistory struct {
 		Node []struct {
 			Name            string `xml:"name,attr"`
@@ -31,7 +33,8 @@ type pacemakerStatus struct {
 	} `xml:"node_history"`
 	Bans struct {
 		Ban []struct {
-			ID string `xml:"id,attr"`
+			ID  string `xml:"id,attr"`
+			RSC string `xml:"resource,attr"`
 		} `xml:"ban"`
 	} `xml:"bans"`
 }
@@ -51,10 +54,6 @@ type summary struct {
 	ClusterOptions struct {
 		StonithEnabled bool `xml:"stonith-enabled,attr"`
 	} `xml:"cluster_options"`
-}
-
-type nodes struct {
-	Node []node `xml:"node"`
 }
 
 type node struct {
@@ -99,7 +98,7 @@ var (
 		"fail_count":          NewMetricDesc("pacemaker", "fail_count", "The Fail count number per node and resource id", []string{"node", "resource"}),
 		"migration_threshold": NewMetricDesc("pacemaker", "migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"}),
 		"config_last_change":  NewMetricDesc("pacemaker", "config_last_change", "Indicate if a configuration of resource has changed in cluster", nil),
-		"constraints":         NewMetricDesc("pacemaker", "constraints", "Indicate if a constraints of specific type is present per resource ID", []string{"type", "id"}),
+		"constraints":         NewMetricDesc("pacemaker", "constraints", "Indicate if a constraints of specific type is present per ID and per resource", []string{"type", "id", "resource"}),
 	}
 
 	crmMonPath   = "/usr/sbin/crm_mon"
@@ -173,7 +172,6 @@ func getPacemakerStatus() (pacemakerStatus, error) {
 
 	return pacemakerStatus, nil
 }
-
 func parsePacemakerStatus(pacemakerXMLRaw []byte) (pacemakerStatus, error) {
 	var pacemakerStatus pacemakerStatus
 	err := xml.Unmarshal(pacemakerXMLRaw, &pacemakerStatus)
@@ -274,9 +272,44 @@ func (c *pacemakerCollector) recordMigrationThresholdMetrics(pacemakerStatus pac
 	}
 }
 
+// cibAdminStatus used by only constraint metric and by cibadmin binary only
+type cibAdminStatus struct {
+	RscLocation []struct {
+		ID  string `xml:"id,attr"`
+		RSC string `xml:"rsc,attr"`
+	} `xml:"rsc_location"`
+}
+
+func getCibAdminPreferConstraint() (cibAdminStatus, error) {
+	var cibAdminStatus cibAdminStatus
+	cibAdminStatusXML, err := exec.Command(cibAdminPath, "--query", "--xpath", "//rsc_location[starts-with(@id,'cli-prefer-')]").Output()
+	if err != nil {
+		return cibAdminStatus, errors.Wrap(err, "error while executing cibadmin")
+	}
+
+	err = xml.Unmarshal(cibAdminStatusXML, &cibAdminStatus)
+	if err != nil {
+		return cibAdminStatus, errors.Wrap(err, "could not parse cibadmin status from XML")
+	}
+
+	return cibAdminStatus, nil
+}
+
 func (c *pacemakerCollector) recordMigrationConstraintsMetrics(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {
+	// set "ban" type of metric
 	for _, ban := range pacemakerStatus.Bans.Ban {
 		// the ban constraints live in xml of pacemaker, where others constraints not
-		ch <- c.makeGaugeMetric("constraints", float64(1), "ban", ban.ID)
+		ch <- c.makeGaugeMetric("constraints", float64(1), "ban", ban.ID, ban.RSC)
+	}
+
+	// set the 2nd type of metric "prefer"
+	cibAdminConstraint, err := getCibAdminPreferConstraint()
+	if err != nil {
+		log.Warnln(err)
+		return
+	}
+
+	for _, rsc := range cibAdminConstraint.RscLocation {
+		ch <- c.makeGaugeMetric("constraints", float64(1), "prefer", rsc.ID, rsc.RSC)
 	}
 }
