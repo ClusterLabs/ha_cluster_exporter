@@ -102,16 +102,22 @@ var (
 		"constraints":         NewMetricDesc("pacemaker", "constraints", "Indicate if a constraints of specific type is present per resource ID", []string{"type", "id"}),
 	}
 
-	crmMonPath = "/usr/sbin/crm_mon"
+	crmMonPath   = "/usr/sbin/crm_mon"
+	cibAdminPath = "/usr/sbin/cibadmin"
 )
 
 func NewPacemakerCollector() (*pacemakerCollector, error) {
-	fileInfo, err := os.Stat(crmMonPath)
-	if err != nil || os.IsNotExist(err) {
-		return nil, errors.Wrapf(err, "'%s' not found", crmMonPath)
-	}
-	if (fileInfo.Mode() & 0111) == 0 {
-		return nil, errors.Errorf("'%s' is not executable", crmMonPath)
+	binaries := []string{crmMonPath, cibAdminPath}
+
+	// check that all binary we rely on  for pacemaker metrics exists and are executables
+	for _, binary := range binaries {
+		fileInfo, err := os.Stat(binary)
+		if err != nil || os.IsNotExist(err) {
+			return nil, errors.Wrapf(err, "'%s' not found", binary)
+		}
+		if (fileInfo.Mode() & 0111) == 0 {
+			return nil, errors.Errorf("'%s' is not executable", binary)
+		}
 	}
 
 	return &pacemakerCollector{
