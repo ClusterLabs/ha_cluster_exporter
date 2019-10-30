@@ -32,6 +32,7 @@ The Pacemaker subsystem collects an atomic snapshot of the HA cluster directly f
 6. [`ha_cluster_pacemaker_fail_count`](#ha_cluster_pacemaker_fail_count)
 7. [`ha_cluster_pacemaker_migration_threshold`](#ha_cluster_pacemaker_migration_threshold)
 8. [`ha_cluster_pacemaker_config_last_change`](#ha_cluster_pacemaker_config_last_change)
+8. [`ha_cluster_pacemaker_constraints`](#ha_cluster_pacemaker_constraints)
 
 ### `ha_cluster_pacemaker_nodes`
 
@@ -108,6 +109,15 @@ Possible values are positive numbers.
 
 The relevant part of this metric is its timestamp, which corresponds to the last time Pacemaker configuration changed.
 The actual metric value will always be 1 and can be ignored.
+
+
+### `ha_cluster_pacemaker_constraints`
+
+### Description
+
+Indicate if a cluster constraints is present, peer ID and resource.
+There are 2 types of constraints currently: `prefer` and `ban` which correspond to pacemaker constraints.
+
 
 ## Corosync
 
