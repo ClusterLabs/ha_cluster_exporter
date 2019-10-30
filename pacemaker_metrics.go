@@ -16,9 +16,11 @@ import (
 
 // *** crm_mon XML unserialization structures
 type pacemakerStatus struct {
-	Version     string  `xml:"version,attr"`
-	Summary     summary `xml:"summary"`
-	Nodes       nodes   `xml:"nodes"`
+	Version string  `xml:"version,attr"`
+	Summary summary `xml:"summary"`
+	Nodes   struct {
+		Node []node `xml:"node"`
+	} `xml:"nodes"`
 	NodeHistory struct {
 		Node []struct {
 			Name            string `xml:"name,attr"`
@@ -29,6 +31,12 @@ type pacemakerStatus struct {
 			} `xml:"resource_history"`
 		} `xml:"node"`
 	} `xml:"node_history"`
+	Bans struct {
+		Ban []struct {
+			ID  string `xml:"id,attr"`
+			RSC string `xml:"resource,attr"`
+		} `xml:"ban"`
+	} `xml:"bans"`
 }
 
 type summary struct {
@@ -46,10 +54,6 @@ type summary struct {
 	ClusterOptions struct {
 		StonithEnabled bool `xml:"stonith-enabled,attr"`
 	} `xml:"cluster_options"`
-}
-
-type nodes struct {
-	Node []node `xml:"node"`
 }
 
 type node struct {
@@ -93,19 +97,26 @@ var (
 		"stonith_enabled":     NewMetricDesc("pacemaker", "stonith_enabled", "Whether or not stonith is enabled", nil),
 		"fail_count":          NewMetricDesc("pacemaker", "fail_count", "The Fail count number per node and resource id", []string{"node", "resource"}),
 		"migration_threshold": NewMetricDesc("pacemaker", "migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"}),
-		"config_last_change":  NewMetricDesc("pacemaker", "config_last_change", "Indicate if a configuration of resource has changed in cluster", []string{}),
+		"config_last_change":  NewMetricDesc("pacemaker", "config_last_change", "Indicate if a configuration of resource has changed in cluster", nil),
+		"constraints":         NewMetricDesc("pacemaker", "constraints", "Indicate if a constraints of specific type is present per ID and per resource", []string{"type", "id", "resource"}),
 	}
 
-	crmMonPath = "/usr/sbin/crm_mon"
+	crmMonPath   = "/usr/sbin/crm_mon"
+	cibAdminPath = "/usr/sbin/cibadmin"
 )
 
 func NewPacemakerCollector() (*pacemakerCollector, error) {
-	fileInfo, err := os.Stat(crmMonPath)
-	if err != nil || os.IsNotExist(err) {
-		return nil, errors.Wrapf(err, "'%s' not found", crmMonPath)
-	}
-	if (fileInfo.Mode() & 0111) == 0 {
-		return nil, errors.Errorf("'%s' is not executable", crmMonPath)
+	binaries := []string{crmMonPath, cibAdminPath}
+
+	// check that all binary we rely on  for pacemaker metrics exists and are executables
+	for _, binary := range binaries {
+		fileInfo, err := os.Stat(binary)
+		if err != nil || os.IsNotExist(err) {
+			return nil, errors.Wrapf(err, "'%s' not found", binary)
+		}
+		if (fileInfo.Mode() & 0111) == 0 {
+			return nil, errors.Errorf("'%s' is not executable", binary)
+		}
 	}
 
 	return &pacemakerCollector{
@@ -144,6 +155,7 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 	c.recordFailCountMetrics(pacemakerStatus, ch)
 	c.recordMigrationThresholdMetrics(pacemakerStatus, ch)
 	c.recordResourceAgentsChanges(pacemakerStatus, ch)
+	c.recordMigrationConstraintsMetrics(pacemakerStatus, ch)
 }
 
 func getPacemakerStatus() (pacemakerStatus, error) {
@@ -160,7 +172,6 @@ func getPacemakerStatus() (pacemakerStatus, error) {
 
 	return pacemakerStatus, nil
 }
-
 func parsePacemakerStatus(pacemakerXMLRaw []byte) (pacemakerStatus, error) {
 	var pacemakerStatus pacemakerStatus
 	err := xml.Unmarshal(pacemakerXMLRaw, &pacemakerStatus)
@@ -258,5 +269,47 @@ func (c *pacemakerCollector) recordMigrationThresholdMetrics(pacemakerStatus pac
 		for _, resHistory := range node.ResourceHistory {
 			ch <- c.makeGaugeMetric("migration_threshold", float64(resHistory.MigrationThreshold), node.Name, resHistory.Name)
 		}
+	}
+}
+
+// cibAdminStatus used by only constraint metric and by cibadmin binary only
+type cibAdminStatus struct {
+	RscLocation []struct {
+		ID  string `xml:"id,attr"`
+		RSC string `xml:"rsc,attr"`
+	} `xml:"rsc_location"`
+}
+
+func getCibAdminPreferConstraint() (cibAdminStatus, error) {
+	var cibAdminStatus cibAdminStatus
+	cibAdminStatusXML, err := exec.Command(cibAdminPath, "--query", "--xpath", "//rsc_location[starts-with(@id,'cli-prefer-')]").Output()
+	if err != nil {
+		return cibAdminStatus, errors.Wrap(err, "error while executing cibadmin")
+	}
+
+	err = xml.Unmarshal(cibAdminStatusXML, &cibAdminStatus)
+	if err != nil {
+		return cibAdminStatus, errors.Wrap(err, "could not parse cibadmin status from XML")
+	}
+
+	return cibAdminStatus, nil
+}
+
+func (c *pacemakerCollector) recordMigrationConstraintsMetrics(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {
+	// set "ban" type of metric
+	for _, ban := range pacemakerStatus.Bans.Ban {
+		// the ban constraints live in xml of pacemaker, where others constraints not
+		ch <- c.makeGaugeMetric("constraints", float64(1), "ban", ban.ID, ban.RSC)
+	}
+
+	// set the 2nd type of metric "prefer"
+	cibAdminConstraint, err := getCibAdminPreferConstraint()
+	if err != nil {
+		log.Warnln(err)
+		return
+	}
+
+	for _, rsc := range cibAdminConstraint.RscLocation {
+		ch <- c.makeGaugeMetric("constraints", float64(1), "prefer", rsc.ID, rsc.RSC)
 	}
 }

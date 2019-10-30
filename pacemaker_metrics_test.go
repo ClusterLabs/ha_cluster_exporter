@@ -65,7 +65,9 @@ func TestParsePacemakerXML(t *testing.T) {
 		<tickets>
 		</tickets>
 		<bans>
-		</bans>
+     		<ban id="cli-ban-msl_SAPHana_PRD_HDB00-on-damadog-hana01" resource="msl_SAPHana_PRD_HDB00" node="damadog-hana01" weight="-1000000" master_only="false" />
+			<ban id="cli-ban-msl_SAPHana_PRD_HDB00-on-damadog-hana02" resource="msl_SAPHana_PRD_HDB002" node="damadog-hana01" weight="-1000000" master_only="false" />
+	    </bans>
 	</crm_mon>`
 
 	status, err := parsePacemakerStatus([]byte(pacemakerxml))
@@ -77,6 +79,13 @@ func TestParsePacemakerXML(t *testing.T) {
 		t.Errorf("Version was incorrect, got: %s, expected: %s ", status.Version, "2.0.0")
 	}
 
+	if status.Bans.Ban[0].ID != "cli-ban-msl_SAPHana_PRD_HDB00-on-damadog-hana01" {
+		t.Errorf("ban constraint incorrect, got: %s, expected: cli-ban-msl_SAPHana_PRD_HDB00-on-damadog-hana01", status.Bans.Ban[0].ID)
+	}
+
+	if status.Bans.Ban[1].ID != "cli-ban-msl_SAPHana_PRD_HDB00-on-damadog-hana02" {
+		t.Errorf("ban constraint incorrect, got: %s, expected: cli-ban-msl_SAPHana_PRD_HDB00-on-damadog-hana02", status.Bans.Ban[0].ID)
+	}
 	var expected int
 	expected = 3
 
@@ -144,6 +153,7 @@ func TestParsePacemakerXML(t *testing.T) {
 
 func TestNewPacemakerCollector(t *testing.T) {
 	crmMonPath = "test/fake_crm_mon.sh"
+	cibAdminPath = "test/fake_cibadmin.sh"
 
 	_, err := NewPacemakerCollector()
 	if err != nil {
@@ -178,7 +188,6 @@ func TestNewPacemakerCollectorChecksCrmMonExecutableBits(t *testing.T) {
 func TestPacemakerCollector(t *testing.T) {
 	clock = StoppedClock{}
 	crmMonPath = "test/fake_crm_mon.sh"
-
 	collector, _ := NewPacemakerCollector()
 	expectMetrics(t, collector, "pacemaker.metrics")
 }
