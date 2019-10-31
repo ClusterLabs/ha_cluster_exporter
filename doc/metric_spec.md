@@ -206,7 +206,7 @@ The total number of lines for this metric will be the cardinality of `resource` 
 
 #### Descriptions
 
-The DRBD disk connections in sync percentage. Values from 0 to 100.
+The DRBD disk connections in sync percentage. Values are float from `0` to `100.00`.
 
 ### `ha_cluster_drbd_resources`
 
