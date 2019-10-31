@@ -146,7 +146,7 @@ func TestDrbdParsing(t *testing.T) {
 	}
 
 	if 99.8 != drbdDevs[1].Connections[0].PeerDevices[0].PercentInSync {
-		t.Errorf("Float PercentInSync doesn't correspond! fail got %f", drbdDevs[0].Connections[0].PeerDevices[0].PercentInSync)
+		t.Errorf("Float PercentInSync doesn't correspond! fail got %f", drbdDevs[1].Connections[0].PeerDevices[0].PercentInSync)
 	}
 
 }
