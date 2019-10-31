@@ -103,7 +103,7 @@ func TestDrbdParsing(t *testing.T) {
             "unacked": 0,
             "has-sync-details": false,
             "has-online-verify-details": false,
-            "percent-in-sync": 100
+            "percent-in-sync": 99.8
           }
         ]
       }
@@ -142,7 +142,11 @@ func TestDrbdParsing(t *testing.T) {
 	}
 
 	if 100 != drbdDevs[0].Connections[0].PeerDevices[0].PercentInSync {
-		t.Errorf("PercentInSync doesn't correspond! fail got %d", drbdDevs[0].Connections[0].PeerDevices[0].PercentInSync)
+		t.Errorf("PercentInSync doesn't correspond! fail got %f", drbdDevs[0].Connections[0].PeerDevices[0].PercentInSync)
+	}
+
+	if 99.8 != drbdDevs[1].Connections[0].PeerDevices[0].PercentInSync {
+		t.Errorf("Float PercentInSync doesn't correspond! fail got %f", drbdDevs[1].Connections[0].PeerDevices[0].PercentInSync)
 	}
 
 }

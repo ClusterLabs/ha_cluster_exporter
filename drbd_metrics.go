@@ -24,9 +24,9 @@ type drbdStatus struct {
 		PeerNodeID  int    `json:"peer-node-id"`
 		PeerRole    string `json:"peer-role"`
 		PeerDevices []struct {
-			Volume        int    `json:"volume"`
-			PeerDiskState string `json:"peer-disk-state"`
-			PercentInSync int    `json:"percent-in-sync"`
+			Volume        int     `json:"volume"`
+			PeerDiskState string  `json:"peer-disk-state"`
+			PercentInSync float64 `json:"percent-in-sync"`
 		} `json:"peer_devices"`
 	} `json:"connections"`
 }
