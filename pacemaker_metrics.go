@@ -101,21 +101,24 @@ var (
 		"constraints":         NewMetricDesc("pacemaker", "constraints", "Indicate if a constraints of specific type is present per ID and per resource", []string{"type", "id", "resource"}),
 	}
 
-	crmMonPath   = "/usr/sbin/crm_mon"
-	cibAdminPath = "/usr/sbin/cibadmin"
+	pacemakerTools = map[string]string{
+		"crmMon":   "crm_mon",
+		"cibAdmin": "cibadmin",
+	}
 )
 
 func NewPacemakerCollector() (*pacemakerCollector, error) {
-	binaries := []string{crmMonPath, cibAdminPath}
-
-	// check that all binary we rely on  for pacemaker metrics exists and are executables
-	for _, binary := range binaries {
-		fileInfo, err := os.Stat(binary)
-		if err != nil || os.IsNotExist(err) {
-			return nil, errors.Wrapf(err, "'%s' not found", binary)
+	for tool, toolBinary := range pacemakerTools {
+		binaryPath, err := exec.LookPath(toolBinary)
+		if err != nil {
+			return nil, errors.Wrapf(err, "'%s' not found", toolBinary)
+		} else {
+			pacemakerTools[tool] = binaryPath
 		}
+
+		fileInfo, err := os.Stat(binaryPath)
 		if (fileInfo.Mode() & 0111) == 0 {
-			return nil, errors.Errorf("'%s' is not executable", binary)
+			return nil, errors.Errorf("'%s' is not executable", binaryPath)
 		}
 	}
 
@@ -160,7 +163,7 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 
 func getPacemakerStatus() (pacemakerStatus, error) {
 	var pacemakerStatus pacemakerStatus
-	pacemakerStatusXML, err := exec.Command(crmMonPath, "-X", "--group-by-node", "--inactive").Output()
+	pacemakerStatusXML, err := exec.Command(pacemakerTools["crmMon"], "-X", "--group-by-node", "--inactive").Output()
 	if err != nil {
 		return pacemakerStatus, errors.Wrap(err, "error while executing crm_mon")
 	}
@@ -282,7 +285,7 @@ type cibAdminStatus struct {
 
 func getCibAdminPreferConstraint() (cibAdminStatus, error) {
 	var cibAdminStatus cibAdminStatus
-	cibAdminStatusXML, err := exec.Command(cibAdminPath, "--query", "--xpath", "//rsc_location[starts-with(@id,'cli-prefer-')]").Output()
+	cibAdminStatusXML, err := exec.Command(pacemakerTools["cibAdmin"], "--query", "--xpath", "//rsc_location[starts-with(@id,'cli-prefer-')]").Output()
 	if err != nil {
 		return cibAdminStatus, errors.Wrap(err, "error while executing cibadmin")
 	}

@@ -24,7 +24,9 @@ var (
 	}
 
 	sbdConfigPath = "/etc/sysconfig/sbd"
-	sbdPath       = "/usr/sbin/sbd"
+	sbdTools      = map[string]string{
+		"sbd": "sbd",
+	}
 )
 
 func NewSbdCollector() (*sbdCollector, error) {
@@ -32,12 +34,18 @@ func NewSbdCollector() (*sbdCollector, error) {
 		return nil, errors.Wrapf(err, "'%s' not found", sbdConfigPath)
 	}
 
-	fileInfo, err := os.Stat(sbdPath)
-	if err != nil || os.IsNotExist(err) {
-		return nil, errors.Wrapf(err, "'%s' not found", sbdPath)
-	}
-	if (fileInfo.Mode() & 0111) == 0 {
-		return nil, errors.Errorf("'%s' is not executable", sbdPath)
+	for tool, toolBinary := range sbdTools {
+		binaryPath, err := exec.LookPath(toolBinary)
+		if err != nil {
+			return nil, errors.Wrapf(err, "'%s' not found", toolBinary)
+		} else {
+			sbdTools[tool] = binaryPath
+		}
+
+		fileInfo, err := os.Stat(binaryPath)
+		if (fileInfo.Mode() & 0111) == 0 {
+			return nil, errors.Errorf("'%s' is not executable", binaryPath)
+		}
 	}
 
 	return &sbdCollector{
@@ -119,7 +127,7 @@ func getSbdDevices(sbdConfigRaw []byte) ([]string, error) {
 func getSbdDeviceStatuses(sbdDevices []string) (map[string]float64, error) {
 	sbdStatuses := make(map[string]float64)
 	for _, sbdDev := range sbdDevices {
-		_, err := exec.Command(sbdPath, "-d", sbdDev, "dump").Output()
+		_, err := exec.Command(sbdTools["sbd"], "-d", sbdDev, "dump").Output()
 
 		// in case of error the device is not healthy
 		if err != nil {

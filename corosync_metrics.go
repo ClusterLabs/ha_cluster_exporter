@@ -23,19 +23,23 @@ var (
 	}
 
 	corosyncTools = map[string]string{
-		"quorumtool": "/usr/sbin/corosync-quorumtool",
-		"cfgtool":    "/usr/sbin/corosync-cfgtool",
+		"quorumtool": "corosync-quorumtool",
+		"cfgtool":    "corosync-cfgtool",
 	}
 )
 
 func NewCorosyncCollector() (*corosyncCollector, error) {
-	for _, toolPath := range corosyncTools {
-		fileInfo, err := os.Stat(toolPath)
-		if os.IsNotExist(err) {
-			return nil, errors.Wrapf(err, "'%s' not found", toolPath)
+	for tool, toolBinary := range corosyncTools {
+		binaryPath, err := exec.LookPath(toolBinary)
+		if err != nil {
+			return nil, errors.Wrapf(err, "'%s' not found", toolBinary)
+		} else {
+			corosyncTools[tool] = binaryPath
 		}
+
+		fileInfo, err := os.Stat(binaryPath)
 		if (fileInfo.Mode() & 0111) == 0 {
-			return nil, errors.Errorf("'%s' is not executable", toolPath)
+			return nil, errors.Errorf("'%s' is not executable", binaryPath)
 		}
 	}
 

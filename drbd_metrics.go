@@ -39,16 +39,24 @@ var (
 		"connections":      NewMetricDesc("drbd", "connections", "The DRBD resource connections; 1 line per per resource, per peer_node_id", []string{"resource", "peer_node_id", "peer_role", "volume", "peer_disk_state"}),
 		"connections_sync": NewMetricDesc("drbd", "connections_sync", "The in sync percentage value for DRBD resource connections", []string{"resource", "peer_node_id", "volume"}),
 	}
-	drbdsetupPath = "/usr/sbin/drbdsetup"
+	drbdTools = map[string]string{
+		"drbd": "drbdsetup",
+	}
 )
 
 func NewDrbdCollector() (*drbdCollector, error) {
-	fileInfo, err := os.Stat(drbdsetupPath)
-	if err != nil || os.IsNotExist(err) {
-		return nil, errors.Wrapf(err, "'%s' not found", drbdsetupPath)
-	}
-	if (fileInfo.Mode() & 0111) == 0 {
-		return nil, errors.Errorf("'%s' is not executable", drbdsetupPath)
+	for tool, toolBinary := range drbdTools {
+		binaryPath, err := exec.LookPath(toolBinary)
+		if err != nil {
+			return nil, errors.Wrapf(err, "'%s' not found", toolBinary)
+		} else {
+			drbdTools[tool] = binaryPath
+		}
+
+		fileInfo, err := os.Stat(binaryPath)
+		if (fileInfo.Mode() & 0111) == 0 {
+			return nil, errors.Errorf("'%s' is not executable", binaryPath)
+		}
 	}
 
 	return &drbdCollector{
@@ -108,7 +116,7 @@ func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
 
 // return drbd status in byte raw json
 func getDrbdInfo() ([]byte, error) {
-	drbdStatusRaw, err := exec.Command(drbdsetupPath, "status", "--json").Output()
+	drbdStatusRaw, err := exec.Command(drbdTools["drbd"], "status", "--json").Output()
 	return drbdStatusRaw, err
 }
 
