@@ -97,7 +97,7 @@ var (
 		"stonith_enabled":     NewMetricDesc("pacemaker", "stonith_enabled", "Whether or not stonith is enabled", nil),
 		"fail_count":          NewMetricDesc("pacemaker", "fail_count", "The Fail count number per node and resource id", []string{"node", "resource"}),
 		"migration_threshold": NewMetricDesc("pacemaker", "migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"}),
-		"config_last_change":  NewMetricDesc("pacemaker", "config_last_change", "Indicate if a configuration of resource has changed in cluster", nil),
+		"config_last_change":  NewMetricDesc("pacemaker", "config_last_change", "The timestamp of the last change of the cluster configuration", nil),
 		"constraints":         NewMetricDesc("pacemaker", "constraints", "Indicate if a constraints of specific type is present per ID and per resource", []string{"type", "id", "resource"}),
 	}
 
@@ -260,8 +260,8 @@ func (c *pacemakerCollector) recordResourceAgentsChanges(pacemakerStatus pacemak
 		log.Warnln(err)
 		return
 	}
-	// is the resource have changed we set a different timeout from pacemaker
-	ch <- prometheus.NewMetricWithTimestamp(t, prometheus.MustNewConstMetric(c.metrics["config_last_change"], prometheus.CounterValue, 1))
+	// we record the timestamp of the last change as a float counter metric, which is in turn timestamped with the time it was checked
+	ch <- prometheus.NewMetricWithTimestamp(clock.Now(), prometheus.MustNewConstMetric(c.metrics["config_last_change"], prometheus.CounterValue, float64(t.Unix())))
 }
 
 func (c *pacemakerCollector) recordMigrationThresholdMetrics(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {

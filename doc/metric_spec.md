@@ -24,15 +24,15 @@ These are the currently implemented subsystems.
 The Pacemaker subsystem collects an atomic snapshot of the HA cluster directly from the XML CIB of Pacemaker via `crm_mon`.
 
 0. [Sample](../test/pacemaker.metrics)
-1. [`ha_cluster_pacemaker_nodes`](#ha_cluster_pacemaker_nodes)
-2. [`ha_cluster_pacemaker_nodes_total`](#ha_cluster_pacemaker_nodes_total)
-3. [`ha_cluster_pacemaker_resources`](#ha_cluster_pacemaker_resources)
-4. [`ha_cluster_pacemaker_resources_total`](#ha_cluster_pacemaker_resources_total)
-5. [`ha_cluster_pacemaker_stonith_enabled`](#ha_cluster_pacemaker_stonith_enabled)
-6. [`ha_cluster_pacemaker_fail_count`](#ha_cluster_pacemaker_fail_count)
-7. [`ha_cluster_pacemaker_migration_threshold`](#ha_cluster_pacemaker_migration_threshold)
-8. [`ha_cluster_pacemaker_config_last_change`](#ha_cluster_pacemaker_config_last_change)
-8. [`ha_cluster_pacemaker_constraints`](#ha_cluster_pacemaker_constraints)
+1. [`ha_cluster_pacemaker_config_last_change`](#ha_cluster_pacemaker_config_last_change)
+2. [`ha_cluster_pacemaker_constraints`](#ha_cluster_pacemaker_constraints)
+3. [`ha_cluster_pacemaker_fail_count`](#ha_cluster_pacemaker_fail_count)
+4. [`ha_cluster_pacemaker_migration_threshold`](#ha_cluster_pacemaker_migration_threshold)
+5. [`ha_cluster_pacemaker_nodes_total`](#ha_cluster_pacemaker_nodes_total)
+6. [`ha_cluster_pacemaker_nodes`](#ha_cluster_pacemaker_nodes)
+7. [`ha_cluster_pacemaker_resources_total`](#ha_cluster_pacemaker_resources_total)
+8. [`ha_cluster_pacemaker_resources`](#ha_cluster_pacemaker_resources)
+9. [`ha_cluster_pacemaker_stonith_enabled`](#ha_cluster_pacemaker_stonith_enabled)
 
 ### `ha_cluster_pacemaker_nodes`
 
@@ -107,8 +107,8 @@ Possible values are positive numbers.
 
 #### Description
 
-The relevant part of this metric is its timestamp, which corresponds to the last time Pacemaker configuration changed.
-The actual metric value will always be 1 and can be ignored.
+The value of this metric is a Unix timestamp in seconds, converted to a float, corresponding to the last time Pacemaker configuration changed.
+The metric is in turn timestamped with the time it was last checked.
 
 
 ### `ha_cluster_pacemaker_constraints`
