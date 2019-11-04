@@ -24,7 +24,7 @@ var (
 	}
 
 	sbdConfigPath = "/etc/sysconfig/sbd"
-	sbdTools      = map[string]string{
+	sbdBinaries   = map[string]string{
 		"sbd": "sbd",
 	}
 )
@@ -34,12 +34,12 @@ func NewSbdCollector() (*sbdCollector, error) {
 		return nil, errors.Wrapf(err, "'%s' not found", sbdConfigPath)
 	}
 
-	for tool, toolBinary := range sbdTools {
+	for tool, toolBinary := range sbdBinaries {
 		binaryPath, err := exec.LookPath(toolBinary)
 		if err != nil {
 			return nil, errors.Wrapf(err, "'%s' not found", toolBinary)
 		} else {
-			sbdTools[tool] = binaryPath
+			sbdBinaries[tool] = binaryPath
 		}
 
 		fileInfo, err := os.Stat(binaryPath)
@@ -127,7 +127,7 @@ func getSbdDevices(sbdConfigRaw []byte) ([]string, error) {
 func getSbdDeviceStatuses(sbdDevices []string) (map[string]float64, error) {
 	sbdStatuses := make(map[string]float64)
 	for _, sbdDev := range sbdDevices {
-		_, err := exec.Command(sbdTools["sbd"], "-d", sbdDev, "dump").Output()
+		_, err := exec.Command(sbdBinaries["sbd"], "-d", sbdDev, "dump").Output()
 
 		// in case of error the device is not healthy
 		if err != nil {

@@ -101,19 +101,19 @@ var (
 		"constraints":         NewMetricDesc("pacemaker", "constraints", "Indicate if a constraints of specific type is present per ID and per resource", []string{"type", "id", "resource"}),
 	}
 
-	pacemakerTools = map[string]string{
+	pacemakerBinaries = map[string]string{
 		"crmMon":   "crm_mon",
 		"cibAdmin": "cibadmin",
 	}
 )
 
 func NewPacemakerCollector() (*pacemakerCollector, error) {
-	for tool, toolBinary := range pacemakerTools {
+	for tool, toolBinary := range pacemakerBinaries {
 		binaryPath, err := exec.LookPath(toolBinary)
 		if err != nil {
 			return nil, errors.Wrapf(err, "'%s' not found", toolBinary)
 		} else {
-			pacemakerTools[tool] = binaryPath
+			pacemakerBinaries[tool] = binaryPath
 		}
 
 		fileInfo, err := os.Stat(binaryPath)
@@ -163,7 +163,7 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 
 func getPacemakerStatus() (pacemakerStatus, error) {
 	var pacemakerStatus pacemakerStatus
-	pacemakerStatusXML, err := exec.Command(pacemakerTools["crmMon"], "-X", "--group-by-node", "--inactive").Output()
+	pacemakerStatusXML, err := exec.Command(pacemakerBinaries["crmMon"], "-X", "--group-by-node", "--inactive").Output()
 	if err != nil {
 		return pacemakerStatus, errors.Wrap(err, "error while executing crm_mon")
 	}
@@ -285,7 +285,7 @@ type cibAdminStatus struct {
 
 func getCibAdminPreferConstraint() (cibAdminStatus, error) {
 	var cibAdminStatus cibAdminStatus
-	cibAdminStatusXML, err := exec.Command(pacemakerTools["cibAdmin"], "--query", "--xpath", "//rsc_location[starts-with(@id,'cli-prefer-')]").Output()
+	cibAdminStatusXML, err := exec.Command(pacemakerBinaries["cibAdmin"], "--query", "--xpath", "//rsc_location[starts-with(@id,'cli-prefer-')]").Output()
 	if err != nil {
 		return cibAdminStatus, errors.Wrap(err, "error while executing cibadmin")
 	}
