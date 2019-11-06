@@ -118,7 +118,7 @@ func NewPacemakerCollector(crmMonPath string, cibAdminPath string) (*pacemakerCo
 
 type pacemakerCollector struct {
 	DefaultCollector
-	crmMonPath string
+	crmMonPath   string
 	cibAdminPath string
 }
 

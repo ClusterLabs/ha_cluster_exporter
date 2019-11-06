@@ -1,0 +1,8 @@
+# sample config
+crm_mon_path: "/usr/sbin/crm_mon"
+cibadmin_path: "/usr/sbin/cibadmin"
+corosync_cfgtoolpath_path: "/usr/sbin/corosync-cfgtool"
+corosync_quorumtool_path: "/usr/sbin/corosync-quorumtool"
+sbd_path: "/usr/sbin/sbd"
+sbd_config_path: "/etc/sysconfig/sbd"
+drbdsetup_path: "/usr/sbin/drbdsetup"

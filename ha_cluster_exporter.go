@@ -172,7 +172,7 @@ func main() {
 		prometheus.MustRegister(sbdCollector)
 	}
 
-	drbdCollector, err := NewDrbdCollector(config.GetString("drbdsetup_path"),)
+	drbdCollector, err := NewDrbdCollector(config.GetString("drbdsetup_path"))
 	if err != nil {
 		log.Warnf("Could not initialize DRBD collector: %v\n", err)
 	} else {

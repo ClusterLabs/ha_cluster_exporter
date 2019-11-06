@@ -39,7 +39,7 @@ func NewCorosyncCollector(cfgToolPath string, quorumToolPath string) (*corosyncC
 
 type corosyncCollector struct {
 	DefaultCollector
-	cfgToolPath string
+	cfgToolPath    string
 	quorumToolPath string
 }
 

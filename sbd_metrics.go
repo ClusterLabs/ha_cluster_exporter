@@ -45,7 +45,7 @@ func NewSbdCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error
 
 type sbdCollector struct {
 	DefaultCollector
-	sbdPath string
+	sbdPath       string
 	sbdConfigPath string
 }
 
