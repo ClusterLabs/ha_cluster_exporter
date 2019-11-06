@@ -104,47 +104,49 @@ func loglevel(opt string) {
 	}
 }
 
-var (
-	clock      Clock = &SystemClock{}
-	portNumber       = flag.String("port", "9002", "The port number to listen on for HTTP requests.")
-	address          = flag.String("address", "0.0.0.0", "The address to listen on for HTTP requests.")
-	logLevel         = flag.String("level", "info", "The level of logs to log")
-)
+var clock Clock = &SystemClock{}
 
 func init() {
 	config.SetConfigName("ha_cluster_exporter")
-	config.AddConfigPath("/etc/")
-	config.AddConfigPath("$HOME/.config")
 	config.AddConfigPath(".")
-
-	config.SetDefault("crm_mon_path", "/usr/sbin/crm_mon")
-	config.SetDefault("cibadmin_path", "/usr/sbin/cibadmin")
-	config.SetDefault("corosync_cfgtoolpath_path", "/usr/sbin/corosync-cfgtool")
-	config.SetDefault("corosync_quorumtool_path", "/usr/sbin/corosync-quorumtool")
-	config.SetDefault("sbd_path", "/usr/sbin/sbd")
-	config.SetDefault("sbd_config_path", "/etc/sysconfig/sbd")
-	config.SetDefault("drbdsetup_path", "/usr/sbin/drbdsetup")
+	config.AddConfigPath("$HOME/.config")
+	config.AddConfigPath("/etc/")
 }
 
 func main() {
-	err := config.ReadInConfig()
-	if err != nil {
-		log.Warn(err)
-		log.Info("Default config values will be used")
-	}
+	flag.String("port", "9002", "The port number to listen on for HTTP requests.")
+	flag.String("address", "0.0.0.0", "The address to listen on for HTTP requests.")
+	flag.String("log-level", "info", "The level of logs to log")
+	flag.String("crm-mon-path", "/usr/sbin/crm_mon", "path to crm_mon executable")
+	flag.String("cibadmin-path", "/usr/sbin/cibadmin", "path to cibadmin executable")
+	flag.String("corosync-cfgtoolpath-path", "/usr/sbin/corosync-cfgtool", "path to corosync-cfgtool executable")
+	flag.String("corosync-quorumtool-path", "/usr/sbin/corosync-quorumtool", "path to corosync-quorumtool executable")
+	flag.String("sbd-path", "/usr/sbin/sbd", "path to sbd executable")
+	flag.String("sbd-config-path", "/etc/sysconfig/sbd", "path to sbd configuration")
+	flag.String("drbdsetup-path", "/usr/sbin/drbdsetup", "path to drbdsetup executable")
 
-	// parse CLI flags and bind them to the viper config container
-	flag.Parse()
+	var err error
+
 	err = config.BindPFlags(flag.CommandLine)
 	if err != nil {
 		log.Errorf("Could not bind config to CLI flags: %v", err)
 	}
 
-	loglevel(*logLevel)
+	flag.Parse()
+
+	err = config.ReadInConfig()
+	if err != nil {
+		log.Warn(err)
+		log.Info("Default config values will be used")
+	} else {
+		log.Info("Using config file: ", config.ConfigFileUsed())
+	}
+
+	loglevel(config.GetString("log-level"))
 
 	pacemakerCollector, err := NewPacemakerCollector(
-		config.GetString("crm_mon_path"),
-		config.GetString("cibadmin_path"),
+		config.GetString("crm-mon-path"),
+		config.GetString("cibadmin-path"),
 	)
 	if err != nil {
 		log.Warnf("Could not initialize Pacemaker collector: %v\n", err)
@@ -153,8 +155,8 @@ func main() {
 	}
 
 	corosyncCollector, err := NewCorosyncCollector(
-		config.GetString("corosync_cfgtoolpath_path"),
-		config.GetString("corosync_quorumtool_path"),
+		config.GetString("corosync-cfgtoolpath-path"),
+		config.GetString("corosync-quorumtool-path"),
 	)
 	if err != nil {
 		log.Warnf("Could not initialize Corosync collector: %v\n", err)
@@ -163,8 +165,8 @@ func main() {
 	}
 
 	sbdCollector, err := NewSbdCollector(
-		config.GetString("sbd_path"),
-		config.GetString("sbd_config_path"),
+		config.GetString("sbd-path"),
+		config.GetString("sbd-config-path"),
 	)
 	if err != nil {
 		log.Warnf("Could not initialize SBD collector: %v\n", err)
@@ -172,15 +174,18 @@ func main() {
 		prometheus.MustRegister(sbdCollector)
 	}
 
-	drbdCollector, err := NewDrbdCollector(config.GetString("drbdsetup_path"))
+	drbdCollector, err := NewDrbdCollector(config.GetString("drbdsetup-path"))
 	if err != nil {
 		log.Warnf("Could not initialize DRBD collector: %v\n", err)
 	} else {
 		prometheus.MustRegister(drbdCollector)
 	}
 
+	fullListenAddress := fmt.Sprintf("%s:%s", config.Get("address"), config.Get("port"))
+
 	http.HandleFunc("/", landingpage)
 	http.Handle("/metrics", promhttp.Handler())
-	log.Infof("Serving metrics on %s:%s", *address, *portNumber)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", *address, *portNumber), nil))
+
+	log.Infof("Serving metrics on %s", fullListenAddress)
+	log.Fatal(http.ListenAndServe(fullListenAddress, nil))
 }
