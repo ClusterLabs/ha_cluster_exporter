@@ -12,7 +12,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
-	"github.com/spf13/viper"
+	config "github.com/spf13/viper"
 )
 
 const NAMESPACE = "ha_cluster"
@@ -112,22 +112,22 @@ var (
 )
 
 func init() {
-	viper.SetConfigName("ha_cluster_exporter")
-	viper.AddConfigPath("/etc/")
-	viper.AddConfigPath("$HOME/.config")
-	viper.AddConfigPath(".")
+	config.SetConfigName("ha_cluster_exporter")
+	config.AddConfigPath("/etc/")
+	config.AddConfigPath("$HOME/.config")
+	config.AddConfigPath(".")
 
-	viper.SetDefault("crm_mon_path", "/usr/sbin/crm_mon")
-	viper.SetDefault("cibadmin_path", "/usr/sbin/cibadmin")
-	viper.SetDefault("corosync_cfgtoolpath_path", "/usr/sbin/corosync-cfgtool")
-	viper.SetDefault("corosync_quorumtool_path", "/usr/sbin/corosync-quorumtool")
-	viper.SetDefault("sbd_path", "/usr/sbin/sbd")
-	viper.SetDefault("sbd_config_path", "/etc/sysconfig/sbd")
-	viper.SetDefault("drbdsetup_path", "/usr/sbin/drbdsetup")
+	config.SetDefault("crm_mon_path", "/usr/sbin/crm_mon")
+	config.SetDefault("cibadmin_path", "/usr/sbin/cibadmin")
+	config.SetDefault("corosync_cfgtoolpath_path", "/usr/sbin/corosync-cfgtool")
+	config.SetDefault("corosync_quorumtool_path", "/usr/sbin/corosync-quorumtool")
+	config.SetDefault("sbd_path", "/usr/sbin/sbd")
+	config.SetDefault("sbd_config_path", "/etc/sysconfig/sbd")
+	config.SetDefault("drbdsetup_path", "/usr/sbin/drbdsetup")
 }
 
 func main() {
-	err := viper.ReadInConfig()
+	err := config.ReadInConfig()
 	if err != nil {
 		log.Warn(err)
 		log.Info("Default config values will be used")
@@ -135,7 +135,7 @@ func main() {
 
 	// parse CLI flags and bind them to the viper config container
 	flag.Parse()
-	err = viper.BindPFlags(flag.CommandLine)
+	err = config.BindPFlags(flag.CommandLine)
 	if err != nil {
 		log.Errorf("Could not bind config to CLI flags: %v", err)
 	}
@@ -143,8 +143,8 @@ func main() {
 	loglevel(*logLevel)
 
 	pacemakerCollector, err := NewPacemakerCollector(
-		viper.GetString("crm_mon_path"),
-		viper.GetString("cibadmin_path"),
+		config.GetString("crm_mon_path"),
+		config.GetString("cibadmin_path"),
 	)
 	if err != nil {
 		log.Warnf("Could not initialize Pacemaker collector: %v\n", err)
@@ -153,8 +153,8 @@ func main() {
 	}
 
 	corosyncCollector, err := NewCorosyncCollector(
-		viper.GetString("corosync_cfgtoolpath_path"),
-		viper.GetString("corosync_quorumtool_path"),
+		config.GetString("corosync_cfgtoolpath_path"),
+		config.GetString("corosync_quorumtool_path"),
 	)
 	if err != nil {
 		log.Warnf("Could not initialize Corosync collector: %v\n", err)
@@ -163,8 +163,8 @@ func main() {
 	}
 
 	sbdCollector, err := NewSbdCollector(
-		viper.GetString("sbd_path"),
-		viper.GetString("sbd_config_path"),
+		config.GetString("sbd_path"),
+		config.GetString("sbd_config_path"),
 	)
 	if err != nil {
 		log.Warnf("Could not initialize SBD collector: %v\n", err)
@@ -172,7 +172,7 @@ func main() {
 		prometheus.MustRegister(sbdCollector)
 	}
 
-	drbdCollector, err := NewDrbdCollector(viper.GetString("drbdsetup_path"),)
+	drbdCollector, err := NewDrbdCollector(config.GetString("drbdsetup_path"),)
 	if err != nil {
 		log.Warnf("Could not initialize DRBD collector: %v\n", err)
 	} else {
