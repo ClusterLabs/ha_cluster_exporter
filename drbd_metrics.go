@@ -40,8 +40,8 @@ var (
 	}
 )
 
-func NewDrbdCollector(drbdsetupPath string) (*drbdCollector, error) {
-	err := CheckExecutables(drbdsetupPath)
+func NewDrbdCollector(drbdSetupPath string) (*drbdCollector, error) {
+	err := CheckExecutables(drbdSetupPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "external executable check failed")
 	}
@@ -50,7 +50,7 @@ func NewDrbdCollector(drbdsetupPath string) (*drbdCollector, error) {
 		DefaultCollector{
 			metrics: drbdMetrics,
 		},
-		drbdsetupPath,
+		drbdSetupPath,
 	}, nil
 }
 
