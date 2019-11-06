@@ -89,8 +89,8 @@ func landingpage(w http.ResponseWriter, r *http.Request) {
 		</html>`))
 }
 
-func loglevel(opt string) {
-	switch opt {
+func loglevel(level string) {
+	switch level {
 	case "error":
 		log.SetLevel(log.ErrorLevel)
 	case "warn":
@@ -100,7 +100,7 @@ func loglevel(opt string) {
 	case "debug":
 		log.SetLevel(log.DebugLevel)
 	default:
-		log.Warnln("Unrecognized log level, default to `info` level")
+		log.Warnln("Unrecognized minimum log level; using 'info' as default")
 	}
 }
 
@@ -112,9 +112,9 @@ func init() {
 	config.AddConfigPath("$HOME/.config")
 	config.AddConfigPath("/etc/")
 
-	flag.String("port", "9002", "The port number to listen on for HTTP requests.")
-	flag.String("address", "0.0.0.0", "The address to listen on for HTTP requests.")
-	flag.String("log-level", "info", "The level of logs to log")
+	flag.String("port", "9002", "The port number to listen on for HTTP requests")
+	flag.String("address", "0.0.0.0", "The address to listen on for HTTP requests")
+	flag.String("log-level", "info", "The minimum logging level; levels are, in ascending order: debug, info, warn, error")
 	flag.String("crm-mon-path", "/usr/sbin/crm_mon", "path to crm_mon executable")
 	flag.String("cibadmin-path", "/usr/sbin/cibadmin", "path to cibadmin executable")
 	flag.String("corosync-cfgtoolpath-path", "/usr/sbin/corosync-cfgtool", "path to corosync-cfgtool executable")
