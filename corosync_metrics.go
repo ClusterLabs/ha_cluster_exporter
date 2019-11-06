@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -21,33 +20,27 @@ var (
 		"ring_errors_total": NewMetricDesc("corosync", "ring_errors_total", "Total number of corosync ring errors", nil),
 		"quorum_votes":      NewMetricDesc("corosync", "quorum_votes", "Cluster quorum votes; one line per type", []string{"type"}),
 	}
-
-	corosyncTools = map[string]string{
-		"quorumtool": "/usr/sbin/corosync-quorumtool",
-		"cfgtool":    "/usr/sbin/corosync-cfgtool",
-	}
 )
 
-func NewCorosyncCollector() (*corosyncCollector, error) {
-	for _, toolPath := range corosyncTools {
-		fileInfo, err := os.Stat(toolPath)
-		if os.IsNotExist(err) {
-			return nil, errors.Wrapf(err, "'%s' not found", toolPath)
-		}
-		if (fileInfo.Mode() & 0111) == 0 {
-			return nil, errors.Errorf("'%s' is not executable", toolPath)
-		}
+func NewCorosyncCollector(cfgToolPath string, quorumToolPath string) (*corosyncCollector, error) {
+	err := CheckExecutables(cfgToolPath, quorumToolPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "external executable check failed")
 	}
 
 	return &corosyncCollector{
 		DefaultCollector{
 			metrics: corosyncMetrics,
 		},
+		cfgToolPath,
+		quorumToolPath,
 	}, nil
 }
 
 type corosyncCollector struct {
 	DefaultCollector
+	cfgToolPath string
+	quorumToolPath string
 }
 
 func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {
@@ -61,7 +54,7 @@ func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {
 		log.Warnln(err)
 	}
 
-	quorumStatusRaw := getQuoromStatus()
+	quorumStatusRaw := c.getQuoromStatus()
 	quorumStatus, quorate, err := parseQuoromStatus(quorumStatusRaw)
 	if err != nil {
 		log.Warnln(err)
@@ -76,7 +69,7 @@ func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {
 }
 
 func (c *corosyncCollector) collectRingErrorsTotal(ch chan<- prometheus.Metric) error {
-	ringStatus := getCorosyncRingStatus()
+	ringStatus := c.getCorosyncRingStatus()
 	ringErrorsTotal, err := parseRingStatus(ringStatus)
 	if err != nil {
 		return errors.Wrap(err, "cannot parse ring status")
@@ -87,10 +80,10 @@ func (c *corosyncCollector) collectRingErrorsTotal(ch chan<- prometheus.Metric) 
 	return nil
 }
 
-func getQuoromStatus() []byte {
+func (c *corosyncCollector) getQuoromStatus() []byte {
 	// We suppress the exec error because if any interface is faulty, the tool will exit with code 1.
 	// If all interfaces are active, exit code will be 0.
-	quorumInfoRaw, _ := exec.Command(corosyncTools["quorumtool"]).Output()
+	quorumInfoRaw, _ := exec.Command(c.quorumToolPath).Output()
 	return quorumInfoRaw
 }
 
@@ -119,7 +112,7 @@ func parseQuoromStatus(quoromStatusRaw []byte) (quorumVotes map[string]int, quor
 	// check the case there is an sbd_config but the SBD_DEVICE is not set
 
 	if quorateWordPresent == "" {
-		return nil, quorate, fmt.Errorf("the quorum status output is not in parsable format as expected")
+		return nil, quorate, fmt.Errorf("cannot parse quorum status")
 	}
 
 	quorateRaw := wordOnly.FindString(strings.SplitAfterN(quoromRaw, "Quorate:", 2)[1])
@@ -151,10 +144,10 @@ func parseQuoromStatus(quoromStatusRaw []byte) (quorumVotes map[string]int, quor
 // get status ring and return it as bytes
 // this function can return also just an malformed output in case of error, we don't check.
 // It is the parser that will check the status
-func getCorosyncRingStatus() []byte {
+func (c *corosyncCollector) getCorosyncRingStatus() []byte {
 	// We suppress the exec error because if any interface is faulty, the tool will exit with code 1.
 	// If all interfaces are active/without error, exit code will be 0.
-	ringStatusRaw, _ := exec.Command(corosyncTools["cfgtool"], "-s").Output()
+	ringStatusRaw, _ := exec.Command(c.cfgToolPath, "-s").Output()
 	return ringStatusRaw
 }
 
@@ -168,7 +161,7 @@ func parseRingStatus(ringStatus []byte) (int, error) {
 	if ringErrorsTotal == 0 {
 		// if there is no RING ID word, the command corosync-cfgtool went wrong/error out
 		if strings.Count(statusRaw, "RING ID") == 0 {
-			return 0, fmt.Errorf("corosync-cfgtool command returned unexpected output %s", statusRaw)
+			return 0, fmt.Errorf("corosync-cfgtool returned unexpected output: %s", statusRaw)
 		}
 
 		return 0, nil

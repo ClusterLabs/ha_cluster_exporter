@@ -151,51 +151,36 @@ func TestDrbdParsing(t *testing.T) {
 
 }
 
-func TestDrbdInfoError(t *testing.T) {
-	drbdsetupPath = "test/nonexistent"
-	_, err := getDrbdInfo()
-	if err == nil {
-		t.Errorf("a non nil error was expected")
-	}
-}
-
 func TestNewDrbdCollector(t *testing.T) {
-	drbdsetupPath = "test/fake_drbdsetup.sh"
-
-	_, err := NewDrbdCollector()
+	_, err := NewDrbdCollector("test/fake_drbdsetup.sh")
 	if err != nil {
 		t.Errorf("Unexpected error, got: %v", err)
 	}
 }
 
 func TestNewDrbdCollectorChecksDrbdsetupExistence(t *testing.T) {
-	drbdsetupPath = "test/nonexistent"
-
-	_, err := NewDrbdCollector()
+	_, err := NewDrbdCollector("test/nonexistent")
 	if err == nil {
 		t.Error("a non nil error was expected")
 	}
-	if err.Error() != "'test/nonexistent' not found: stat test/nonexistent: no such file or directory" {
+	if err.Error() != "external executable check failed: stat test/nonexistent: no such file or directory" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
 
 func TestNewDrbdCollectorChecksDrbdsetupExecutableBits(t *testing.T) {
-	drbdsetupPath = "test/dummy"
-
-	_, err := NewDrbdCollector()
+	_, err := NewDrbdCollector("test/dummy")
 	if err == nil {
 		t.Fatalf("a non nil error was expected")
 	}
-	if err.Error() != "'test/dummy' is not executable" {
+	if err.Error() != "external executable check failed: 'test/dummy' is not executable" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
 
 func TestDRBDCollector(t *testing.T) {
 	clock = StoppedClock{}
-	drbdsetupPath = "test/fake_drbdsetup.sh"
 
-	collector, _ := NewDrbdCollector()
+	collector, _ := NewDrbdCollector("test/fake_drbdsetup.sh")
 	expectMetrics(t, collector, "drbd.metrics")
 }
