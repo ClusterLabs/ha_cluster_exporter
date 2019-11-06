@@ -111,9 +111,7 @@ func init() {
 	config.AddConfigPath(".")
 	config.AddConfigPath("$HOME/.config")
 	config.AddConfigPath("/etc/")
-}
 
-func main() {
 	flag.String("port", "9002", "The port number to listen on for HTTP requests.")
 	flag.String("address", "0.0.0.0", "The address to listen on for HTTP requests.")
 	flag.String("log-level", "info", "The level of logs to log")
@@ -125,12 +123,14 @@ func main() {
 	flag.String("sbd-config-path", "/etc/sysconfig/sbd", "path to sbd configuration")
 	flag.String("drbdsetup-path", "/usr/sbin/drbdsetup", "path to drbdsetup executable")
 
-	var err error
-
-	err = config.BindPFlags(flag.CommandLine)
+	err := config.BindPFlags(flag.CommandLine)
 	if err != nil {
 		log.Errorf("Could not bind config to CLI flags: %v", err)
 	}
+}
+
+func main() {
+	var err error
 
 	flag.Parse()
 
