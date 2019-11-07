@@ -3,44 +3,108 @@
 [![Build Status](https://travis-ci.org/ClusterLabs/ha_cluster_exporter.svg?branch=master)](https://travis-ci.org/ClusterLabs/ha_cluster_exporter)
 
 
-This is a Prometheus exporter used to export metrics of the various components of HA clusters.  
+This is a bespoke Prometheus exporter used to enable the monitoring of Pacemaker based HA clusters.  
 
 ## Table of Contents
-1. [Usage](#Usage)
-2. [Features](#Features)
+1. [Features](#features)
+2. [Installation](#installation)
+2. [Usage](#usage)
 3. [Devel](#Devel)
 4. [Design](#Design)
 
+## Features
+
+The exporter is a stateless HTTP endpoint. On each HTTP request, it inspects the cluster status locally by parsing pre-existing, distributed data, provided by the external tools provided by the various cluster components.
+
+Exported data include:
+- Pacemaker cluster summary, nodes and resources stats 
+- Corosync ring errors and quorum votes
+- SBD devices health status 
+- DRBD resources and connections stats
+
+A comprehensive list of all the metrics can be found in the [metrics document](doc/metric_spec.md).
+
+## Installation
+
+The project can be installed in many ways, including but not limited to:
+
+1. [Manual clone & build](#manual-clone-&-build)
+2. [Go](#go)
+3. [RPM](#rpm)
+
+
+#### Manual clone & build
+
+```
+git clone https://github.com/ClusterLabs/ha_cluster_exporter
+cd ha_cluster_exporter
+make
+make install
+```
+
+#### Go
+
+```
+go get github.com/ClusterLabs/ha_cluster_exporter
+```
+
+#### RPM
+You can find the repositories for RPM based distributions in [SUSE's Open Build Service](https://build.opensuse.org/repositories/server:monitoring/prometheus-ha_cluster_exporter).  
+On openSUSE or SUSE Linux Enterprise you can just use the `zypper` system package manager:
+```shell
+export DISTRO=SLE_15_SP1 # change as desired
+zypper addrepo https://download.opensuse.org/repositories/server:/monitoring/$DISTRO/server:monitoring.repo
+zypper install prometheus-ha_cluster_exporter
+```
+
 ## Usage
 
-You can find the RPM pkgs for the exporter here: https://build.opensuse.org/package/show/server:monitoring/prometheus-ha_cluster_exporter.
+You can run the exporter in any of the cluster nodes. 
 
-Once installed run the exporter **inside a cluster node** with: 
+```
+$ ./ha_cluster_exporter  
+INFO[0000] Serving metrics on 0.0.0.0:9002
+```
 
-`systemctl start prometheus-ha_cluster_exporter`. By default it will show on `http://YOUR_HOST_IP:9002/metrics`.
+Though not strictly required, it is _strongly_ advised to run it in all the nodes.
 
-If you open a web-browser it will serve the metrics. 
-The exporter can't work outside a HA cluster node.
+It will export the metrics under the `/metrics` path, on port `9002` by default.
+
+While the exporter can run outside a HA cluster node, it won't export any metric it can't collect; e.g. it won't export DRBD metrics if it can't be locally inspected with `drbdsetup`.  
+A warning message will inform the user of such cases.
 
 **Hint:**
-For a terraform deployment you can also read: https://github.com/SUSE/ha-sap-terraform-deployments
+You can deploy a full HA Cluster via Terraform with [SUSE/ha-sap-terraform-deployments](https://github.com/SUSE/ha-sap-terraform-deployments).
 
-## Features
-It should be run inside one or more nodes composing the cluster. Running in every nodes is advised.
+#### Configuration
 
-- show cluster node and resource metrics via `crm_mon` (pacemaker data xml)
-- show corosync metrics (ring errors, quorum metrics)
-- show SBD disk health metrics
-- show DRBD metrics (local and remote disks resource metrics)
+All the runtime parameters can be configured either via CLI flags or via a configuration file, both or which are completely optional.
 
-A complete list of the metrics can be found in the [metrics](doc/metric_spec.md) document.
+For more details, refer to the help message via `ha_cluster_exporter --help`.
 
-## Devel
+**Note**:
+the built-in defaults are tailored for the latest version of SUSE Linux Enterprise.
 
-Build the binary with `make` and run it inside a node of the ha cluster, it will show the metrics on port `9002` by default.
-Use `ha_cluster_exporter -h` for options.
+The program will scan, in order, the current working directory, `$HOME/.config`, `/etc` and `/usr/etc` for files named `ha_cluster_exporter.(yaml|json|toml)`.
+The first match has precedence, and the CLI flags have precedence over the config file.
 
-#### Design
+Please refer to the example [YAML configuration](ha_cluster_exporter.yaml) for more details.
 
-For the technical design of the exporter have look at [design](doc/design.md) (this is focused on cluster_metrics).
+#### systemd integration
+
+A [systemd unit file](prometheus-ha_cluster_exporter.service) is provided with the RPM packages. You can enable and start it as usual:  
+
+```
+systemctl --now enable prometheus-ha_cluster_exporter
+```
+
+## Development
+
+This is a young project, pull requests are more than welcome!
+
+Most development tasks can be accomplished via the [Makefile](Makefile).
+
+The default target will clean, analyse, test and build the binary.
+
+We recommend having a look at the [design document](doc/design.md) before contributing.
 
