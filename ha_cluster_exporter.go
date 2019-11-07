@@ -108,8 +108,8 @@ var clock Clock = &SystemClock{}
 
 func init() {
 	config.SetConfigName("ha_cluster_exporter")
-	config.AddConfigPath(".")
-	config.AddConfigPath("$HOME/.config")
+	config.AddConfigPath("./")
+	config.AddConfigPath("$HOME/.config/")
 	config.AddConfigPath("/etc/")
 
 	flag.String("port", "9002", "The port number to listen on for HTTP requests")

@@ -3,16 +3,15 @@
 [![Build Status](https://travis-ci.org/ClusterLabs/ha_cluster_exporter.svg?branch=master)](https://travis-ci.org/ClusterLabs/ha_cluster_exporter)
 
 
-This prometheus exporter is used to serve metrics for ha clusters and their components, as for single components.
-It should run inside a node of the cluster or both.
+This is a Prometheus exporter used to export metrics of the various components of HA clusters.  
 
-## Table of Contents:
+## Table of Contents
 1. [Usage](#Usage)
 2. [Features](#Features)
 3. [Devel](#Devel)
 4. [Design](#Design)
 
-## Usage:
+## Usage
 
 You can find the RPM pkgs for the exporter here: https://build.opensuse.org/package/show/server:monitoring/prometheus-ha_cluster_exporter.
 
@@ -26,24 +25,22 @@ The exporter can't work outside a HA cluster node.
 **Hint:**
 For a terraform deployment you can also read: https://github.com/SUSE/ha-sap-terraform-deployments
 
-## Features:
+## Features
+It should be run inside one or more nodes composing the cluster. Running in every nodes is advised.
 
 - show cluster node and resource metrics via `crm_mon` (pacemaker data xml)
-
 - show corosync metrics (ring errors, quorum metrics)
-
 - show SBD disk health metrics
-
 - show DRBD metrics (local and remote disks resource metrics)
 
-We mantain a complete list of the [metric specification](doc/metric_spec.md), usage and possible values.
+A complete list of the metrics can be found in the [metrics](doc/metric_spec.md) document.
 
-## Devel:
+## Devel
 
 Build the binary with `make` and run it inside a node of the ha cluster, it will show the metrics on port `9002` by default.
 Use `ha_cluster_exporter -h` for options.
 
-#### Design:
+#### Design
 
 For the technical design of the exporter have look at [design](doc/design.md) (this is focused on cluster_metrics).
 
