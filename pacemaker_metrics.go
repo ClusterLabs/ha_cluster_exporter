@@ -104,7 +104,7 @@ var (
 func NewPacemakerCollector(crmMonPath string, cibAdminPath string) (*pacemakerCollector, error) {
 	err := CheckExecutables(crmMonPath, cibAdminPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "external executable check failed")
+		return nil, errors.Wrap(err, "could not initialize Pacemaker collector")
 	}
 
 	return &pacemakerCollector{

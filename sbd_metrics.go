@@ -27,11 +27,11 @@ var (
 func NewSbdCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error) {
 	err := CheckExecutables(sbdPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "external executable check failed")
+		return nil, errors.Wrap(err, "could not initialize SBD collector")
 	}
 
 	if _, err := os.Stat(sbdConfigPath); os.IsNotExist(err) {
-		return nil, errors.Wrapf(err, "SBD config not found")
+		return nil, errors.Errorf("could not initialize SBD collector: '%s' does not exist", sbdConfigPath)
 	}
 
 	return &sbdCollector{

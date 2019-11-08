@@ -43,7 +43,7 @@ var (
 func NewDrbdCollector(drbdSetupPath string) (*drbdCollector, error) {
 	err := CheckExecutables(drbdSetupPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "external executable check failed")
+		return nil, errors.Wrap(err, "could not initialize DRBD collector")
 	}
 
 	return &drbdCollector{

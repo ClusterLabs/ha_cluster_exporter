@@ -154,7 +154,7 @@ func TestNewCorosyncCollectorChecksCfgtoolExistence(t *testing.T) {
 	if err == nil {
 		t.Fatal("a non nil error was expected")
 	}
-	if err.Error() != "external executable check failed: stat test/nonexistent: no such file or directory" {
+	if err.Error() != "could not initialize Corosync collector: 'test/nonexistent' does not exist" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
@@ -165,7 +165,7 @@ func TestNewCorosyncCollectorChecksQuorumtoolExistence(t *testing.T) {
 	if err == nil {
 		t.Fatal("a non nil error was expected")
 	}
-	if err.Error() != "external executable check failed: stat test/nonexistent: no such file or directory" {
+	if err.Error() != "could not initialize Corosync collector: 'test/nonexistent' does not exist" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
@@ -175,7 +175,7 @@ func TestNewCorosyncCollectorChecksCfgtoolExecutableBits(t *testing.T) {
 	if err == nil {
 		t.Fatal("a non nil error was expected")
 	}
-	if err.Error() != "external executable check failed: 'test/dummy' is not executable" {
+	if err.Error() != "could not initialize Corosync collector: 'test/dummy' is not executable" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
@@ -185,7 +185,7 @@ func TestNewCorosyncCollectorChecksQuorumtoolExecutableBits(t *testing.T) {
 	if err == nil {
 		t.Fatal("a non nil error was expected")
 	}
-	if err.Error() != "external executable check failed: 'test/dummy' is not executable" {
+	if err.Error() != "could not initialize Corosync collector: 'test/dummy' is not executable" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }

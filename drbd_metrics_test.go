@@ -161,9 +161,9 @@ func TestNewDrbdCollector(t *testing.T) {
 func TestNewDrbdCollectorChecksDrbdsetupExistence(t *testing.T) {
 	_, err := NewDrbdCollector("test/nonexistent")
 	if err == nil {
-		t.Error("a non nil error was expected")
+		t.Fatal("a non nil error was expected")
 	}
-	if err.Error() != "external executable check failed: stat test/nonexistent: no such file or directory" {
+	if err.Error() != "could not initialize DRBD collector: 'test/nonexistent' does not exist" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
@@ -173,7 +173,7 @@ func TestNewDrbdCollectorChecksDrbdsetupExecutableBits(t *testing.T) {
 	if err == nil {
 		t.Fatalf("a non nil error was expected")
 	}
-	if err.Error() != "external executable check failed: 'test/dummy' is not executable" {
+	if err.Error() != "could not initialize DRBD collector: 'test/dummy' is not executable" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }

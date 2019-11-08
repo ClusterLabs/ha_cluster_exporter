@@ -225,7 +225,7 @@ func TestNewSbdCollectorChecksSbdConfigExistence(t *testing.T) {
 	if err == nil {
 		t.Fatal("a non nil error was expected")
 	}
-	if err.Error() != "SBD config not found: stat test/nonexistent: no such file or directory" {
+	if err.Error() != "could not initialize SBD collector: 'test/nonexistent' does not exist" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
@@ -235,7 +235,7 @@ func TestNewSbdCollectorChecksSbdExistence(t *testing.T) {
 	if err == nil {
 		t.Fatal("a non nil error was expected")
 	}
-	if err.Error() != "external executable check failed: stat test/nonexistent: no such file or directory" {
+	if err.Error() != "could not initialize SBD collector: 'test/nonexistent' does not exist" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
@@ -245,7 +245,7 @@ func TestNewSbdCollectorChecksSbdExecutableBits(t *testing.T) {
 	if err == nil {
 		t.Fatalf("a non nil error was expected")
 	}
-	if err.Error() != "external executable check failed: 'test/dummy' is not executable" {
+	if err.Error() != "could not initialize SBD collector: 'test/dummy' is not executable" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }

@@ -25,7 +25,7 @@ var (
 func NewCorosyncCollector(cfgToolPath string, quorumToolPath string) (*corosyncCollector, error) {
 	err := CheckExecutables(cfgToolPath, quorumToolPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "external executable check failed")
+		return nil, errors.Wrap(err, "could not initialize Corosync collector")
 	}
 
 	return &corosyncCollector{

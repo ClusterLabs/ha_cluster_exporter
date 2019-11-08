@@ -59,12 +59,15 @@ func NewMetricDesc(subsystem, name, help string, variableLabels []string) *prome
 	return prometheus.NewDesc(prometheus.BuildFQName(NAMESPACE, subsystem, name), help, variableLabels, nil)
 }
 
+// check that all the given paths exist and are executable files
 func CheckExecutables(paths ...string) error {
-	// check that all executables we rely on exist and are executables
 	for _, path := range paths {
 		fileInfo, err := os.Stat(path)
 		if err != nil || os.IsNotExist(err) {
-			return err
+			return errors.Errorf("'%s' does not exist", path)
+		}
+		if fileInfo.IsDir() {
+			return errors.Errorf("'%s' is a directory", path)
 		}
 		if (fileInfo.Mode() & 0111) == 0 {
 			return errors.Errorf("'%s' is not executable", path)
@@ -150,9 +153,10 @@ func main() {
 		config.GetString("cibadmin-path"),
 	)
 	if err != nil {
-		log.Warnf("Could not initialize Pacemaker collector: %v\n", err)
+		log.Warn(err)
 	} else {
 		prometheus.MustRegister(pacemakerCollector)
+		log.Info("Pacemaker collector registered")
 	}
 
 	corosyncCollector, err := NewCorosyncCollector(
@@ -160,9 +164,10 @@ func main() {
 		config.GetString("corosync-quorumtool-path"),
 	)
 	if err != nil {
-		log.Warnf("Could not initialize Corosync collector: %v\n", err)
+		log.Warn(err)
 	} else {
 		prometheus.MustRegister(corosyncCollector)
+		log.Info("Corosync collector registered")
 	}
 
 	sbdCollector, err := NewSbdCollector(
@@ -170,16 +175,18 @@ func main() {
 		config.GetString("sbd-config-path"),
 	)
 	if err != nil {
-		log.Warnf("Could not initialize SBD collector: %v\n", err)
+		log.Warn(err)
 	} else {
 		prometheus.MustRegister(sbdCollector)
+		log.Info("SBD collector registered")
 	}
 
 	drbdCollector, err := NewDrbdCollector(config.GetString("drbdsetup-path"))
 	if err != nil {
-		log.Warnf("Could not initialize DRBD collector: %v\n", err)
+		log.Warn(err)
 	} else {
 		prometheus.MustRegister(drbdCollector)
+		log.Info("DRBD collector registered")
 	}
 
 	fullListenAddress := fmt.Sprintf("%s:%s", config.Get("address"), config.Get("port"))
