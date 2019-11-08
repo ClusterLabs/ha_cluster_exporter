@@ -2,19 +2,17 @@
 
 [![Build Status](https://travis-ci.org/ClusterLabs/ha_cluster_exporter.svg?branch=master)](https://travis-ci.org/ClusterLabs/ha_cluster_exporter)
 
-
 This is a bespoke Prometheus exporter used to enable the monitoring of Pacemaker based HA clusters.  
 
 ## Table of Contents
 1. [Features](#features)
 2. [Installation](#installation)
-2. [Usage](#usage)
-3. [Devel](#Devel)
-4. [Design](#Design)
+3. [Usage](#usage)
+4. [Development](#development)
 
 ## Features
 
-The exporter is a stateless HTTP endpoint. On each HTTP request, it inspects the cluster status locally by parsing pre-existing, distributed data, provided by the external tools provided by the various cluster components.
+The exporter is a stateless HTTP endpoint. On each HTTP request, it locally inspects the cluster status by parsing pre-existing distributed data, provided by the tools of the various cluster components.
 
 Exported data include:
 - Pacemaker cluster summary, nodes and resources stats 
@@ -33,7 +31,7 @@ The project can be installed in many ways, including but not limited to:
 3. [RPM](#rpm)
 
 
-#### Manual clone & build
+### Manual clone & build
 
 ```
 git clone https://github.com/ClusterLabs/ha_cluster_exporter
@@ -42,13 +40,13 @@ make
 make install
 ```
 
-#### Go
+### Go
 
 ```
 go get github.com/ClusterLabs/ha_cluster_exporter
 ```
 
-#### RPM
+### RPM
 You can find the repositories for RPM based distributions in [SUSE's Open Build Service](https://build.opensuse.org/repositories/server:monitoring/prometheus-ha_cluster_exporter).  
 On openSUSE or SUSE Linux Enterprise you can just use the `zypper` system package manager:
 ```shell
@@ -76,21 +74,21 @@ A warning message will inform the user of such cases.
 **Hint:**
 You can deploy a full HA Cluster via Terraform with [SUSE/ha-sap-terraform-deployments](https://github.com/SUSE/ha-sap-terraform-deployments).
 
-#### Configuration
+### Configuration
 
 All the runtime parameters can be configured either via CLI flags or via a configuration file, both or which are completely optional.
 
 For more details, refer to the help message via `ha_cluster_exporter --help`.
 
 **Note**:
-the built-in defaults are tailored for the latest version of SUSE Linux Enterprise.
+the built-in defaults are tailored for the latest version of SUSE Linux Enterprise and openSUSE.
 
 The program will scan, in order, the current working directory, `$HOME/.config`, `/etc` and `/usr/etc` for files named `ha_cluster_exporter.(yaml|json|toml)`.
 The first match has precedence, and the CLI flags have precedence over the config file.
 
 Please refer to the example [YAML configuration](ha_cluster_exporter.yaml) for more details.
 
-#### systemd integration
+### systemd integration
 
 A [systemd unit file](prometheus-ha_cluster_exporter.service) is provided with the RPM packages. You can enable and start it as usual:  
 
@@ -100,7 +98,7 @@ systemctl --now enable prometheus-ha_cluster_exporter
 
 ## Development
 
-This is a young project, pull requests are more than welcome!
+Pull requests are more than welcome!
 
 Most development tasks can be accomplished via the [Makefile](Makefile).
 
