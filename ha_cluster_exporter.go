@@ -111,6 +111,7 @@ func init() {
 	config.AddConfigPath("./")
 	config.AddConfigPath("$HOME/.config/")
 	config.AddConfigPath("/etc/")
+	config.AddConfigPath("/usr/etc/")
 
 	flag.String("port", "9002", "The port number to listen on for HTTP requests")
 	flag.String("address", "0.0.0.0", "The address to listen on for HTTP requests")
