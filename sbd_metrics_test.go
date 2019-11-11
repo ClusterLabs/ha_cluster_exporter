@@ -216,6 +216,19 @@ func TestOnlyOneDeviceSbd(t *testing.T) {
 	}
 }
 
+func TestSbdDeviceParserWithFullCommentBeforeActualSetting(t *testing.T) {
+	sbdConfig := `
+# SBD_DEVICE=/dev/foo
+SBD_DEVICE=/dev/vdc;/dev/vdd`
+
+	sbdDevices := getSbdDevices([]byte(sbdConfig))
+
+	expectedLength := 2
+	if len(sbdDevices) != expectedLength {
+		t.Fatalf("length of SbdDevice should be %d, got %d", expectedLength, len(sbdDevices))
+	}
+}
+
 func TestNewSbdCollector(t *testing.T) {
 	_, err := NewSbdCollector("test/fake_sbd.sh", "test/fake_sbdconfig")
 	if err != nil {
