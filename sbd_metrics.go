@@ -21,6 +21,7 @@ var (
 		// the map key will function as an identifier of the metric throughout the rest of the code;
 		// it is arbitrary, but by convention we use the actual metric name
 		"device_status": NewMetricDesc("sbd", "device_status", "Whether or not an SBD device is healthy; one line per device", []string{"device"}),
+		"devices_total": NewMetricDesc("sbd", "devices_total", "Total count of configured SBD devices", nil),
 	}
 )
 
@@ -61,18 +62,10 @@ func (c *sbdCollector) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 
-	sbdDevices, err := getSbdDevices(sbdConfiguration)
-	if err != nil {
-		// most likely, the sbd_device were not set in config file
-		log.Warnln(err)
-		return
-	}
+	sbdDevices := getSbdDevices(sbdConfiguration)
+	ch <- c.makeGaugeMetric("devices_total", float64(len(sbdDevices)))
 
-	sbdStatuses, err := c.getSbdDeviceStatuses(sbdDevices)
-	if err != nil {
-		log.Warnln(err)
-		return
-	}
+	sbdStatuses := c.getSbdDeviceStatuses(sbdDevices)
 	for sbdDev, sbdStatus := range sbdStatuses {
 		ch <- c.makeGaugeMetric("device_status", sbdStatus, sbdDev)
 	}
@@ -94,27 +87,24 @@ func readSdbFile(sbdConfigPath string) ([]byte, error) {
 }
 
 // retrieve a list of sbd devices from the config file contents
-func getSbdDevices(sbdConfigRaw []byte) ([]string, error) {
+func getSbdDevices(sbdConfigRaw []byte) []string {
 	// in config it can be both SBD_DEVICE="/dev/foo" or SBD_DEVICE=/dev/foo;/dev/bro
-	wordOnly := regexp.MustCompile("SBD_DEVICE=\"?[a-zA-Z-/;]+\"?")
-	sbdDevicesConfig := wordOnly.FindString(string(sbdConfigRaw))
+	regex := regexp.MustCompile(`(?m)^\s*SBD_DEVICE="?((?:[\w-/];?)+)"?\s*$`)
+	sbdDevicesLine := regex.FindStringSubmatch(string(sbdConfigRaw))
 
-	// check the case there is an sbd_config but the SBD_DEVICE is not set
-
-	if sbdDevicesConfig == "" {
-		return nil, fmt.Errorf("there are no SBD_DEVICE set in configuration file")
+	// if SBD_DEVICE line could not be found, return 0 devices
+	if sbdDevicesLine == nil {
+		return nil
 	}
-	// remove the SBD_DEVICE
-	sbdArray := strings.Split(sbdDevicesConfig, "SBD_DEVICE=")[1]
-	// make a list of devices by ; seperators and remove double quotes if present
-	sbdDevices := strings.Split(strings.Trim(sbdArray, "\""), ";")
 
-	return sbdDevices, nil
+	sbdDevices := strings.Split(sbdDevicesLine[1], ";")
+
+	return sbdDevices
 }
 
 // this function takes a list of sbd devices and returns
 // a map of SBD device names with 1 if healthy, 0 if not
-func (c *sbdCollector) getSbdDeviceStatuses(sbdDevices []string) (map[string]float64, error) {
+func (c *sbdCollector) getSbdDeviceStatuses(sbdDevices []string) map[string]float64 {
 	sbdStatuses := make(map[string]float64)
 	for _, sbdDev := range sbdDevices {
 		_, err := exec.Command(c.sbdPath, "-d", sbdDev, "dump").Output()
@@ -127,9 +117,5 @@ func (c *sbdCollector) getSbdDeviceStatuses(sbdDevices []string) (map[string]flo
 		}
 	}
 
-	if len(sbdStatuses) == 0 {
-		return nil, errors.New("could not retrieve SBD device statuses")
-	}
-
-	return sbdStatuses, nil
+	return sbdStatuses
 }
