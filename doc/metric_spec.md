@@ -161,6 +161,7 @@ The SBD subsystems collect devices stats by parsing its configuration the output
 
 0. [Sample](../test/sbd.metrics)
 1. [`ha_cluster_sbd_device_status`](#ha_cluster_sbd_device_status)
+2. [`ha_cluster_sbd_devices_total`](#ha_cluster_sbd_devices_total)
 
 ### `ha_cluster_sbd_device_status`
 
@@ -175,6 +176,12 @@ Value is either `1` or `0`.
 
 The total number of lines for this metric will be the cardinality of `device`.
 
+
+### `ha_cluster_sbd_devices_total`
+
+#### Description
+
+Total count of configured SBD devices.
 
 ## DRBD
 
