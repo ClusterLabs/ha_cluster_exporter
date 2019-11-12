@@ -88,8 +88,13 @@ func readSdbFile(sbdConfigPath string) ([]byte, error) {
 
 // retrieve a list of sbd devices from the config file contents
 func getSbdDevices(sbdConfigRaw []byte) []string {
-	// in config it can be both SBD_DEVICE="/dev/foo" or SBD_DEVICE=/dev/foo;/dev/bro
-	regex := regexp.MustCompile(`(?m)^\s*SBD_DEVICE="?((?:[\w-/];?)+)"?\s*$`)
+	// The following regex matches lines like SBD_DEVICE="/dev/foo" or SBD_DEVICE=/dev/foo;/dev/bar
+	// It captures all the colon separated device names, without double quotes, into a capture group
+	// It allows for free indentation, trailing spaces and end of lines, and it will ignore commented lines
+	// Unbalanced double quotes are not checked and they will still produce a match
+	// If multiple matching lines are present, only the first will be used
+	// The single device name pattern is `[\w-/]+`, which is pretty relaxed
+	regex := regexp.MustCompile(`(?m)^\s*SBD_DEVICE="?((?:[\w-/]+;?)+)"?\s*$`)
 	sbdDevicesLine := regex.FindStringSubmatch(string(sbdConfigRaw))
 
 	// if SBD_DEVICE line could not be found, return 0 devices
@@ -97,6 +102,7 @@ func getSbdDevices(sbdConfigRaw []byte) []string {
 		return nil
 	}
 
+	// split the first capture group, e.g. `/dev/foo;/dev/bar`; the 0th element is always the whole line
 	sbdDevices := strings.Split(sbdDevicesLine[1], ";")
 
 	return sbdDevices
