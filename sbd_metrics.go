@@ -22,33 +22,31 @@ var (
 		// it is arbitrary, but by convention we use the actual metric name
 		"device_status": NewMetricDesc("sbd", "device_status", "Whether or not an SBD device is healthy; one line per device", []string{"device"}),
 	}
-
-	sbdConfigPath = "/etc/sysconfig/sbd"
-	sbdPath       = "/usr/sbin/sbd"
 )
 
-func NewSbdCollector() (*sbdCollector, error) {
-	if _, err := os.Stat(sbdConfigPath); os.IsNotExist(err) {
-		return nil, errors.Wrapf(err, "'%s' not found", sbdConfigPath)
+func NewSbdCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error) {
+	err := CheckExecutables(sbdPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not initialize SBD collector")
 	}
 
-	fileInfo, err := os.Stat(sbdPath)
-	if err != nil || os.IsNotExist(err) {
-		return nil, errors.Wrapf(err, "'%s' not found", sbdPath)
-	}
-	if (fileInfo.Mode() & 0111) == 0 {
-		return nil, errors.Errorf("'%s' is not executable", sbdPath)
+	if _, err := os.Stat(sbdConfigPath); os.IsNotExist(err) {
+		return nil, errors.Errorf("could not initialize SBD collector: '%s' does not exist", sbdConfigPath)
 	}
 
 	return &sbdCollector{
 		DefaultCollector{
 			metrics: sbdMetrics,
 		},
+		sbdPath,
+		sbdConfigPath,
 	}, nil
 }
 
 type sbdCollector struct {
 	DefaultCollector
+	sbdPath       string
+	sbdConfigPath string
 }
 
 func (c *sbdCollector) Collect(ch chan<- prometheus.Metric) {
@@ -57,7 +55,7 @@ func (c *sbdCollector) Collect(ch chan<- prometheus.Metric) {
 
 	log.Infoln("Collecting SBD metrics...")
 
-	sbdConfiguration, err := readSdbFile()
+	sbdConfiguration, err := readSdbFile(c.sbdConfigPath)
 	if err != nil {
 		log.Warnln(err)
 		return
@@ -70,7 +68,7 @@ func (c *sbdCollector) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 
-	sbdStatuses, err := getSbdDeviceStatuses(sbdDevices)
+	sbdStatuses, err := c.getSbdDeviceStatuses(sbdDevices)
 	if err != nil {
 		log.Warnln(err)
 		return
@@ -80,7 +78,7 @@ func (c *sbdCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 }
 
-func readSdbFile() ([]byte, error) {
+func readSdbFile(sbdConfigPath string) ([]byte, error) {
 	sbdConfFile, err := os.Open(sbdConfigPath)
 	if err != nil {
 		return nil, fmt.Errorf("could not open sbd config file %s", err)
@@ -116,10 +114,10 @@ func getSbdDevices(sbdConfigRaw []byte) ([]string, error) {
 
 // this function takes a list of sbd devices and returns
 // a map of SBD device names with 1 if healthy, 0 if not
-func getSbdDeviceStatuses(sbdDevices []string) (map[string]float64, error) {
+func (c *sbdCollector) getSbdDeviceStatuses(sbdDevices []string) (map[string]float64, error) {
 	sbdStatuses := make(map[string]float64)
 	for _, sbdDev := range sbdDevices {
-		_, err := exec.Command(sbdPath, "-d", sbdDev, "dump").Output()
+		_, err := exec.Command(c.sbdPath, "-d", sbdDev, "dump").Output()
 
 		// in case of error the device is not healthy
 		if err != nil {

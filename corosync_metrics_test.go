@@ -66,7 +66,6 @@ func TestOneRingError(t *testing.T) {
 			status  = ring 1 active with no faults																				   
 			`
 
-	getCorosyncRingStatus()
 	ringErrorsTotal, err := parseRingStatus([]byte(ringStatusWithOneError))
 	RingExpectedErrors := 1
 	if ringErrorsTotal != RingExpectedErrors {
@@ -88,7 +87,6 @@ func TestZeroRingErrors(t *testing.T) {
 			status  = ring 1 active with no faults																				   
 			`
 
-	getCorosyncRingStatus()
 	ringErrorsTotal, err := parseRingStatus([]byte(ringStatusWithOneError))
 	RingExpectedErrors := 0
 	if ringErrorsTotal != RingExpectedErrors {
@@ -134,90 +132,67 @@ func TestMultipleRingErrors(t *testing.T) {
 	}
 }
 
-// test that in case of system unexpected error we detect this
-func TestSystemUnexpectedError(t *testing.T) {
-	corosyncTools["cfgtool"] = "test/dummy"
-	ringStatusError := getCorosyncRingStatus()
-
-	// should fail because dummy cfgtool exec failed
-	ringErrorsTotal, err := parseRingStatus([]byte(ringStatusError))
+func TestRingStatusParsingError(t *testing.T) {
+	_, err := parseRingStatus([]byte("some error occurred"))
 	if err == nil {
-		t.Error("a non nil error was expected")
+		t.Fatal("a non nil error was expected")
 	}
-
-	ringExpectedErrors := 0
-	if ringErrorsTotal != ringExpectedErrors {
-		t.Errorf("ringErrors was incorrect, got: %d, expected: %d.", ringErrorsTotal, ringExpectedErrors)
+	if err.Error() != "corosync-cfgtool returned unexpected output: some error occurred" {
+		t.Errorf("Unexpected error: %v", err)
 	}
 }
 
 func TestNewCorosyncCollector(t *testing.T) {
-	corosyncTools["cfgtool"] = "test/fake_corosync-cfgtool.sh"
-	corosyncTools["quorumtool"] = "test/fake_corosync-quorumtool.sh"
-
-	_, err := NewCorosyncCollector()
+	_, err := NewCorosyncCollector("test/fake_corosync-cfgtool.sh", "test/fake_corosync-quorumtool.sh")
 	if err != nil {
 		t.Errorf("Unexpected error, got: %v", err)
 	}
 }
 
 func TestNewCorosyncCollectorChecksCfgtoolExistence(t *testing.T) {
-	corosyncTools["cfgtool"] = "test/nonexistent"
-	corosyncTools["quorumtool"] = "test/fake_corosync-quorumtool.sh"
-
-	_, err := NewCorosyncCollector()
+	_, err := NewCorosyncCollector("test/nonexistent", "test/fake_corosync-quorumtool.sh")
 	if err == nil {
 		t.Fatal("a non nil error was expected")
 	}
-	if err.Error() != "'test/nonexistent' not found: stat test/nonexistent: no such file or directory" {
+	if err.Error() != "could not initialize Corosync collector: 'test/nonexistent' does not exist" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
 
 func TestNewCorosyncCollectorChecksQuorumtoolExistence(t *testing.T) {
-	corosyncTools["cfgtool"] = "test/fake_corosync-cfgtool.sh"
-	corosyncTools["quorumtool"] = "test/nonexistent"
 
-	_, err := NewCorosyncCollector()
+	_, err := NewCorosyncCollector("test/fake_corosync-cfgtool.sh", "test/nonexistent")
 	if err == nil {
 		t.Fatal("a non nil error was expected")
 	}
-	if err.Error() != "'test/nonexistent' not found: stat test/nonexistent: no such file or directory" {
+	if err.Error() != "could not initialize Corosync collector: 'test/nonexistent' does not exist" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
 
 func TestNewCorosyncCollectorChecksCfgtoolExecutableBits(t *testing.T) {
-	corosyncTools["cfgtool"] = "test/dummy"
-	corosyncTools["quorumtool"] = "test/fake_corosync-quorumtool.sh"
-
-	_, err := NewCorosyncCollector()
+	_, err := NewCorosyncCollector("test/dummy", "test/fake_corosync-quorumtool.sh")
 	if err == nil {
 		t.Fatal("a non nil error was expected")
 	}
-	if err.Error() != "'test/dummy' is not executable" {
+	if err.Error() != "could not initialize Corosync collector: 'test/dummy' is not executable" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
 
 func TestNewCorosyncCollectorChecksQuorumtoolExecutableBits(t *testing.T) {
-	corosyncTools["cfgtool"] = "test/fake_corosync-cfgtool.sh"
-	corosyncTools["quorumtool"] = "test/dummy"
-
-	_, err := NewCorosyncCollector()
+	_, err := NewCorosyncCollector("test/fake_corosync-cfgtool.sh", "test/dummy")
 	if err == nil {
 		t.Fatal("a non nil error was expected")
 	}
-	if err.Error() != "'test/dummy' is not executable" {
+	if err.Error() != "could not initialize Corosync collector: 'test/dummy' is not executable" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
 
 func TestCorosyncCollector(t *testing.T) {
 	clock = StoppedClock{}
-	corosyncTools["cfgtool"] = "test/fake_corosync-cfgtool.sh"
-	corosyncTools["quorumtool"] = "test/fake_corosync-quorumtool.sh"
 
-	collector, _ := NewCorosyncCollector()
+	collector, _ := NewCorosyncCollector("test/fake_corosync-cfgtool.sh", "test/fake_corosync-quorumtool.sh")
 	expectMetrics(t, collector, "corosync.metrics")
 }

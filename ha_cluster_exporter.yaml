@@ -1,0 +1,11 @@
+# sample config
+port: "9002"
+addres: "0.0.0.0"
+log-level: "info"
+crm-mon-path: "/usr/sbin/crm_mon"
+cibadmin-path: "/usr/sbin/cibadmin"
+corosync-cfgtoolpath-path: "/usr/sbin/corosync-cfgtool"
+corosync-quorumtool-path: "/usr/sbin/corosync-quorumtool"
+sbd-path: "/usr/sbin/sbd"
+sbd-config-path: "/etc/sysconfig/sbd"
+drbdsetup-path: "/usr/sbin/drbdsetup"

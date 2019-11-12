@@ -5,7 +5,7 @@ import (
 )
 
 func TestReadSbdConfFileError(t *testing.T) {
-	sbdConfFile, err := readSdbFile()
+	sbdConfFile, err := readSdbFile("test/nonexistent")
 
 	if sbdConfFile != nil {
 		t.Errorf("SbdConfig file should be empty in case of error")
@@ -214,59 +214,45 @@ func TestOnlyOneDeviceSbd(t *testing.T) {
 }
 
 func TestNewSbdCollector(t *testing.T) {
-	sbdConfigPath = "test/fake_sbdconfig"
-	sbdPath = "test/fake_sbd.sh"
-
-	_, err := NewSbdCollector()
+	_, err := NewSbdCollector("test/fake_sbd.sh", "test/fake_sbdconfig")
 	if err != nil {
 		t.Errorf("Unexpected error, got: %v", err)
 	}
 }
 
 func TestNewSbdCollectorChecksSbdConfigExistence(t *testing.T) {
-	sbdConfigPath = "test/nonexistent"
-	sbdPath = "test/fake_sbd.sh"
-
-	_, err := NewSbdCollector()
+	_, err := NewSbdCollector("test/fake_sbd.sh", "test/nonexistent")
 	if err == nil {
 		t.Fatal("a non nil error was expected")
 	}
-	if err.Error() != "'test/nonexistent' not found: stat test/nonexistent: no such file or directory" {
+	if err.Error() != "could not initialize SBD collector: 'test/nonexistent' does not exist" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
 
 func TestNewSbdCollectorChecksSbdExistence(t *testing.T) {
-	sbdConfigPath = "test/fake_sbdconfig"
-	sbdPath = "test/nonexistent"
-
-	_, err := NewSbdCollector()
+	_, err := NewSbdCollector("test/nonexistent", "test/fake_sbdconfig")
 	if err == nil {
 		t.Fatal("a non nil error was expected")
 	}
-	if err.Error() != "'test/nonexistent' not found: stat test/nonexistent: no such file or directory" {
+	if err.Error() != "could not initialize SBD collector: 'test/nonexistent' does not exist" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
 
 func TestNewSbdCollectorChecksSbdExecutableBits(t *testing.T) {
-	sbdConfigPath = "test/fake_sbdconfig"
-	sbdPath = "test/dummy"
-
-	_, err := NewSbdCollector()
+	_, err := NewSbdCollector("test/dummy", "test/fake_sbdconfig")
 	if err == nil {
 		t.Fatalf("a non nil error was expected")
 	}
-	if err.Error() != "'test/dummy' is not executable" {
+	if err.Error() != "could not initialize SBD collector: 'test/dummy' is not executable" {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
 
 func TestSBDCollector(t *testing.T) {
 	clock = StoppedClock{}
-	sbdConfigPath = "test/fake_sbdconfig"
-	sbdPath = "test/fake_sbd.sh"
 
-	collector, _ := NewSbdCollector()
+	collector, _ := NewSbdCollector("test/fake_sbd.sh", "test/fake_sbdconfig")
 	expectMetrics(t, collector, "sbd.metrics")
 }

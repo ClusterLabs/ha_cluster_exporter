@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/xml"
 	"math"
-	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -100,34 +99,27 @@ var (
 		"config_last_change":  NewMetricDesc("pacemaker", "config_last_change", "The timestamp of the last change of the cluster configuration", nil),
 		"constraints":         NewMetricDesc("pacemaker", "constraints", "Indicate if a constraints of specific type is present per ID and per resource", []string{"type", "id", "resource"}),
 	}
-
-	crmMonPath   = "/usr/sbin/crm_mon"
-	cibAdminPath = "/usr/sbin/cibadmin"
 )
 
-func NewPacemakerCollector() (*pacemakerCollector, error) {
-	binaries := []string{crmMonPath, cibAdminPath}
-
-	// check that all binary we rely on  for pacemaker metrics exists and are executables
-	for _, binary := range binaries {
-		fileInfo, err := os.Stat(binary)
-		if err != nil || os.IsNotExist(err) {
-			return nil, errors.Wrapf(err, "'%s' not found", binary)
-		}
-		if (fileInfo.Mode() & 0111) == 0 {
-			return nil, errors.Errorf("'%s' is not executable", binary)
-		}
+func NewPacemakerCollector(crmMonPath string, cibAdminPath string) (*pacemakerCollector, error) {
+	err := CheckExecutables(crmMonPath, cibAdminPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not initialize Pacemaker collector")
 	}
 
 	return &pacemakerCollector{
 		DefaultCollector{
 			metrics: pacemakerMetrics,
 		},
+		crmMonPath,
+		cibAdminPath,
 	}, nil
 }
 
 type pacemakerCollector struct {
 	DefaultCollector
+	crmMonPath   string
+	cibAdminPath string
 }
 
 func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
@@ -136,7 +128,7 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 
 	log.Infoln("Collecting pacemaker metrics...")
 
-	pacemakerStatus, err := getPacemakerStatus()
+	pacemakerStatus, err := c.getPacemakerStatus()
 	if err != nil {
 		log.Warnln(err)
 		return
@@ -158,9 +150,9 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 	c.recordMigrationConstraintsMetrics(pacemakerStatus, ch)
 }
 
-func getPacemakerStatus() (pacemakerStatus, error) {
+func (c *pacemakerCollector) getPacemakerStatus() (pacemakerStatus, error) {
 	var pacemakerStatus pacemakerStatus
-	pacemakerStatusXML, err := exec.Command(crmMonPath, "-X", "--group-by-node", "--inactive").Output()
+	pacemakerStatusXML, err := exec.Command(c.crmMonPath, "-X", "--group-by-node", "--inactive").Output()
 	if err != nil {
 		return pacemakerStatus, errors.Wrap(err, "error while executing crm_mon")
 	}
@@ -280,9 +272,9 @@ type cibAdminStatus struct {
 	} `xml:"rsc_location"`
 }
 
-func getCibAdminPreferConstraint() (cibAdminStatus, error) {
+func (c *pacemakerCollector) getCibAdminPreferConstraint() (cibAdminStatus, error) {
 	var cibAdminStatus cibAdminStatus
-	cibAdminStatusXML, err := exec.Command(cibAdminPath, "--query", "--xpath", "//rsc_location[starts-with(@id,'cli-prefer-')]").Output()
+	cibAdminStatusXML, err := exec.Command(c.cibAdminPath, "--query", "--xpath", "//rsc_location[starts-with(@id,'cli-prefer-')]").Output()
 	if err != nil {
 		return cibAdminStatus, errors.Wrap(err, "error while executing cibadmin")
 	}
@@ -303,7 +295,7 @@ func (c *pacemakerCollector) recordMigrationConstraintsMetrics(pacemakerStatus p
 	}
 
 	// set the 2nd type of metric "prefer"
-	cibAdminConstraint, err := getCibAdminPreferConstraint()
+	cibAdminConstraint, err := c.getCibAdminPreferConstraint()
 	if err != nil {
 		log.Warnln(err)
 		return

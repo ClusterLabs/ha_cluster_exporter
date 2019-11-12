@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -39,27 +38,25 @@ var (
 		"connections":      NewMetricDesc("drbd", "connections", "The DRBD resource connections; 1 line per per resource, per peer_node_id", []string{"resource", "peer_node_id", "peer_role", "volume", "peer_disk_state"}),
 		"connections_sync": NewMetricDesc("drbd", "connections_sync", "The in sync percentage value for DRBD resource connections", []string{"resource", "peer_node_id", "volume"}),
 	}
-	drbdsetupPath = "/usr/sbin/drbdsetup"
 )
 
-func NewDrbdCollector() (*drbdCollector, error) {
-	fileInfo, err := os.Stat(drbdsetupPath)
-	if err != nil || os.IsNotExist(err) {
-		return nil, errors.Wrapf(err, "'%s' not found", drbdsetupPath)
-	}
-	if (fileInfo.Mode() & 0111) == 0 {
-		return nil, errors.Errorf("'%s' is not executable", drbdsetupPath)
+func NewDrbdCollector(drbdSetupPath string) (*drbdCollector, error) {
+	err := CheckExecutables(drbdSetupPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not initialize DRBD collector")
 	}
 
 	return &drbdCollector{
 		DefaultCollector{
 			metrics: drbdMetrics,
 		},
+		drbdSetupPath,
 	}, nil
 }
 
 type drbdCollector struct {
 	DefaultCollector
+	drbdsetupPath string
 }
 
 func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
@@ -68,15 +65,15 @@ func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
 
 	log.Infoln("Collecting DRBD metrics...")
 
-	drbdStatusJSONRaw, err := getDrbdInfo()
+	drbdStatusRaw, err := exec.Command(c.drbdsetupPath, "status", "--json").Output()
 	if err != nil {
-		log.Warnf("Error by retrieving drbd infos %s", err)
+		log.Warnf("Error while retrieving drbd infos %s", err)
 		return
 	}
 	// populate structs and parse relevant info we will expose via metrics
-	drbdDev, err := parseDrbdStatus(drbdStatusJSONRaw)
+	drbdDev, err := parseDrbdStatus(drbdStatusRaw)
 	if err != nil {
-		log.Warnf("Error by parsing drbd json: %s", err)
+		log.Warnf("Error while parsing drbd json: %s", err)
 		return
 	}
 
@@ -104,12 +101,6 @@ func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
 			}
 		}
 	}
-}
-
-// return drbd status in byte raw json
-func getDrbdInfo() ([]byte, error) {
-	drbdStatusRaw, err := exec.Command(drbdsetupPath, "status", "--json").Output()
-	return drbdStatusRaw, err
 }
 
 func parseDrbdStatus(statusRaw []byte) ([]drbdStatus, error) {
