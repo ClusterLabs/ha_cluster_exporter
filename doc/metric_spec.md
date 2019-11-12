@@ -181,7 +181,8 @@ The total number of lines for this metric will be the cardinality of `device`.
 
 #### Description
 
-Total count of configured SBD devices.
+Total count of configured SBD devices.  
+Value is an integer greater than or equal to `0`.
 
 ## DRBD
 
