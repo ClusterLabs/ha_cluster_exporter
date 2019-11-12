@@ -121,12 +121,18 @@ func TestGetSbdDevicesWithoutDoubleQuotes(t *testing.T) {
 	 SBD_DEVICE=/dev/vdc;/dev/brother;/dev/syster																					
 			`
 
-	sbdDevices, _ := getSbdDevices([]byte(sbdConfig))
+	sbdDevices := getSbdDevices([]byte(sbdConfig))
+
+	if len(sbdDevices) != 3 {
+		t.Fatalf("length of SbdDevice should be 3 got %d", len(sbdDevices))
+	}
+
 	// we should have 3 devices
 	expected := "/dev/vdc"
 	if sbdDevices[0] != expected {
 		t.Errorf("sbdDevice was incorrect, got: %s, expected: %s ", sbdDevices[0], expected)
 	}
+
 	expected = "/dev/brother"
 	if sbdDevices[1] != expected {
 		t.Errorf("sbdDevice was incorrect, got: %s, expected: %s ", sbdDevices[0], expected)
@@ -135,10 +141,6 @@ func TestGetSbdDevicesWithoutDoubleQuotes(t *testing.T) {
 	expected = "/dev/syster"
 	if sbdDevices[2] != expected {
 		t.Errorf("sbdDevice was incorrect, got: %s, expected: %s ", sbdDevices[0], expected)
-	}
-
-	if len(sbdDevices) != 3 {
-		t.Errorf("length of SbdDevice should be 3 got %d", len(sbdDevices))
 	}
 
 }
@@ -167,7 +169,12 @@ func TestGetSbdDevicesWithDoubleQuotes(t *testing.T) {
 	 #
 	 SBD_OPTS=`
 
-	sbdDevices, _ := getSbdDevices([]byte(sbdConfig))
+	sbdDevices := getSbdDevices([]byte(sbdConfig))
+
+	if len(sbdDevices) != 3 {
+		t.Fatalf("length of SbdDevice should be 3 got %d", len(sbdDevices))
+	}
+
 	// we should have 3 devices
 	expected := "/dev/vdc"
 	if sbdDevices[0] != expected {
@@ -183,10 +190,6 @@ func TestGetSbdDevicesWithDoubleQuotes(t *testing.T) {
 		t.Errorf("sbdDevice was incorrect, got: %s, expected: %s ", sbdDevices[0], expected)
 	}
 
-	if len(sbdDevices) != 3 {
-		t.Errorf("length of SbdDevice should be 3 got %d", len(sbdDevices))
-	}
-
 }
 
 // test the other case with double quotes, and put the string in random place
@@ -200,16 +203,29 @@ func TestOnlyOneDeviceSbd(t *testing.T) {
 	 ## Default: "flush,reboot"
 `
 
-	sbdDevices, _ := getSbdDevices([]byte(sbdConfig))
+	sbdDevices := getSbdDevices([]byte(sbdConfig))
+
+	if len(sbdDevices) != 1 {
+		t.Fatalf("length of SbdDevice should be 1 got %d", len(sbdDevices))
+	}
 
 	// we should have 1 device
 	expected := "/dev/vdc"
 	if sbdDevices[0] != expected {
 		t.Errorf("sbdDevice was incorrect, got: %s, expected: %s ", sbdDevices[0], expected)
 	}
+}
 
-	if len(sbdDevices) != 1 {
-		t.Errorf("length of SbdDevice should be 1 got %d", len(sbdDevices))
+func TestSbdDeviceParserWithFullCommentBeforeActualSetting(t *testing.T) {
+	sbdConfig := `
+# SBD_DEVICE=/dev/foo
+SBD_DEVICE=/dev/vdc;/dev/vdd`
+
+	sbdDevices := getSbdDevices([]byte(sbdConfig))
+
+	expectedLength := 2
+	if len(sbdDevices) != expectedLength {
+		t.Fatalf("length of SbdDevice should be %d, got %d", expectedLength, len(sbdDevices))
 	}
 }
 
