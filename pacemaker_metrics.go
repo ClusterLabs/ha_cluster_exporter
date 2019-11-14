@@ -89,9 +89,9 @@ var (
 	pacemakerMetrics = metricDescriptors{
 		// the map key will function as an identifier of the metric throughout the rest of the code;
 		// it is arbitrary, but by convention we use the actual metric name
-		"nodes":               NewMetricDesc("pacemaker", "nodes", "The nodes in the cluster; one line per name, per status", []string{"name", "type", "status"}),
+		"nodes":               NewMetricDesc("pacemaker", "nodes", "The nodes in the cluster; one line per name, per status", []string{"node", "type", "status"}),
 		"nodes_total":         NewMetricDesc("pacemaker", "nodes_total", "Total number of nodes in the cluster", nil),
-		"resources":           NewMetricDesc("pacemaker", "resources", "The resources in the cluster; one line per id, per status", []string{"node", "id", "role", "managed", "status"}),
+		"resources":           NewMetricDesc("pacemaker", "resources", "The resources in the cluster; one line per id, per status", []string{"node", "resource", "role", "managed", "status"}),
 		"resources_total":     NewMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
 		"stonith_enabled":     NewMetricDesc("pacemaker", "stonith_enabled", "Whether or not stonith is enabled", nil),
 		"fail_count":          NewMetricDesc("pacemaker", "fail_count", "The Fail count number per node and resource id", []string{"node", "resource"}),
@@ -221,7 +221,7 @@ func (c *pacemakerCollector) recordResourcesMetrics(node node, ch chan<- prometh
 					"resources",
 					float64(1),
 					node.Name,
-					strings.ToLower(resource.ID),
+					resource.ID,
 					strings.ToLower(resource.Role),
 					strconv.FormatBool(resource.Managed),
 					resourceStatus)
