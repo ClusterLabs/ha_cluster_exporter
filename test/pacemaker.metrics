@@ -3,9 +3,10 @@
 ha_cluster_pacemaker_config_last_change 1.571399302e+09 1234
 # HELP ha_cluster_pacemaker_constraints Indicate if a constraints of specific type is present per ID and per resource
 # TYPE ha_cluster_pacemaker_constraints gauge
-ha_cluster_pacemaker_constraints{id="cli-ban-msl_SAPHana_PRD_HDB00-on-damadog-hana01",resource="msl_SAPHana_PRD_HDB00",type="ban"} 1 1234
-ha_cluster_pacemaker_constraints{id="cli-prefer-cln_SAPHanaTopology_PRD_HDB00",resource="cln_SAPHanaTopology_PRD_HDB00",type="prefer"} 1 1234
-ha_cluster_pacemaker_constraints{id="cli-prefer-msl_SAPHana_PRD_HDB00",resource="msl_SAPHana_PRD_HDB00",type="prefer"} 1 1234
+ha_cluster_pacemaker_constraints{constraint="cli-ban-msl_SAPHana_PRD_HDB00-on-hana01",node="hana01",resource="msl_SAPHana_PRD_HDB00"} -Inf 1234
+ha_cluster_pacemaker_constraints{constraint="cli-prefer-cln_SAPHanaTopology_PRD_HDB00",node="hana01",resource="cln_SAPHanaTopology_PRD_HDB00"} +Inf 1234
+ha_cluster_pacemaker_constraints{constraint="cli-prefer-msl_SAPHana_PRD_HDB00",node="hana01",resource="msl_SAPHana_PRD_HDB00"} +Inf 1234
+ha_cluster_pacemaker_constraints{constraint="test",node="hana02",resource="test"} 666 1234
 # HELP ha_cluster_pacemaker_fail_count The Fail count number per node and resource id
 # TYPE ha_cluster_pacemaker_fail_count gauge
 ha_cluster_pacemaker_fail_count{node="hana01",resource="rsc_SAPHanaTopology_PRD_HDB00"} 0 1234
