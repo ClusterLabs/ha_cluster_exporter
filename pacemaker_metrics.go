@@ -85,9 +85,10 @@ type CIB struct {
 		Constraints struct{
 			RscLocations []struct {
 				Id  string `xml:"id,attr"`
-				Resource string `xml:"rsc,attr"`
-				Score string `xml:"score,attr"`
 				Node string `xml:"node,attr"`
+				Resource string `xml:"rsc,attr"`
+				Role string `xml:"role,attr"`
+				Score string `xml:"score,attr"`
 			} `xml:"rsc_location"`
 		} `xml:"constraints"`
 	} `xml:"configuration"`
@@ -97,15 +98,15 @@ var (
 	pacemakerMetrics = metricDescriptors{
 		// the map key will function as an identifier of the metric throughout the rest of the code;
 		// it is arbitrary, but by convention we use the actual metric name
-		"nodes":               NewMetricDesc("pacemaker", "nodes", "The nodes in the cluster; one line per name, per status", []string{"node", "type", "status"}),
-		"nodes_total":         NewMetricDesc("pacemaker", "nodes_total", "Total number of nodes in the cluster", nil),
-		"resources":           NewMetricDesc("pacemaker", "resources", "The resources in the cluster; one line per id, per status", []string{"node", "resource", "role", "managed", "status"}),
-		"resources_total":     NewMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
-		"stonith_enabled":     NewMetricDesc("pacemaker", "stonith_enabled", "Whether or not stonith is enabled", nil),
-		"fail_count":          NewMetricDesc("pacemaker", "fail_count", "The Fail count number per node and resource id", []string{"node", "resource"}),
-		"migration_threshold": NewMetricDesc("pacemaker", "migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"}),
-		"config_last_change":  NewMetricDesc("pacemaker", "config_last_change", "The timestamp of the last change of the cluster configuration", nil),
-		"constraints":         NewMetricDesc("pacemaker", "constraints", "Indicate if a constraints of specific type is present per ID and per resource", []string{"constraint", "resource", "node"}),
+		"nodes":                NewMetricDesc("pacemaker", "nodes", "The nodes in the cluster; one line per name, per status", []string{"node", "type", "status"}),
+		"nodes_total":          NewMetricDesc("pacemaker", "nodes_total", "Total number of nodes in the cluster", nil),
+		"resources":            NewMetricDesc("pacemaker", "resources", "The resources in the cluster; one line per id, per status", []string{"node", "resource", "role", "managed", "status"}),
+		"resources_total":      NewMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
+		"stonith_enabled":      NewMetricDesc("pacemaker", "stonith_enabled", "Whether or not stonith is enabled", nil),
+		"fail_count":           NewMetricDesc("pacemaker", "fail_count", "The Fail count number per node and resource id", []string{"node", "resource"}),
+		"migration_threshold":  NewMetricDesc("pacemaker", "migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"}),
+		"config_last_change":   NewMetricDesc("pacemaker", "config_last_change", "The timestamp of the last change of the cluster configuration", nil),
+		"location_constraints": NewMetricDesc("pacemaker", "location_constraints", "Resource location constraints. The value indicates the score.", []string{"constraint", "node", "resource", "role"}),
 	}
 )
 
@@ -161,7 +162,7 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 	c.recordFailCountMetrics(pacemakerStatus, ch)
 	c.recordMigrationThresholdMetrics(pacemakerStatus, ch)
 	c.recordResourceAgentsChanges(pacemakerStatus, ch)
-	c.recordMigrationConstraintsMetrics(cib, ch)
+	c.recordConstraintsMetrics(cib, ch)
 }
 
 func (c *pacemakerCollector) getPacemakerStatus() (pacemakerStatus, error) {
@@ -293,7 +294,7 @@ func (c *pacemakerCollector) getCIB() (CIB, error) {
 	return cib, nil
 }
 
-func (c *pacemakerCollector) recordMigrationConstraintsMetrics(cib CIB, ch chan<- prometheus.Metric) {
+func (c *pacemakerCollector) recordConstraintsMetrics(cib CIB, ch chan<- prometheus.Metric) {
 	for _, constraint := range cib.Configuration.Constraints.RscLocations {
 		var constraintScore float64
 		switch constraint.Score {
@@ -306,6 +307,6 @@ func (c *pacemakerCollector) recordMigrationConstraintsMetrics(cib CIB, ch chan<
 			constraintScore = float64(s)
 		}
 
-		ch <- c.makeGaugeMetric("constraints", constraintScore, constraint.Id, constraint.Resource, constraint.Node)
+		ch <- c.makeGaugeMetric("location_constraints", constraintScore, constraint.Id, constraint.Node, constraint.Resource, strings.ToLower(constraint.Role))
 	}
 }
