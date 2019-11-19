@@ -82,13 +82,13 @@ type resource struct {
 // Pacemaker CIB is queried from cibadmin and unmarshaled from XML
 type CIB struct {
 	Configuration struct {
-		Constraints struct{
+		Constraints struct {
 			RscLocations []struct {
-				Id  string `xml:"id,attr"`
-				Node string `xml:"node,attr"`
+				Id       string `xml:"id,attr"`
+				Node     string `xml:"node,attr"`
 				Resource string `xml:"rsc,attr"`
-				Role string `xml:"role,attr"`
-				Score string `xml:"score,attr"`
+				Role     string `xml:"role,attr"`
+				Score    string `xml:"score,attr"`
 			} `xml:"rsc_location"`
 		} `xml:"constraints"`
 	} `xml:"configuration"`
