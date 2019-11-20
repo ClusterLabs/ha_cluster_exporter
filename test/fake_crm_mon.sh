@@ -85,7 +85,6 @@ cat <<EOF
     <tickets>
     </tickets>
     <bans>
-        <ban id="cli-ban-msl_SAPHana_PRD_HDB00-on-damadog-hana01" resource="msl_SAPHana_PRD_HDB00" node="damadog-hana01" weight="-1000000" master_only="false" />
     </bans>
 </crm_mon>
 EOF

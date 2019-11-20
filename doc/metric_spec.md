@@ -25,8 +25,8 @@ The Pacemaker subsystem collects an atomic snapshot of the HA cluster directly f
 
 0. [Sample](../test/pacemaker.metrics)
 1. [`ha_cluster_pacemaker_config_last_change`](#ha_cluster_pacemaker_config_last_change)
-2. [`ha_cluster_pacemaker_constraints`](#ha_cluster_pacemaker_constraints)
 3. [`ha_cluster_pacemaker_fail_count`](#ha_cluster_pacemaker_fail_count)
+2. [`ha_cluster_pacemaker_location_constraints`](#ha_cluster_pacemaker_location_constraints)
 4. [`ha_cluster_pacemaker_migration_threshold`](#ha_cluster_pacemaker_migration_threshold)
 5. [`ha_cluster_pacemaker_nodes_total`](#ha_cluster_pacemaker_nodes_total)
 6. [`ha_cluster_pacemaker_nodes`](#ha_cluster_pacemaker_nodes)
@@ -34,16 +34,58 @@ The Pacemaker subsystem collects an atomic snapshot of the HA cluster directly f
 8. [`ha_cluster_pacemaker_resources`](#ha_cluster_pacemaker_resources)
 9. [`ha_cluster_pacemaker_stonith_enabled`](#ha_cluster_pacemaker_stonith_enabled)
 
+
+### `ha_cluster_pacemaker_config_last_change`
+
+#### Description
+
+The value of this metric is a Unix timestamp in seconds, converted to a float, corresponding to the last time Pacemaker configuration changed.
+The metric is in turn timestamped with the time it was last checked.
+
+
+### `ha_cluster_pacemaker_fail_count`
+
+#### Description
+
+The number of fail count per node and resource ID.  
+The value is an integer ranging from 0 to `+Inf`.    
+The actual maximum integer value depends on Pacemaker internals, so please refer to upstream documentation for further information.
+
+
+### `ha_cluster_pacemaker_location_constraints`
+
+#### Description
+
+Resource location constraints.  
+The value of the metric is the **score** of the constraint, represented by an integer ranging from `-Inf` to `+Inf`.  
+The actual minimum and maximum integer values depend on Pacemaker internals, so please refer to upstream documentation for further information.
+
+#### Labels
+
+- `constraint`: the unique string identifier of the constraint.
+- `node`: the node the constraint applies to.
+- `resource`: the resource the constraint applies to.
+- `role`: the resource role the constraint applies to, if any.
+
+
+### `ha_cluster_pacemaker_migration_threshold`
+
+#### Description
+
+The number of migration threshold pro node and resource ID set by a pacemaker cluster. 
+Possible values are positive numbers.
+
+
 ### `ha_cluster_pacemaker_nodes`
 
 #### Description
 
-The nodes in the cluster; one line per `name`, per `status`.  
+The nodes in the cluster; one line per `node`, per `status`.  
 Either the value is `1`, or the line is absent altogether.
 
 #### Labels
 
-- `name`: name of the node (usually the hostname).
+- `node`: name of the node (usually the hostname).
 - `status`: one of `online|standby|standby_onfail|maintanance|pending|unclean|shutdown|expected_up|dc`. 
 - `type`: one of `member|ping|remote`.
 
@@ -66,7 +108,7 @@ Either the value is `1`, or the line is absent altogether.
 
 #### Labels
 
-- `id`: the unique resource name.
+- `resource`: the unique resource name.
 - `node`: the name of the node hosting the resource.
 - `managed`: either `true` or `false`.
 - `role`:  one of `started|stopped|master|slave` or one of `starting|stopping|migrating|promoting|demoting`.
@@ -88,35 +130,6 @@ The total number of *configured* resources in the cluster. This value is mostly 
 
 Whether or not stonith is enabled in the cluster.  
 Value is either `1` or `0`.
-
-### `ha_cluster_pacemaker_fail_count`
-
-#### Description
-
-The number of fail count per node and resource ID.
-The value can vary from 0, 1 , 5 etc to `+Inf`, that  correspond to the infinity fail count. For more information about fail count refer to pacemaker upstream documentation.
-
-### `ha_cluster_pacemaker_migration_threshold`
-
-#### Description
-
-The number of migration threshold pro node and resource ID set by a pacemaker cluster. 
-Possible values are positive numbers.
-
-### `ha_cluster_pacemaker_config_last_change`
-
-#### Description
-
-The value of this metric is a Unix timestamp in seconds, converted to a float, corresponding to the last time Pacemaker configuration changed.
-The metric is in turn timestamped with the time it was last checked.
-
-
-### `ha_cluster_pacemaker_constraints`
-
-### Description
-
-Indicate if a cluster constraints is present, peer ID and resource.
-There are 2 types of constraints currently: `prefer` and `ban` which correspond to pacemaker constraints.
 
 
 ## Corosync
@@ -163,6 +176,7 @@ The SBD subsystems collect devices stats by parsing its configuration the output
 1. [`ha_cluster_sbd_device_status`](#ha_cluster_sbd_device_status)
 2. [`ha_cluster_sbd_devices_total`](#ha_cluster_sbd_devices_total)
 
+
 ### `ha_cluster_sbd_device_status`
 
 #### Description
@@ -184,6 +198,7 @@ The total number of lines for this metric will be the cardinality of `device`.
 Total count of configured SBD devices.  
 Value is an integer greater than or equal to `0`.
 
+
 ## DRBD
 
 The DRBD subsystems collect devices stats by parsing its configuration the JSON output of `drbdsetup`.
@@ -192,6 +207,7 @@ The DRBD subsystems collect devices stats by parsing its configuration the JSON 
 1. [`ha_cluster_drbd_resources`](#ha_cluster_drbd_resources)
 2. [`ha_cluster_drbd_connections`](#ha_cluster_drbd_connections)
 3. [`ha_cluster_drbd_connections_sync`](#ha_cluster_drbd_connections_sync`)
+
 
 ### `ha_cluster_drbd_connections`
 
@@ -210,11 +226,13 @@ Either the value is `1`, or the line is absent altogether.
 
 The total number of lines for this metric will be the cardinality of `resource` times the cardinality of `peer_node_id`.
 
+
 ### `ha_cluster_drbd_connections_sync`
 
 #### Descriptions
 
 The DRBD disk connections in sync percentage. Values are float from `0` to `100.00`.
+
 
 ### `ha_cluster_drbd_resources`
 
@@ -225,7 +243,7 @@ Either the value is `1`, or the line is absent altogether.
 
 #### Labels
 
-- `name`: the name of the resource.
+- `resource`: the name of the resource.
 - `role`: one of `primary|secondary|unknown`
 - `volume`: the volume number
 - `disk_state`: one of `attaching|failed|negotiating|inconsistent|outdated|dunknown|consistent|uptodate`
