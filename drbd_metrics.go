@@ -37,6 +37,7 @@ var (
 		"resources":        NewMetricDesc("drbd", "resources", "The DRBD resources; 1 line per name, per volume", []string{"resource", "role", "volume", "disk_state"}),
 		"connections":      NewMetricDesc("drbd", "connections", "The DRBD resource connections; 1 line per per resource, per peer_node_id", []string{"resource", "peer_node_id", "peer_role", "volume", "peer_disk_state"}),
 		"connections_sync": NewMetricDesc("drbd", "connections_sync", "The in sync percentage value for DRBD resource connections", []string{"resource", "peer_node_id", "volume"}),
+		"splitbrain":       NewMetricDesc("drbd", "splitbrain", "The splitbrain per node, resource and volume. The value 1 indicate the splitbrain is present", []string{"node", "resource", "volume"}),
 	}
 )
 
