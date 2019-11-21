@@ -37,7 +37,7 @@ var (
 		"resources":        NewMetricDesc("drbd", "resources", "The DRBD resources; 1 line per name, per volume", []string{"resource", "role", "volume", "disk_state"}),
 		"connections":      NewMetricDesc("drbd", "connections", "The DRBD resource connections; 1 line per per resource, per peer_node_id", []string{"resource", "peer_node_id", "peer_role", "volume", "peer_disk_state"}),
 		"connections_sync": NewMetricDesc("drbd", "connections_sync", "The in sync percentage value for DRBD resource connections", []string{"resource", "peer_node_id", "volume"}),
-		"splitbrain":       NewMetricDesc("drbd", "splitbrain", "The splitbrain per node, resource and volume. The value 1 indicate the splitbrain is present", []string{"node", "resource", "volume"}),
+		"split_brain":      NewMetricDesc("drbd", "split_brain", "The split brain metric per node, resource and volume. The value 1 indicate the split brain is present", []string{"node", "resource", "volume"}),
 	}
 )
 
@@ -102,6 +102,16 @@ func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
 			}
 		}
 	}
+
+	// set split brain metric
+
+	// 1) loop over location /var/lib/drbd/drbd-split-brain-detected-$DRBD_RESOURCE-$DRBD_VOLUME
+	// 2) after prefix loop over-filenames and create metrics based on file name
+	// 3) go throught the founded split-brain and set the metric accordingly (if there is no splitbrain just don't set to 0, as the overall design of exporter)
+
+	// for foundedSplitBrains do
+	// ch <- c.makeGaugeMetric("split_brain", float64(1), splitBrain["node"], splitBrain["resource"], splitBrain["volume"])
+
 }
 
 func parseDrbdStatus(statusRaw []byte) ([]drbdStatus, error) {
@@ -111,4 +121,11 @@ func parseDrbdStatus(statusRaw []byte) ([]drbdStatus, error) {
 		return drbdDevs, err
 	}
 	return drbdDevs, nil
+}
+
+// this function basically depends on the custom hook for drbd.
+// by default if the custom hook is not set, the exporter will not be able to detect it.
+// return a map of splitbrains
+func parseDrbdSplitBrains() {
+	log.Info("not yet")
 }

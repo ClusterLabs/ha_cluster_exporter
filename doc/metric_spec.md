@@ -206,8 +206,8 @@ The DRBD subsystems collect devices stats by parsing its configuration the JSON 
 0. [Sample](../test/drbd.metrics)
 1. [`ha_cluster_drbd_resources`](#ha_cluster_drbd_resources)
 2. [`ha_cluster_drbd_connections`](#ha_cluster_drbd_connections)
-3. [`ha_cluster_drbd_connections_sync`](#ha_cluster_drbd_connections_sync`)
-
+3. [`ha_cluster_drbd_connections_sync`](#ha_cluster_drbd_connections_sync)
+4. [`ha_cluster_drbd_split_brain`](#ha_cluster_drbd_split_brain)
 
 ### `ha_cluster_drbd_connections`
 
@@ -249,3 +249,22 @@ Either the value is `1`, or the line is absent altogether.
 - `disk_state`: one of `attaching|failed|negotiating|inconsistent|outdated|dunknown|consistent|uptodate`
 
 The total number of lines for this metric will be the cardinality of `name` times the cardinality of `volume`.
+
+### `ha_cluster_drbd_split_brain`
+
+#### Description
+
+This metric signal if there is a split brain occuring per node, per resource, and volume.
+Either the value is `1`, or the line is absent altogether.
+
+This metric is a special metric comparing to others, because in order to make this metric working you will need to set a drbd customer split-brain handler. Look at the end 
+
+### Labels
+
+- `resource`: the name of the resource.
+- `role`: one of `primary|secondary|unknown`
+- `volume`: the volume number
+
+### Setting up the DRBD split brain hook:
+
+In order to get woring the split_brain metric TODO TODO.. 
