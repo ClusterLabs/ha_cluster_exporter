@@ -254,7 +254,7 @@ The total number of lines for this metric will be the cardinality of `name` time
 
 #### Description
 
-This metric signal if there is a split brain occuring per node, per resource, and volume.
+This metric signal if there is a split brain occuring per resource and volume.
 Either the value is `1`, or the line is absent altogether.
 
 This metric is a special metric comparing to others, because in order to make this metric working you will need to set a drbd customer split-brain handler. Look at the end 
@@ -262,9 +262,29 @@ This metric is a special metric comparing to others, because in order to make th
 ### Labels
 
 - `resource`: the name of the resource.
-- `role`: one of `primary|secondary|unknown`
 - `volume`: the volume number
 
 ### Setting up the DRBD split brain hook:
 
-In order to get woring the split_brain metric TODO TODO.. 
+In order to get woring the split_brain metric:
+
+1) create hook:
+
+```bash
+#! /bin/bash
+mkdir -p /var/run/drbd/splitbrain
+echo "DRBD split-brain detected! Remember to remove the file /var/lib/drbd/drbd-split-brain-detected once the splitbrain is solved!" > /var/run/drbd/splitbrain/drbd-split-brain-detected-$DRBD_RESOURCE-$DRBD_VOLUME
+```
+
+2) copy this hook into all drbd nodes:
+```/var/lib/drbd/notify-split-brain-haclusterexporter-suse-metric.sh```
+
+3) on the drbd configuration enable the hook:
+
+```split_brain: "/usr/lib/drbd/notify-split-brain-haclusterexporter-suse-metric.sh"`
+
+Refer to upstream doc: https://docs.linbit.com/docs/users-guide-8.4/#s-configure-split-brain-behavior
+
+It is important for the exporter that he hook should create the files in that location and naming. 
+
+Remember to remove the files manually after the split brain is solved
