@@ -69,19 +69,23 @@ func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
 	log.Infoln("Collecting DRBD metrics...")
 
 	// set split brain metric
-	// by default if the custom hook is not set, the exporter will not be able to detect it.
+	// by default if the custom hook is not set, the exporter will not be able to detect it
 	files, err := ioutil.ReadDir("/var/run/drbd/splitbrain")
 	if err != nil {
 		log.Warnf("Error while reading directory /var/run/drbd/splitbrain: %s", err)
 	} else {
 		for _, f := range files {
 			// check if in directory there are file of syntax we expect (nil is when there is not any)
-			match, _ := filepath.Glob("/var/run/drbd/splitbrain/drbd-split-brain-detected*")
+			match, _ := filepath.Glob("/var/run/drbd/splitbrain/drbd-split-brain-detected-*")
 			if match != nil {
 				resAndVolume := strings.Split(f.Name(), "drbd-split-brain-detected-")[1]
-				resource := strings.Split(resAndVolume, "-")[0]
-				volume := strings.Split(resAndVolume, "-")[1]
-				ch <- c.makeGaugeMetric("split_brain", float64(1), resource, volume)
+				// avoid to have index out range panic error (in case the there is not resource-volume syntax)
+				if len(strings.Split(resAndVolume, "-")) == 2 {
+					resource := strings.Split(resAndVolume, "-")[0]
+					volume := strings.Split(resAndVolume, "-")[1]
+					ch <- c.makeGaugeMetric("split_brain", float64(1), resource, volume)
+					log.Warnf("Found split brain for drbd %s %s! Please remove file once you have resolved splitbrain", resource, volume)
+				}
 			}
 		}
 	}
