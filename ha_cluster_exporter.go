@@ -125,7 +125,7 @@ func init() {
 	flag.String("corosync-quorumtool-path", "/usr/sbin/corosync-quorumtool", "path to corosync-quorumtool executable")
 	flag.String("sbd-path", "/usr/sbin/sbd", "path to sbd executable")
 	flag.String("sbd-config-path", "/etc/sysconfig/sbd", "path to sbd configuration")
-	flag.String("drbdsetup-path", "/usr/sbin/drbdsetup", "path to drbdsetup executable")
+	flag.String("drbdsetup-path", "/sbin/drbdsetup", "path to drbdsetup executable")
 
 	err := config.BindPFlags(flag.CommandLine)
 	if err != nil {
