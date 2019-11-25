@@ -152,14 +152,14 @@ func TestDrbdParsing(t *testing.T) {
 }
 
 func TestNewDrbdCollector(t *testing.T) {
-	_, err := NewDrbdCollector("test/fake_drbdsetup.sh")
+	_, err := NewDrbdCollector("test/fake_drbdsetup.sh", "splitbrainpath")
 	if err != nil {
 		t.Errorf("Unexpected error, got: %v", err)
 	}
 }
 
 func TestNewDrbdCollectorChecksDrbdsetupExistence(t *testing.T) {
-	_, err := NewDrbdCollector("test/nonexistent")
+	_, err := NewDrbdCollector("test/nonexistent", "splitbrainfake")
 	if err == nil {
 		t.Fatal("a non nil error was expected")
 	}
@@ -169,7 +169,7 @@ func TestNewDrbdCollectorChecksDrbdsetupExistence(t *testing.T) {
 }
 
 func TestNewDrbdCollectorChecksDrbdsetupExecutableBits(t *testing.T) {
-	_, err := NewDrbdCollector("test/dummy")
+	_, err := NewDrbdCollector("test/dummy", "splibrainfake")
 	if err == nil {
 		t.Fatalf("a non nil error was expected")
 	}
@@ -181,6 +181,6 @@ func TestNewDrbdCollectorChecksDrbdsetupExecutableBits(t *testing.T) {
 func TestDRBDCollector(t *testing.T) {
 	clock = StoppedClock{}
 
-	collector, _ := NewDrbdCollector("test/fake_drbdsetup.sh")
+	collector, _ := NewDrbdCollector("test/fake_drbdsetup.sh", "splitbrainfake")
 	expectMetrics(t, collector, "drbd.metrics")
 }

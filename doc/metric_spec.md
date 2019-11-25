@@ -259,14 +259,14 @@ Either the value is `1`, or the line is absent altogether.
 
 This metric is a special metric comparing to others, because in order to make this metric working you will need to set a drbd customer split-brain handler. Look at the end 
 
-### Labels
+#### Labels
 
 - `resource`: the name of the resource.
 - `volume`: the volume number
 
-### Setting up the DRBD split brain hook:
+#### Setting up the DRBD split-brain hook
 
-In order to get woring the split_brain metric:
+In order to get the `split_brain` metric working:
 
 1) create hook:
 
