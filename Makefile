@@ -1,12 +1,19 @@
-default: clean fmt static-checks test build post-build
+VERSION ?= dev
+ARCHS = amd64 arm64 ppc64le s390x
+
+default: clean mod-tidy fmt vet-check test build
 
 download:
 	go mod download
 	go mod verify
 
-build: ha_cluster_exporter
-ha_cluster_exporter: download fmt
-	go build .
+build: amd64
+
+build-all: clean $(ARCHS)
+
+$(ARCHS):
+	@mkdir -p build
+	CGO_ENABLED=0 GOOS=linux GOARCH=$@ go build -trimpath -ldflags "-s -w -X main.version=$(VERSION)" -o build/ha-cluster-exporter-${VERSION}-linux-$@
 
 install:
 	go install
@@ -18,6 +25,9 @@ vet-check: download
 
 fmt:
 	go fmt
+
+mod-tidy:
+	go mod tidy
 
 fmt-check:
 	.ci/go_lint.sh
@@ -33,10 +43,8 @@ coverage.out:
 clean:
 	go clean
 	rm -f coverage.out
+	rm -rf build/*
 
-post-build:
-	go mod tidy
+obs-commit:
 
-release:
-
-.PHONY: default download install static-checks vet-check fmt fmt-check test clean release post-build
+.PHONY: default download install static-checks vet-check fmt fmt-check mod-tidy test clean build build-all obs-commit $(ARCHS)
