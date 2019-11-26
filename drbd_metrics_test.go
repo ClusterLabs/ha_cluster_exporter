@@ -181,6 +181,6 @@ func TestNewDrbdCollectorChecksDrbdsetupExecutableBits(t *testing.T) {
 func TestDRBDCollector(t *testing.T) {
 	clock = StoppedClock{}
 
-	collector, _ := NewDrbdCollector("test/fake_drbdsetup.sh", "splitbrainfake")
+	collector, _ := NewDrbdCollector("test/fake_drbdsetup.sh", "test/fake_splitbrainfake.sh")
 	expectMetrics(t, collector, "drbd.metrics")
 }
