@@ -10,3 +10,7 @@ ha_cluster_drbd_connections_sync{peer_node_id="1",resource="1-single-1",volume="
 # TYPE ha_cluster_drbd_resources gauge
 ha_cluster_drbd_resources{disk_state="uptodate",resource="1-single-0",role="Secondary",volume="0"} 1 1234
 ha_cluster_drbd_resources{disk_state="uptodate",resource="1-single-1",role="Secondary",volume="0"} 1 1234
+# HELP ha_cluster_drbd_split_brain Whether a split brain has been detected; 1 line per resource, per volume.
+# TYPE ha_cluster_drbd_split_brain gauge
+ha_cluster_drbd_split_brain{resource="resource01",volume="vol01"} 1 1234
+ha_cluster_drbd_split_brain{resource="resource02",volume="vol02"} 1 1234

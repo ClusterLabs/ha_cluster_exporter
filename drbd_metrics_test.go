@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"testing"
 )
 
@@ -180,7 +181,26 @@ func TestNewDrbdCollectorChecksDrbdsetupExecutableBits(t *testing.T) {
 
 func TestDRBDCollector(t *testing.T) {
 	clock = StoppedClock{}
+	splitBrainDir := "/var/tmp/drbd/splitbrain"
+	testFiles := [3]string{
+		"drbd-split-brain-detected-resource01-vol01",
+		"drbd-split-brain-detected-resource02-vol02",
+		"drbd-split-brain-detected-missingthingsWrongSkippedMetricS",
+	}
+	// create dir for putting temp file if not existings
+	if _, err := os.Stat(splitBrainDir); os.IsNotExist(err) {
+		err := os.MkdirAll(splitBrainDir, os.ModePerm)
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err)
+		}
+	}
 
-	collector, _ := NewDrbdCollector("test/fake_drbdsetup.sh", "test/fake_splitbrainfake.sh")
+	for _, testFile := range testFiles {
+		os.Create(splitBrainDir + "/" + testFile)
+	}
+	defer os.RemoveAll(splitBrainDir)
+
+	collector, _ := NewDrbdCollector("test/fake_drbdsetup.sh", splitBrainDir)
 	expectMetrics(t, collector, "drbd.metrics")
+
 }
