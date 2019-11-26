@@ -1,9 +1,6 @@
-sudo:     false
 language: go
 go:
   - "stable"
-services:
-  - docker
 
 jobs:
   include:
@@ -16,21 +13,24 @@ jobs:
     - stage: Build
       script: make build-all
       if: tag IS present
-
-deploy:
-  provider: releases
-  api_key: $GITHUB_OAUTH_TOKEN
-  file_glob: yes
-  file: build/bin/*
-  name: $TRAVIS_TAG
-  skip_cleanup: true
-  on:
-    tags: true
-  after_deploy:
-    - docker run -t -v "$(pwd):/package" -w /package \
-      -e OBS_USER=$OBS_USER \
-      -e OBS_PASS=$OBS_PASS \
-      -e OBS_PROJECT=$OBS_PROJECT \
-      -e OBS_PACKAGE=$OBS_PACKAGE \
-      shap/continuous_deliver \
-      make obs-commit
+    - stage: Deploy
+      if: tag IS present
+      services:
+        - docker
+      script: |
+        docker run -t -v "$(pwd):/package" -w /package \
+          -e OBS_USER=$OBS_USER \
+          -e OBS_PASS=$OBS_PASS \
+          -e OBS_PROJECT=$OBS_PROJECT \
+          -e OBS_PACKAGE=$OBS_PACKAGE \
+          shap/continuous_deliver \
+          make obs-commit
+      deploy:
+        provider: releases
+        api_key: $GITHUB_OAUTH_TOKEN
+        file_glob: yes
+        file: build/bin/*
+        name: $TRAVIS_TAG
+        cleanup: false
+        on:
+          tags: true
