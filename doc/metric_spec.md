@@ -268,18 +268,12 @@ This metric is a special metric comparing to others, because in order to make th
 
 In order to get the `split_brain` metric working:
 
-1) create hook:
+1) copy hook into all drbd nodes:
 
-```bash
-#! /bin/bash
-mkdir -p /var/run/drbd/splitbrain
-echo "DRBD split-brain detected! Remember to remove the file /var/lib/drbd/drbd-split-brain-detected once the splitbrain is solved!" > /var/run/drbd/splitbrain/drbd-split-brain-detected-$DRBD_RESOURCE-$DRBD_VOLUME
-```
+get the hook from:
+https://github.com/SUSE/ha-sap-terraform-deployments/blob/72c9d3ecf6c3f6dd18ccb7bcbde4b40722d5c641/salt/drbd_node/files/notify-split-brain-haclusterexporter-suse-metric.sh
 
-2) copy this hook into all drbd nodes:
-```/var/lib/drbd/notify-split-brain-haclusterexporter-suse-metric.sh```
-
-3) on the drbd configuration enable the hook:
+2) on the drbd configuration enable the hook:
 
 ```split_brain: "/usr/lib/drbd/notify-split-brain-haclusterexporter-suse-metric.sh"`
 
