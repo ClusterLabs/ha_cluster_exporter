@@ -10,15 +10,13 @@ jobs:
     - stage: Test
       name: Unit tests
       script: make test
-    - stage: Build
-      script: make build-all
-      if: tag IS present
-    - stage: Deploy
+    - stage: Build & release
       if: tag IS present
       services:
         - docker
-      script: |
-        docker run -t -v "$(pwd):/package" -w /package \
+      script:
+        - make build-all
+        - docker run --rm -t -v .:/package -w /package \
           -e OBS_USER=$OBS_USER \
           -e OBS_PASS=$OBS_PASS \
           -e OBS_PROJECT=$OBS_PROJECT \
