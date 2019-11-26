@@ -1,5 +1,5 @@
 [Unit]
-Description=Prometheus exporter for ha_cluster metrics (pacemaker)
+Description=Prometheus exporter for Pacemaker HA clusters metrics
 Wants=pacemaker.service
 After=network.target pacemaker.service
 

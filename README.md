@@ -90,7 +90,7 @@ Please refer to the example [YAML configuration](ha_cluster_exporter.yaml) for m
 
 ### systemd integration
 
-A [systemd unit file](prometheus-ha_cluster_exporter.service) is provided with the RPM packages. You can enable and start it as usual:  
+A [systemd unit file](ha_cluster_exporter.service) is provided with the RPM packages. You can enable and start it as usual:  
 
 ```
 systemctl --now enable prometheus-ha_cluster_exporter

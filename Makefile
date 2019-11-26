@@ -1,4 +1,5 @@
 VERSION ?= dev
+OBS_PACKAGE ?= "prometheus-ha_cluster_exporter"
 ARCHS = amd64 arm64 ppc64le s390x
 
 default: clean mod-tidy fmt vet-check test build
@@ -9,11 +10,11 @@ download:
 
 build: amd64
 
-build-all: clean $(ARCHS)
+build-all: clean-bin $(ARCHS)
 
 $(ARCHS):
-	@mkdir -p build
-	CGO_ENABLED=0 GOOS=linux GOARCH=$@ go build -trimpath -ldflags "-s -w -X main.version=$(VERSION)" -o build/ha-cluster-exporter-${VERSION}-linux-$@
+	@mkdir -p build/bin
+	CGO_ENABLED=0 GOOS=linux GOARCH=$@ go build -trimpath -ldflags "-s -w -X main.version=$(VERSION)" -o build/bin/ha_cluster_exporter-$(VERSION)-$@
 
 install:
 	go install
@@ -40,11 +41,31 @@ coverage.out:
 	go test -cover -coverprofile=coverage.out
 	go tool cover -html=coverage.out
 
-clean:
+clean: clean-bin clean-obs
 	go clean
 	rm -f coverage.out
-	rm -rf build/*
 
-obs-commit:
+clean-bin:
+	rm -rf build/bin
 
-.PHONY: default download install static-checks vet-check fmt fmt-check mod-tidy test clean build build-all obs-commit $(ARCHS)
+clean-obs:
+	rm -rf build/obs
+
+.ONESHELL:
+obs-commit: clean-obs
+	mkdir -p build/obs/$(OBS_PACKAGE)
+	osc checkout $(OBS_PROJECT)/$(OBS_PACKAGE) -o build/obs
+	cp ha_cluster_exporter.spec build/obs/$(OBS_PACKAGE).spec
+	cp -r doc LICENSE *.md ha_cluster_exporter.service build/obs/$(OBS_PACKAGE)/
+	cp build/bin/* build/obs/$(OBS_PACKAGE)/
+	cd build/obs/$(OBS_PACKAGE)
+	mv ha_cluster_exporter-$(VERSION)-arm64 ha_cluster_exporter-$(VERSION)-aarch64
+	mv ha_cluster_exporter-$(VERSION)-amd64 ha_cluster_exporter-$(VERSION)-x86_64
+	cd ..
+	sed -i 's/%%VERSION%%/$(VERSION)/' $(OBS_PACKAGE).spec
+	rm *.tar.gz
+	tar -cvzf $(OBS_PACKAGE)-$(VERSION).tar.gz -C $(OBS_PACKAGE) .
+	osc addremove
+	osc commit -m "Automated $(VERSION) release"
+
+.PHONY: default download install static-checks vet-check fmt fmt-check mod-tidy test clean clean-bin clean-obs build build-all obs-commit $(ARCHS)
