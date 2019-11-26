@@ -11,8 +11,6 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-# ignore binary
-ha_cluster_exporter
-
 # we don't use vendoring
 /vendor
+/build
