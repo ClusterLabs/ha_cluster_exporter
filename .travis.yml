@@ -22,15 +22,6 @@ jobs:
         - VERSION=$TRAVIS_TAG
       script:
         - make -j4 build-all
-        - |
-          docker run --rm -t -v "$(pwd):/package" -w /package \
-          -e OBS_USER=$OBS_USER \
-          -e OBS_PASS=$OBS_PASS \
-          -e OBS_PROJECT=$OBS_PROJECT \
-          -e OBS_PACKAGE=$OBS_PACKAGE \
-          -e VERSION=$VERSION \
-          shap/continuous_deliver \
-          bash -c ".ci/init_osc_creds.sh && make obs-commit"
       deploy:
         provider: releases
         api_key: $GITHUB_OAUTH_TOKEN
@@ -40,3 +31,9 @@ jobs:
         skip_cleanup: true
         on:
           tags: true
+        after_deploy:
+          - |
+            docker run --rm -t -v "$(pwd):/package" -w /package \
+            -e OBS_USER -e OBS_PASS -e OBS_PROJECT -e OBS_PACKAGE -e VERSION -e REPOSITORY=$TRAVIS_REPO_SLUG \
+            shap/continuous_deliver \
+            bash -c ".ci/init_osc_creds.sh && make obs-commit"
