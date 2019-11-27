@@ -1,6 +1,8 @@
 VERSION ?= dev
-OBS_PACKAGE ?= "prometheus-ha_cluster_exporter"
-ARCHS = amd64 arm64 ppc64le s390x
+OBS_PACKAGE ?= prometheus-ha_cluster_exporter
+ARCHS ?= amd64 arm64 ppc64le s390x
+AUTHOR ?= shap-staff@suse.de
+REPOSITORY ?= clusterlabs/ha_cluster_exporter
 
 default: clean mod-tidy fmt vet-check test build
 
@@ -51,7 +53,7 @@ clean-bin:
 clean-obs:
 	rm -rf build/obs
 
-obs-changes: clean-obs
+obs-workdir: clean-obs
 	mkdir -p build/obs/$(OBS_PACKAGE)
 	osc checkout $(OBS_PROJECT)/$(OBS_PACKAGE) -o build/obs
 	cp ha_cluster_exporter.spec build/obs/$(OBS_PACKAGE).spec
@@ -62,9 +64,10 @@ obs-changes: clean-obs
 	sed -i 's/%%VERSION%%/$(VERSION)/' build/obs/$(OBS_PACKAGE).spec
 	rm build/obs/*.tar.gz
 	tar -cvzf build/obs/$(OBS_PACKAGE)-$(VERSION).tar.gz -C build/obs/$(OBS_PACKAGE) .
+	.ci/gh_release_to_obs_changeset.py $(REPOSITORY) --author $(AUTHOR) --tag $(VERSION) -f build/obs/$(OBS_PACKAGE).changes
 
-obs-commit: obs-changes
+obs-commit: obs-workdir
 	cd build/obs; osc addremove
 	cd build/obs; osc commit -m "Automated $(VERSION) release"
 
-.PHONY: default download install static-checks vet-check fmt fmt-check mod-tidy test clean clean-bin clean-obs build build-all obs-commit $(ARCHS)
+.PHONY: default download install static-checks vet-check fmt fmt-check mod-tidy test clean clean-bin clean-obs build build-all obs-commit obs-workdir $(ARCHS)
