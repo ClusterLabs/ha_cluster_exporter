@@ -31,9 +31,9 @@ jobs:
         skip_cleanup: true
         on:
           tags: true
-        after_deploy:
-          - |
-            docker run --rm -t -v "$(pwd):/package" -w /package \
-            -e OBS_USER -e OBS_PASS -e OBS_PROJECT -e OBS_PACKAGE -e VERSION -e REPOSITORY=$TRAVIS_REPO_SLUG \
-            shap/continuous_deliver \
-            bash -c ".ci/init_osc_creds.sh && make obs-commit"
+      after_deploy:
+        - |
+          docker run --rm -t -v "$(pwd):/package" -w /package \
+          -e OBS_USER -e OBS_PASS -e OBS_PROJECT -e OBS_PACKAGE -e VERSION -e REPOSITORY=$TRAVIS_REPO_SLUG \
+          shap/continuous_deliver \
+          bash -c ".ci/init_osc_creds.sh && make obs-commit"
