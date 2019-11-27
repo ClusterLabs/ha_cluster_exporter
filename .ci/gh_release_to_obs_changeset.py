@@ -28,8 +28,9 @@ url = f'https://api.github.com/repos/{args.repo}/releases{releaseSegment}'
 try:
     response = request.urlopen(url)
 except urllib.error.HTTPError as error:
-    print(f"GitHub API responded with a {error.code} error:", file=sys.stderr)
-    print(json.dumps(json.load(error), indent=4), file=sys.stderr)
+    print(f"GitHub API responded with a {error.code} error!", file=sys.stderr)
+    print("Url:", url, file=sys.stderr)
+    print("Response:", json.dumps(json.load(error), indent=4), file=sys.stderr, sep="\n")
     sys.exit(1)
 
 release = json.load(response)
