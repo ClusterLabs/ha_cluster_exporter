@@ -7,7 +7,6 @@ Summary:        Prometheus exporter for Pacemaker HA clusters metrics
 Group:          System/Monitoring
 Url:            https://github.com/ClusterLabs/ha_cluster_exporter
 Source:         %{name}-%{version}.tar.gz
-BuildRequires:  fdupes
 ExclusiveArch:  aarch64 x86_64 ppc64le s390x
 Provides:       ha_cluster_exporter = %{version}-%{release}
 Provides:       prometheus(ha_cluster_exporter) = %{version}-%{release}
@@ -36,8 +35,6 @@ install -D -m 0644 %{shortname}.service %{buildroot}%{_unitdir}/%{name}.service
 # Install compat wrapper for legacy init systems
 install -Dd -m 0755 %{buildroot}%{_sbindir}
 ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rc%{name}
-
-%fdupes %{buildroot}
 
 %pre
 %service_add_pre %{name}.service

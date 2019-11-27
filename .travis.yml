@@ -37,6 +37,6 @@ jobs:
         file_glob: yes
         file: build/bin/*
         name: $TRAVIS_TAG
-        cleanup: false
+        skip_cleanup: true
         on:
           tags: true
