@@ -50,8 +50,7 @@ with tempfile.TemporaryFile("r+") as temp:
     print("\n", file=temp)
 
     if release['body']:
-        print(textwrap.indent(release['body'], "  "), file=temp)
-    print(file=temp)
+        print(textwrap.indent(release['body'], "  "), file=temp, end="\n\n")
     temp.seek(0)
 
     if args.file:
