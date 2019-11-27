@@ -24,12 +24,12 @@ jobs:
         - make -j4 build-all
         - |
           docker run --rm -t -v "$(pwd):/package" -w /package \
-          -e OBS_USER="$OBS_USER" \
-          -e OBS_PASS="$OBS_PASS" \
-          -e OBS_PROJECT="$OBS_PROJECT" \
-          -e OBS_PACKAGE="$OBS_PACKAGE" \
+          -e OBS_USER=$OBS_USER \
+          -e OBS_PASS=$OBS_PASS \
+          -e OBS_PROJECT=$OBS_PROJECT \
+          -e OBS_PACKAGE=$OBS_PACKAGE \
           shap/continuous_deliver \
-          make obs-commit
+          bash -c ".ci/init_osc_creds.sh && make obs-commit"
       deploy:
         provider: releases
         api_key: $GITHUB_OAUTH_TOKEN
