@@ -16,11 +16,11 @@ jobs:
         - docker
       script:
         - make build-all
-        - docker run --rm -t -v "$(pwd):/package" -w /package \
-          -e OBS_USER=$OBS_USER \
-          -e OBS_PASS=$OBS_PASS \
-          -e OBS_PROJECT=$OBS_PROJECT \
-          -e OBS_PACKAGE=$OBS_PACKAGE \
+        - docker run --rm -t -v "$(pwd)":/package -w /package \
+          -e OBS_USER="$OBS_USER" \
+          -e OBS_PASS="$OBS_PASS" \
+          -e OBS_PROJECT="$OBS_PROJECT" \
+          -e OBS_PACKAGE="$OBS_PACKAGE" \
           shap/continuous_deliver \
           make obs-commit
       deploy:
