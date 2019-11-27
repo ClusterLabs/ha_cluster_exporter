@@ -206,8 +206,8 @@ The DRBD subsystems collect devices stats by parsing its configuration the JSON 
 0. [Sample](../test/drbd.metrics)
 1. [`ha_cluster_drbd_resources`](#ha_cluster_drbd_resources)
 2. [`ha_cluster_drbd_connections`](#ha_cluster_drbd_connections)
-3. [`ha_cluster_drbd_connections_sync`](#ha_cluster_drbd_connections_sync`)
-
+3. [`ha_cluster_drbd_connections_sync`](#ha_cluster_drbd_connections_sync)
+4. [`ha_cluster_drbd_split_brain`](#ha_cluster_drbd_split_brain)
 
 ### `ha_cluster_drbd_connections`
 
@@ -249,3 +249,36 @@ Either the value is `1`, or the line is absent altogether.
 - `disk_state`: one of `attaching|failed|negotiating|inconsistent|outdated|dunknown|consistent|uptodate`
 
 The total number of lines for this metric will be the cardinality of `name` times the cardinality of `volume`.
+
+### `ha_cluster_drbd_split_brain`
+
+#### Description
+
+This metric signal if there is a split brain occuring per resource and volume.
+Either the value is `1`, or the line is absent altogether.
+
+This metric is a special metric comparing to others, because in order to make this metric working you will need to set a drbd customer split-brain handler. Look at the end 
+
+#### Labels
+
+- `resource`: the name of the resource.
+- `volume`: the volume number
+
+#### Setting up the DRBD split-brain hook
+
+In order to get the `split_brain` metric working:
+
+1) copy hook into all drbd nodes:
+
+get the hook from:
+https://github.com/SUSE/ha-sap-terraform-deployments/blob/72c9d3ecf6c3f6dd18ccb7bcbde4b40722d5c641/salt/drbd_node/files/notify-split-brain-haclusterexporter-suse-metric.sh
+
+2) on the drbd configuration enable the hook:
+
+```split_brain: "/usr/lib/drbd/notify-split-brain-haclusterexporter-suse-metric.sh"`
+
+Refer to upstream doc: https://docs.linbit.com/docs/users-guide-8.4/#s-configure-split-brain-behavior
+
+It is important for the exporter that he hook should create the files in that location and naming. 
+
+Remember to remove the files manually after the split brain is solved

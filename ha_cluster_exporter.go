@@ -126,6 +126,7 @@ func init() {
 	flag.String("sbd-path", "/usr/sbin/sbd", "path to sbd executable")
 	flag.String("sbd-config-path", "/etc/sysconfig/sbd", "path to sbd configuration")
 	flag.String("drbdsetup-path", "/sbin/drbdsetup", "path to drbdsetup executable")
+	flag.String("drbdsplitbrain-path", "/var/run/drbd/splitbrain", "path to drbd splitbrain hooks temporary files")
 
 	err := config.BindPFlags(flag.CommandLine)
 	if err != nil {
@@ -181,7 +182,7 @@ func main() {
 		log.Info("SBD collector registered")
 	}
 
-	drbdCollector, err := NewDrbdCollector(config.GetString("drbdsetup-path"))
+	drbdCollector, err := NewDrbdCollector(config.GetString("drbdsetup-path"), config.GetString("drbdsplitbrain-path"))
 	if err != nil {
 		log.Warn(err)
 	} else {

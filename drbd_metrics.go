@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -37,10 +39,11 @@ var (
 		"resources":        NewMetricDesc("drbd", "resources", "The DRBD resources; 1 line per name, per volume", []string{"resource", "role", "volume", "disk_state"}),
 		"connections":      NewMetricDesc("drbd", "connections", "The DRBD resource connections; 1 line per per resource, per peer_node_id", []string{"resource", "peer_node_id", "peer_role", "volume", "peer_disk_state"}),
 		"connections_sync": NewMetricDesc("drbd", "connections_sync", "The in sync percentage value for DRBD resource connections", []string{"resource", "peer_node_id", "volume"}),
+		"split_brain":      NewMetricDesc("drbd", "split_brain", "Whether a split brain has been detected; 1 line per resource, per volume.", []string{"resource", "volume"}),
 	}
 )
 
-func NewDrbdCollector(drbdSetupPath string) (*drbdCollector, error) {
+func NewDrbdCollector(drbdSetupPath string, drbdSplitBrainPath string) (*drbdCollector, error) {
 	err := CheckExecutables(drbdSetupPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not initialize DRBD collector")
@@ -51,12 +54,14 @@ func NewDrbdCollector(drbdSetupPath string) (*drbdCollector, error) {
 			metrics: drbdMetrics,
 		},
 		drbdSetupPath,
+		drbdSplitBrainPath,
 	}, nil
 }
 
 type drbdCollector struct {
 	DefaultCollector
-	drbdsetupPath string
+	drbdsetupPath      string
+	drbdSplitBrainPath string
 }
 
 func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
@@ -64,6 +69,9 @@ func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
 	defer c.mutex.Unlock()
 
 	log.Infoln("Collecting DRBD metrics...")
+
+	// set split brain metric
+	c.setDrbdSplitBrainMetric(ch)
 
 	drbdStatusRaw, err := exec.Command(c.drbdsetupPath, "status", "--json").Output()
 	if err != nil {
@@ -101,6 +109,7 @@ func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
 			}
 		}
 	}
+
 }
 
 func parseDrbdStatus(statusRaw []byte) ([]drbdStatus, error) {
@@ -110,4 +119,33 @@ func parseDrbdStatus(statusRaw []byte) ([]drbdStatus, error) {
 		return drbdDevs, err
 	}
 	return drbdDevs, nil
+}
+
+func (c *drbdCollector) setDrbdSplitBrainMetric(ch chan<- prometheus.Metric) {
+
+	// set split brain metric
+	// by default if the custom hook is not set, the exporter will not be able to detect it
+	files, err := ioutil.ReadDir(c.drbdSplitBrainPath)
+	if err != nil {
+		log.Warnf("Error while reading directory %s: %s", c.drbdSplitBrainPath, err)
+	}
+
+	for _, f := range files {
+		// check if in directory there are file of syntax we expect (nil is when there is not any)
+		match, _ := filepath.Glob(c.drbdSplitBrainPath + "/drbd-split-brain-detected-*")
+		if match == nil {
+			continue
+		}
+		resAndVolume := strings.Split(f.Name(), "drbd-split-brain-detected-")[1]
+
+		// avoid to have index out range panic error (in case the there is not resource-volume syntax)
+		if len(strings.Split(resAndVolume, "-")) != 2 {
+			continue
+		}
+		//Resource (0) volume (1) place in slice
+		resourceAndVolume := strings.Split(resAndVolume, "-")
+
+		ch <- c.makeGaugeMetric("split_brain", float64(1), resourceAndVolume[0], resourceAndVolume[1])
+
+	}
 }
