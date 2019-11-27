@@ -51,21 +51,18 @@ clean-bin:
 clean-obs:
 	rm -rf build/obs
 
-.ONESHELL:
 obs-commit: clean-obs
 	mkdir -p build/obs/$(OBS_PACKAGE)
 	osc checkout $(OBS_PROJECT)/$(OBS_PACKAGE) -o build/obs
 	cp ha_cluster_exporter.spec build/obs/$(OBS_PACKAGE).spec
 	cp -r doc LICENSE *.md ha_cluster_exporter.service build/obs/$(OBS_PACKAGE)/
 	cp build/bin/* build/obs/$(OBS_PACKAGE)/
-	cd build/obs/$(OBS_PACKAGE)
-	mv ha_cluster_exporter-$(VERSION)-arm64 ha_cluster_exporter-$(VERSION)-aarch64
-	mv ha_cluster_exporter-$(VERSION)-amd64 ha_cluster_exporter-$(VERSION)-x86_64
-	cd ..
-	sed -i 's/%%VERSION%%/$(VERSION)/' $(OBS_PACKAGE).spec
-	rm *.tar.gz
-	tar -cvzf $(OBS_PACKAGE)-$(VERSION).tar.gz -C $(OBS_PACKAGE) .
-	osc addremove
-	osc commit -m "Automated $(VERSION) release"
+	mv build/obs/$(OBS_PACKAGE)/ha_cluster_exporter-$(VERSION)-arm64 build/obs/$(OBS_PACKAGE)/ha_cluster_exporter-$(VERSION)-aarch64
+	mv build/obs/$(OBS_PACKAGE)/ha_cluster_exporter-$(VERSION)-amd64 build/obs/$(OBS_PACKAGE)/ha_cluster_exporter-$(VERSION)-x86_64
+	sed -i 's/%%VERSION%%/$(VERSION)/' build/obs/$(OBS_PACKAGE)/$(OBS_PACKAGE).spec
+	rm build/obs/$(OBS_PACKAGE)/*.tar.gz
+	tar -cvzf build/obs/$(OBS_PACKAGE)/$(OBS_PACKAGE)-$(VERSION).tar.gz -C build/obs/$(OBS_PACKAGE) .
+	cd build/obs; osc addremove
+	cd build/obs; osc commit -m "Automated $(VERSION) release"
 
 .PHONY: default download install static-checks vet-check fmt fmt-check mod-tidy test clean clean-bin clean-obs build build-all obs-commit $(ARCHS)

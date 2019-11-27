@@ -21,7 +21,7 @@ jobs:
       env:
         - VERSION=$TRAVIS_TAG
       script:
-        - make build-all
+        - make -j4 build-all
         - |
           docker run --rm -t -v "$(pwd):/package" -w /package \
           -e OBS_USER="$OBS_USER" \
