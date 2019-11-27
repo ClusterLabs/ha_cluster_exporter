@@ -51,7 +51,7 @@ clean-bin:
 clean-obs:
 	rm -rf build/obs
 
-obs-commit: clean-obs
+obs-changes: clean-obs
 	mkdir -p build/obs/$(OBS_PACKAGE)
 	osc checkout $(OBS_PROJECT)/$(OBS_PACKAGE) -o build/obs
 	cp ha_cluster_exporter.spec build/obs/$(OBS_PACKAGE).spec
@@ -62,6 +62,8 @@ obs-commit: clean-obs
 	sed -i 's/%%VERSION%%/$(VERSION)/' build/obs/$(OBS_PACKAGE).spec
 	rm build/obs/*.tar.gz
 	tar -cvzf build/obs/$(OBS_PACKAGE)-$(VERSION).tar.gz -C build/obs/$(OBS_PACKAGE) .
+
+obs-commit: obs-changes
 	cd build/obs; osc addremove
 	cd build/obs; osc commit -m "Automated $(VERSION) release"
 

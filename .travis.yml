@@ -28,6 +28,7 @@ jobs:
           -e OBS_PASS=$OBS_PASS \
           -e OBS_PROJECT=$OBS_PROJECT \
           -e OBS_PACKAGE=$OBS_PACKAGE \
+          -e VERSION=$VERSION \
           shap/continuous_deliver \
           bash -c ".ci/init_osc_creds.sh && make obs-commit"
       deploy:
