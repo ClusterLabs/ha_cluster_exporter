@@ -1,9 +1,10 @@
-sudo:     false
 language: go
 go:
-  - 1.11.x
-env:
-  - GO111MODULE=on
+  - "stable"
+
+cache:
+  directories:
+    - $GOPATH/pkg/mod
 
 jobs:
   include:
@@ -13,6 +14,26 @@ jobs:
     - stage: Test
       name: Unit tests
       script: make test
-    - stage: Release
-      script: make release
+    - stage: Build & release
       if: tag IS present
+      services:
+        - docker
+      env:
+        - VERSION=$TRAVIS_TAG
+      script:
+        - make -j4 build-all
+      deploy:
+        provider: releases
+        api_key: $GITHUB_OAUTH_TOKEN
+        file_glob: yes
+        file: build/bin/*
+        name: $TRAVIS_TAG
+        skip_cleanup: true
+        on:
+          tags: true
+      after_deploy:
+        - |
+          docker run --rm -t -v "$(pwd):/package" -w /package \
+          -e OBS_USER -e OBS_PASS -e OBS_PROJECT -e OBS_PACKAGE -e VERSION -e REPOSITORY=$TRAVIS_REPO_SLUG \
+          shap/continuous_deliver \
+          bash -c ".ci/init_osc_creds.sh && make obs-commit"
