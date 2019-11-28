@@ -1,8 +1,17 @@
+# this is the what ends up in the RPM "Version" field and it is also used as suffix for the built binaries
+# it can be arbitrary for local builds, but it if you want to commit to OBS it must correspond to a Git tag with an associated GitHub release
 VERSION ?= dev
-OBS_PACKAGE ?= prometheus-ha_cluster_exporter
-ARCHS ?= amd64 arm64 ppc64le s390x
+
+# we only use this to comply with RPM changelog conventions at SUSE
 AUTHOR ?= shap-staff@suse.de
+
+# you can customize any of the following to build forks
+OBS_PROJECT ?= server:monitoring
+OBS_PACKAGE ?= prometheus-ha_cluster_exporter
 REPOSITORY ?= clusterlabs/ha_cluster_exporter
+
+# the Go archs we crosscompile to
+ARCHS ?= amd64 arm64 ppc64le s390x
 
 default: clean mod-tidy fmt vet-check test build
 
@@ -54,7 +63,7 @@ clean-obs:
 	rm -rf build/obs
 
 obs-workdir: clean-obs
-	mkdir -p build/obs/$(OBS_PACKAGE)
+	@mkdir -p build/obs/$(OBS_PACKAGE)
 	osc checkout $(OBS_PROJECT)/$(OBS_PACKAGE) -o build/obs
 	cp ha_cluster_exporter.spec build/obs/$(OBS_PACKAGE).spec
 	cp -r doc LICENSE *.md ha_cluster_exporter.service build/obs/$(OBS_PACKAGE)/
