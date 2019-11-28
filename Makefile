@@ -73,7 +73,7 @@ obs-workdir: clean-obs
 	sed -i 's/%%VERSION%%/$(VERSION)/' build/obs/$(OBS_PACKAGE).spec
 	rm build/obs/*.tar.gz
 	tar -cvzf build/obs/$(OBS_PACKAGE)-$(VERSION).tar.gz -C build/obs/$(OBS_PACKAGE) .
-	.ci/gh_release_to_obs_changeset.py $(REPOSITORY) --author $(AUTHOR) --tag $(VERSION) -f build/obs/$(OBS_PACKAGE).changes
+	.ci/gh_release_to_obs_changeset.py $(REPOSITORY) -a $(AUTHOR) -t $(VERSION) -f build/obs/$(OBS_PACKAGE).changes || true
 
 obs-commit: obs-workdir
 	cd build/obs; osc addremove
