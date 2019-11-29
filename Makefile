@@ -66,7 +66,7 @@ obs-workdir: clean-obs
 	@mkdir -p build/obs/$(OBS_PACKAGE)
 	osc checkout $(OBS_PROJECT)/$(OBS_PACKAGE) -o build/obs
 	cp ha_cluster_exporter.spec build/obs/$(OBS_PACKAGE).spec
-	cp -r doc LICENSE *.md ha_cluster_exporter.service build/obs/$(OBS_PACKAGE)/
+	git archive --format=tar HEAD | tar -x -C build/obs/$(OBS_PACKAGE)
 	cp build/bin/* build/obs/$(OBS_PACKAGE)/
 	mv build/obs/$(OBS_PACKAGE)/ha_cluster_exporter-$(VERSION)-arm64 build/obs/$(OBS_PACKAGE)/ha_cluster_exporter-$(VERSION)-aarch64
 	mv build/obs/$(OBS_PACKAGE)/ha_cluster_exporter-$(VERSION)-amd64 build/obs/$(OBS_PACKAGE)/ha_cluster_exporter-$(VERSION)-x86_64
