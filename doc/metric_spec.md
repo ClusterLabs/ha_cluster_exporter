@@ -275,7 +275,7 @@ https://github.com/SUSE/ha-sap-terraform-deployments/blob/72c9d3ecf6c3f6dd18ccb7
 
 2) on the drbd configuration enable the hook:
 
-```split_brain: "/usr/lib/drbd/notify-split-brain-haclusterexporter-suse-metric.sh"`
+```split_brain: "/usr/lib/drbd/notify-split-brain-haclusterexporter-suse-metric.sh"```
 
 Refer to upstream doc: https://docs.linbit.com/docs/users-guide-8.4/#s-configure-split-brain-behavior
 
