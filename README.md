@@ -100,9 +100,28 @@ systemctl --now enable prometheus-ha_cluster_exporter
 
 Pull requests are more than welcome!
 
-Most development tasks can be accomplished via the [Makefile](Makefile).
-
-The default target will clean, analyse, test and build the binary.
-
 We recommend having a look at the [design document](doc/design.md) before contributing.
 
+#### Makefile
+
+Most development tasks can be accomplished via [make](Makefile).
+
+The default target will clean, analyse, test and build the amd64 binary into the `build/bin` directory.
+
+You can also cross-compile to the various architectures we support with `make build-all`.
+
+##### Open Build Service releases
+
+The CI will automatically publish GitHub releases to SUSE's Open Build Service: to perform a new release, just publish a new GH release or push a git tag. Tags must always follow the [SemVer](https://semver.org/) scheme.
+
+If you wish to produce an OBS working directory locally, after you have configured [`osc`](https://en.opensuse.org/openSUSE:OSC) locally, you can run: 
+```
+make build-all
+make obs-workdir
+```
+This will checkout the OBS project and prepare a release in the `build/obs` directory.
+
+Note that, by default, `dev` is used as the RPM `Version` field, as well as a suffix for all the binary file names.  
+To prepare an actual release, you can use the `VERSION` environment variable to set this value to an actual release tag.
+
+To commit the release to OBS, run `make obs-commit`.
