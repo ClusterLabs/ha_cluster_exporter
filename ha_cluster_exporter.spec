@@ -1,5 +1,5 @@
 Name:           prometheus-ha_cluster_exporter
-# Version will be processed by the set_version source service
+# Version will be processed via Makefile
 Version:        %%VERSION%%
 Release:        0
 License:        Apache-2.0
@@ -8,9 +8,13 @@ Group:          System/Monitoring
 Url:            https://github.com/ClusterLabs/ha_cluster_exporter
 Source:         %{name}-%{version}.tar.gz
 ExclusiveArch:  aarch64 x86_64 ppc64le s390x
+BuildRoot:      %{_tmppath}/%{name}-%{version}-build
+BuildRequires:  go >= 1.11
 Provides:       ha_cluster_exporter = %{version}-%{release}
 Provides:       prometheus(ha_cluster_exporter) = %{version}-%{release}
-BuildRoot:      %{_tmppath}/%{name}-%{version}-build
+# Unlike C/C++ packages, Golang packages do not have header files. They are statically built so the main package is also the devel package.
+Provides:       %{name}-devel = %{version}
+Provides:       %{name}-devel-static = %{version}
 
 # Make sure that the binary is not getting stripped.
 %undefine _build_create_debug
@@ -24,10 +28,19 @@ Prometheus exporter for Pacemaker HA clusters metrics
 
 %define shortname ha_cluster_exporter
 
+%build
+
+# s390x GOARCH doesn't support PIE
+%ifnarch s390x
+export GOFLAGS="-buildmode=pie"
+%endif
+
+go build -mod=vendor -ldflags="-s -w -X main.version=%{version}" -o %{shortname}
+
 %install
 
 # Install the binary.
-install -D -m 0755 %{shortname}-%{version}-%{_arch} "%{buildroot}%{_bindir}/%{shortname}"
+install -D -m 0755 %{shortname} "%{buildroot}%{_bindir}/%{shortname}"
 
 # Install the systemd unit
 install -D -m 0644 %{shortname}.service %{buildroot}%{_unitdir}/%{name}.service
