@@ -62,15 +62,14 @@ clean-bin:
 clean-obs:
 	rm -rf build/obs
 
-obs-workdir: clean-obs
+obs-workdir: build/obs
+build/obs:
 	@mkdir -p build/obs/$(OBS_PACKAGE)
 	osc checkout $(OBS_PROJECT)/$(OBS_PACKAGE) -o build/obs
 	cp ha_cluster_exporter.spec build/obs/$(OBS_PACKAGE).spec
-	git archive --format=tar HEAD | tar -x -C build/obs/$(OBS_PACKAGE)
-	cp build/bin/* build/obs/$(OBS_PACKAGE)/
-	mv build/obs/$(OBS_PACKAGE)/ha_cluster_exporter-$(VERSION)-arm64 build/obs/$(OBS_PACKAGE)/ha_cluster_exporter-$(VERSION)-aarch64
-	mv build/obs/$(OBS_PACKAGE)/ha_cluster_exporter-$(VERSION)-amd64 build/obs/$(OBS_PACKAGE)/ha_cluster_exporter-$(VERSION)-x86_64
 	sed -i 's/%%VERSION%%/$(VERSION)/' build/obs/$(OBS_PACKAGE).spec
+	git archive --format=tar HEAD | tar -x -C build/obs/$(OBS_PACKAGE)
+	cd build/obs/$(OBS_PACKAGE); go mod vendor
 	rm build/obs/*.tar.gz
 	tar -cvzf build/obs/$(OBS_PACKAGE)-$(VERSION).tar.gz -C build/obs/$(OBS_PACKAGE) .
 	.ci/gh_release_to_obs_changeset.py $(REPOSITORY) -a $(AUTHOR) -t $(VERSION) -f build/obs/$(OBS_PACKAGE).changes || true
