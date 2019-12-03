@@ -116,7 +116,6 @@ The CI will automatically publish GitHub releases to SUSE's Open Build Service: 
 
 If you wish to produce an OBS working directory locally, after you have configured [`osc`](https://en.opensuse.org/openSUSE:OSC) locally, you can run: 
 ```
-make build-all
 make obs-workdir
 ```
 This will checkout the OBS project and prepare a release in the `build/obs` directory.
