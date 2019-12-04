@@ -22,12 +22,12 @@ func TestDrbdParsing(t *testing.T) {
         "client": false,
         "quorum": true,
         "size": 409600,
-        "read": 0,
-        "written": 548525,
-        "al-writes": 4,
-        "bm-writes": 0,
-        "upper-pending": 0,
-        "lower-pending": 0
+        "read": 654321,
+        "written": 123456,
+        "al-writes": 123,
+        "bm-writes": 321,
+        "upper-pending": 1,
+        "lower-pending": 2
       }
     ],
     "connections": [
@@ -46,11 +46,11 @@ func TestDrbdParsing(t *testing.T) {
             "peer-disk-state": "UpToDate",
             "peer-client": false,
             "resync-suspended": "no",
-            "received": 548525,
-            "sent": 0,
+            "received": 456,
+            "sent": 654,
             "out-of-sync": 0,
-            "pending": 0,
-            "unacked": 0,
+            "pending": 3,
+            "unacked": 4,
             "has-sync-details": false,
             "has-online-verify-details": false,
             "percent-in-sync": 100
@@ -73,12 +73,12 @@ func TestDrbdParsing(t *testing.T) {
         "client": false,
         "quorum": true,
         "size": 10200,
-        "read": 0,
-        "written": 546005,
-        "al-writes": 1,
-        "bm-writes": 0,
-        "upper-pending": 0,
-        "lower-pending": 0
+        "read": 654321,
+        "written": 123456,
+        "al-writes": 123,
+        "bm-writes": 321,
+        "upper-pending": 1,
+        "lower-pending": 2
       }
     ],
     "connections": [
@@ -97,11 +97,11 @@ func TestDrbdParsing(t *testing.T) {
             "peer-disk-state": "UpToDate",
             "peer-client": false,
             "resync-suspended": "no",
-            "received": 546005,
-            "sent": 0,
+            "received": 456,
+            "sent": 654,
             "out-of-sync": 0,
-            "pending": 0,
-            "unacked": 0,
+            "pending": 3,
+            "unacked": 4,
             "has-sync-details": false,
             "has-online-verify-details": false,
             "percent-in-sync": 99.8
@@ -140,6 +140,46 @@ func TestDrbdParsing(t *testing.T) {
 
 	if 0 != drbdDevs[0].Devices[0].Volume {
 		t.Errorf("volumes should be 0")
+	}
+
+	if 123456 != drbdDevs[0].Devices[0].Written {
+		t.Errorf("written should be 123456")
+	}
+
+	if 654321 != drbdDevs[0].Devices[0].Read {
+		t.Errorf("read should be 654321")
+	}
+
+	if 123 != drbdDevs[0].Devices[0].AlWrites {
+		t.Errorf("al-writes should be 123")
+	}
+
+	if 321 != drbdDevs[0].Devices[0].BmWrites {
+		t.Errorf("bm-writes should be 321")
+	}
+
+	if 1 != drbdDevs[0].Devices[0].UpPending {
+		t.Errorf("upper-pending should be 1")
+	}
+
+	if 2 != drbdDevs[0].Devices[0].LoPending {
+		t.Errorf("lower-pending should be 2")
+	}
+
+	if 456 != drbdDevs[0].Connections[0].PeerDevices[0].Received {
+		t.Errorf("received should be 456")
+	}
+
+	if 654 != drbdDevs[0].Connections[0].PeerDevices[0].Sent {
+		t.Errorf("sent should be 654")
+	}
+
+	if 3 != drbdDevs[0].Connections[0].PeerDevices[0].Pending {
+		t.Errorf("pending should be 3")
+	}
+
+	if 4 != drbdDevs[0].Connections[0].PeerDevices[0].Unacked {
+		t.Errorf("unacked should be 4")
 	}
 
 	if 100 != drbdDevs[0].Connections[0].PeerDevices[0].PercentInSync {

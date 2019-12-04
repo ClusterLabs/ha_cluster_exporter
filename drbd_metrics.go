@@ -19,6 +19,12 @@ type drbdStatus struct {
 	Role    string `json:"role"`
 	Devices []struct {
 		Volume    int    `json:"volume"`
+		Written   int    `json:"written"`
+		Read      int    `json:"read"`
+		AlWrites  int    `json:"al-writes"`
+		BmWrites  int    `json:"bm-writes"`
+		UpPending int    `json:"upper-pending"`
+		LoPending int    `json:"lower-pending"`
 		DiskState string `json:"disk-state"`
 	} `json:"devices"`
 	Connections []struct {
@@ -26,6 +32,10 @@ type drbdStatus struct {
 		PeerRole    string `json:"peer-role"`
 		PeerDevices []struct {
 			Volume        int     `json:"volume"`
+			Received      int     `json:"received"`
+			Sent          int     `json:"sent"`
+			Pending       int     `json:"pending"`
+			Unacked       int     `json:"unacked"`
 			PeerDiskState string  `json:"peer-disk-state"`
 			PercentInSync float64 `json:"percent-in-sync"`
 		} `json:"peer_devices"`
@@ -36,10 +46,20 @@ var (
 	drbdMetrics = metricDescriptors{
 		// the map key will function as an identifier of the metric throughout the rest of the code;
 		// it is arbitrary, but by convention we use the actual metric name
-		"resources":        NewMetricDesc("drbd", "resources", "The DRBD resources; 1 line per name, per volume", []string{"resource", "role", "volume", "disk_state"}),
-		"connections":      NewMetricDesc("drbd", "connections", "The DRBD resource connections; 1 line per per resource, per peer_node_id", []string{"resource", "peer_node_id", "peer_role", "volume", "peer_disk_state"}),
-		"connections_sync": NewMetricDesc("drbd", "connections_sync", "The in sync percentage value for DRBD resource connections", []string{"resource", "peer_node_id", "volume"}),
-		"split_brain":      NewMetricDesc("drbd", "split_brain", "Whether a split brain has been detected; 1 line per resource, per volume.", []string{"resource", "volume"}),
+		"resources":            NewMetricDesc("drbd", "resources", "The DRBD resources; 1 line per name, per volume", []string{"resource", "role", "volume", "disk_state"}),
+		"written":              NewMetricDesc("drbd", "written", "KiB written to DRBD; 1 line per res, per volume", []string{"resource", "role", "volume", "disk_state"}),
+		"read":                 NewMetricDesc("drbd", "read", "KiB read from DRBD; 1 line per res, per volume", []string{"resource", "role", "volume", "disk_state"}),
+		"al_writes":            NewMetricDesc("drbd", "al_writes", "Writes to activity log; 1 line per res, per volume", []string{"resource", "role", "volume", "disk_state"}),
+		"bm_writes":            NewMetricDesc("drbd", "bm_writes", "Writes to bitmap; 1 line per res, per volume", []string{"resource", "role", "volume", "disk_state"}),
+		"upper_pending":        NewMetricDesc("drbd", "upper_pending", "Upper pending; 1 line per res, per volume", []string{"resource", "role", "volume", "disk_state"}),
+		"lower_pending":        NewMetricDesc("drbd", "lower_pending", "Lower pending; 1 line per res, per volume", []string{"resource", "role", "volume", "disk_state"}),
+		"connections":          NewMetricDesc("drbd", "connections", "The DRBD resource connections; 1 line per per resource, per peer_node_id", []string{"resource", "peer_node_id", "peer_role", "volume", "peer_disk_state"}),
+		"connections_sync":     NewMetricDesc("drbd", "connections_sync", "The in sync percentage value for DRBD resource connections", []string{"resource", "peer_node_id", "volume"}),
+		"connections_received": NewMetricDesc("drbd", "connections_received", "KiB received per connection", []string{"resource", "peer_node_id", "volume"}),
+		"connections_sent":     NewMetricDesc("drbd", "connections_sent", "KiB sent per connection", []string{"resource", "peer_node_id", "volume"}),
+		"connections_pending":  NewMetricDesc("drbd", "connections_pending", "Pending value per connection", []string{"resource", "peer_node_id", "volume"}),
+		"connections_unacked":  NewMetricDesc("drbd", "connections_unacked", "Unacked value per connection", []string{"resource", "peer_node_id", "volume"}),
+		"split_brain":          NewMetricDesc("drbd", "split_brain", "Whether a split brain has been detected; 1 line per resource, per volume.", []string{"resource", "volume"}),
 	}
 )
 
@@ -89,6 +109,18 @@ func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
 		for _, device := range resource.Devices {
 			// the `resources` metric value is always 1, otherwise it's absent
 			ch <- c.makeGaugeMetric("resources", float64(1), resource.Name, resource.Role, strconv.Itoa(device.Volume), strings.ToLower(device.DiskState))
+
+			ch <- c.makeGaugeMetric("written", float64(device.Written), resource.Name, resource.Role, strconv.Itoa(device.Volume), strings.ToLower(device.DiskState))
+
+			ch <- c.makeGaugeMetric("read", float64(device.Read), resource.Name, resource.Role, strconv.Itoa(device.Volume), strings.ToLower(device.DiskState))
+
+			ch <- c.makeGaugeMetric("al_writes", float64(device.AlWrites), resource.Name, resource.Role, strconv.Itoa(device.Volume), strings.ToLower(device.DiskState))
+
+			ch <- c.makeGaugeMetric("bm_writes", float64(device.BmWrites), resource.Name, resource.Role, strconv.Itoa(device.Volume), strings.ToLower(device.DiskState))
+
+			ch <- c.makeGaugeMetric("upper_pending", float64(device.UpPending), resource.Name, resource.Role, strconv.Itoa(device.Volume), strings.ToLower(device.DiskState))
+
+			ch <- c.makeGaugeMetric("lower_pending", float64(device.LoPending), resource.Name, resource.Role, strconv.Itoa(device.Volume), strings.ToLower(device.DiskState))
 		}
 		if len(resource.Connections) == 0 {
 			log.Warnf("Could not retrieve connection info for resource '%s'\n", resource.Name)
@@ -105,6 +137,14 @@ func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
 					conn.PeerRole, strconv.Itoa(peerDev.Volume), strings.ToLower(peerDev.PeerDiskState))
 
 				ch <- c.makeGaugeMetric("connections_sync", float64(peerDev.PercentInSync), resource.Name, strconv.Itoa(conn.PeerNodeID), strconv.Itoa(peerDev.Volume))
+
+				ch <- c.makeGaugeMetric("connections_received", float64(peerDev.Received), resource.Name, strconv.Itoa(conn.PeerNodeID), strconv.Itoa(peerDev.Volume))
+
+				ch <- c.makeGaugeMetric("connections_sent", float64(peerDev.Sent), resource.Name, strconv.Itoa(conn.PeerNodeID), strconv.Itoa(peerDev.Volume))
+
+				ch <- c.makeGaugeMetric("connections_pending", float64(peerDev.Pending), resource.Name, strconv.Itoa(conn.PeerNodeID), strconv.Itoa(peerDev.Volume))
+
+				ch <- c.makeGaugeMetric("connections_unacked", float64(peerDev.Unacked), resource.Name, strconv.Itoa(conn.PeerNodeID), strconv.Itoa(peerDev.Volume))
 
 			}
 		}
