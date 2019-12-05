@@ -16,12 +16,12 @@ cat <<EOF
         "client": false,
         "quorum": true,
         "size": 409600,
-        "read": 0,
-        "written": 548525,
-        "al-writes": 4,
-        "bm-writes": 0,
-        "upper-pending": 0,
-        "lower-pending": 0
+        "read": 654321,
+        "written": 123456,
+        "al-writes": 123,
+        "bm-writes": 321,
+        "upper-pending": 1,
+        "lower-pending": 2
       }
     ],
     "connections": [
@@ -40,11 +40,11 @@ cat <<EOF
             "peer-disk-state": "UpToDate",
             "peer-client": false,
             "resync-suspended": "no",
-            "received": 548525,
-            "sent": 0,
+            "received": 456,
+            "sent": 654,
             "out-of-sync": 0,
-            "pending": 0,
-            "unacked": 0,
+            "pending": 3,
+            "unacked": 4,
             "has-sync-details": false,
             "has-online-verify-details": false,
             "percent-in-sync": 100
@@ -67,12 +67,12 @@ cat <<EOF
         "client": false,
         "quorum": true,
         "size": 10200,
-        "read": 0,
-        "written": 546005,
-        "al-writes": 1,
-        "bm-writes": 0,
-        "upper-pending": 0,
-        "lower-pending": 0
+        "read": 654321,
+        "written": 123456,
+        "al-writes": 123,
+        "bm-writes": 321,
+        "upper-pending": 1,
+        "lower-pending": 2
       }
     ],
     "connections": [
@@ -91,11 +91,11 @@ cat <<EOF
             "peer-disk-state": "UpToDate",
             "peer-client": false,
             "resync-suspended": "no",
-            "received": 546005,
-            "sent": 0,
+            "received": 456,
+            "sent": 654,
             "out-of-sync": 0,
-            "pending": 0,
-            "unacked": 0,
+            "pending": 3,
+            "unacked": 4,
             "has-sync-details": false,
             "has-online-verify-details": false,
             "percent-in-sync": 100
