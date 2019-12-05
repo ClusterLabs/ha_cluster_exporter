@@ -205,9 +205,19 @@ The DRBD subsystems collect devices stats by parsing its configuration the JSON 
 
 0. [Sample](../test/drbd.metrics)
 1. [`ha_cluster_drbd_resources`](#ha_cluster_drbd_resources)
-2. [`ha_cluster_drbd_connections`](#ha_cluster_drbd_connections)
-3. [`ha_cluster_drbd_connections_sync`](#ha_cluster_drbd_connections_sync)
-4. [`ha_cluster_drbd_split_brain`](#ha_cluster_drbd_split_brain)
+2. [`ha_cluster_drbd_written`](#ha_cluster_drbd_written)
+3. [`ha_cluster_drbd_read`](#ha_cluster_drbd_read)
+4. [`ha_cluster_drbd_al_writes`](#ha_cluster_al_writes)
+5. [`ha_cluster_drbd_bm_writes`](#ha_cluster_bm_writes)
+6. [`ha_cluster_drbd_upper_pending`](#ha_cluster_drbd_upper_pending)
+7. [`ha_cluster_drbd_lower_pending`](#ha_cluster_drbd_lower_pending)
+8. [`ha_cluster_drbd_connections`](#ha_cluster_drbd_connections)
+9. [`ha_cluster_drbd_connections_sync`](#ha_cluster_drbd_connections_sync)
+10. [`ha_cluster_drbd_connections_received`](#ha_cluster_drbd_connections_received)
+11. [`ha_cluster_drbd_connections_sent`](#ha_cluster_drbd_connections_sent)
+12. [`ha_cluster_drbd_connections_pending`](#ha_cluster_drbd_connections_pending)
+13. [`ha_cluster_drbd_connections_unacked`](#ha_cluster_drbd_connections_unacked)
+14. [`ha_cluster_drbd_split_brain`](#ha_cluster_drbd_split_brain)
 
 ### `ha_cluster_drbd_connections`
 
@@ -226,13 +236,69 @@ Either the value is `1`, or the line is absent altogether.
 
 The total number of lines for this metric will be the cardinality of `resource` times the cardinality of `peer_node_id`.
 
-
 ### `ha_cluster_drbd_connections_sync`
 
-#### Descriptions
+#### Description
 
 The DRBD disk connections in sync percentage. Values are float from `0` to `100.00`.
 
+#### Labels
+
+- `resource`: the resource this connection is for.
+- `peer_node_id`: the id of the node this connection is for
+- `volume`: the volume number
+
+### `ha_cluster_drbd_connections_received`
+
+#### Description
+
+Volume of net data received from the partner via the network connection in KiB; 1 line per per `resource`, per `peer_node_id`
+Value is an integer greater than or equal to `0`.
+
+#### Labels
+
+- `resource`: the resource this connection is for.
+- `peer_node_id`: the id of the node this connection is for
+- `volume`: the volume number
+
+### `ha_cluster_drbd_connections_sent`
+
+#### Description
+
+Volume of net data sent to the partner via the network connection in KiB; 1 line per per `resource`, per `peer_node_id`
+Value is an integer greater than or equal to `0`.
+
+#### Labels
+
+- `resource`: the resource this connection is for.
+- `peer_node_id`: the id of the node this connection is for
+- `volume`: the volume number
+
+### `ha_cluster_drbd_connections_pending`
+
+#### Description
+
+Number of requests sent to the partner that have not yet been received; 1 line per per `resource`, per `peer_node_id`
+Value is an integer greater than or equal to `0`.
+
+#### Labels
+
+- `resource`: the resource this connection is for.
+- `peer_node_id`: the id of the node this connection is for
+- `volume`: the volume number
+
+### `ha_cluster_drbd_connections_unacked`
+
+#### Description
+
+Number of requests received by the partner but have not yet been acknowledged; 1 line per per `resource`, per `peer_node_id`
+Value is an integer greater than or equal to `0`.
+
+#### Labels
+
+- `resource`: the resource this connection is for.
+- `peer_node_id`: the id of the node this connection is for
+- `volume`: the volume number
 
 ### `ha_cluster_drbd_resources`
 
@@ -250,14 +316,86 @@ Either the value is `1`, or the line is absent altogether.
 
 The total number of lines for this metric will be the cardinality of `name` times the cardinality of `volume`.
 
+### `ha_cluster_drbd_written`
+
+#### Description
+
+Amount in KiB written to the DRBD resource; 1 line per `resource`, per `volume`
+Value is an integer greater than or equal to `0`.
+
+#### Labels
+
+- `resource`: the name of the resource.
+- `volume`: the volume number
+
+### `ha_cluster_drbd_read`
+
+#### Description
+
+Amount in KiB read from the DRBD resource; 1 line per `resource`, per `volume`
+Value is an integer greater than or equal to `0`.
+
+#### Labels
+
+- `resource`: the name of the resource.
+- `volume`: the volume number
+
+### `ha_cluster_drbd_al_writes`
+
+#### Description
+
+Number of updates of the activity log area of the meta data; 1 line per `resource`, per `volume`
+Value is an integer greater than or equal to `0`.
+
+#### Labels
+
+- `resource`: the name of the resource.
+- `volume`: the volume number
+
+### `ha_cluster_drbd_bm_writes`
+
+#### Description
+
+Number of updates of the bitmap area of the meta data; 1 line per `resource`, per `volume`
+Value is an integer greater than or equal to `0`.
+
+#### Labels
+
+- `resource`: the name of the resource.
+- `volume`: the volume number
+
+### `ha_cluster_drbd_upper_pending`
+
+#### Description
+
+Number of block I/O requests forwarded to DRBD, but not yet answered by DRBD; 1 line per `resource`, per `volume`
+Value is an integer greater than or equal to `0`.
+
+#### Labels
+
+- `resource`: the name of the resource.
+- `volume`: the volume number
+
+### `ha_cluster_drbd_lower_pending`
+
+#### Description
+
+Number of open requests to the local I/O sub-system issued by DRBD; 1 line per `resource`, per `volume`
+Value is an integer greater than or equal to `0`.
+
+#### Labels
+
+- `resource`: the name of the resource.
+- `volume`: the volume number
+
 ### `ha_cluster_drbd_split_brain`
 
 #### Description
 
-This metric signal if there is a split brain occuring per resource and volume.
+This metric signal if there is a split brain occurring per resource and volume.
 Either the value is `1`, or the line is absent altogether.
 
-This metric is a special metric comparing to others, because in order to make this metric working you will need to set a drbd customer split-brain handler. Look at the end 
+This metric is a special metric compared to others, because in order to make this metric work you will need to setup a DRBD custom split-brain handler. Look at the end.
 
 #### Labels
 
@@ -273,7 +411,7 @@ In order to get the `split_brain` metric working:
 get the hook from:
 https://github.com/SUSE/ha-sap-terraform-deployments/blob/72c9d3ecf6c3f6dd18ccb7bcbde4b40722d5c641/salt/drbd_node/files/notify-split-brain-haclusterexporter-suse-metric.sh
 
-2) on the drbd configuration enable the hook:
+2) on the DRBD configuration enable the hook:
 
 ```split_brain: "/usr/lib/drbd/notify-split-brain-haclusterexporter-suse-metric.sh"```
 

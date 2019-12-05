@@ -24,28 +24,28 @@ ha_cluster_drbd_connections_unacked{peer_node_id="1",resource="1-single-0",volum
 ha_cluster_drbd_connections_unacked{peer_node_id="1",resource="1-single-1",volume="0"} 4 1234
 # HELP ha_cluster_drbd_written KiB written to DRBD; 1 line per res, per volume
 # TYPE ha_cluster_drbd_written gauge
-ha_cluster_drbd_written{disk_state="uptodate",resource="1-single-0",role="Secondary",volume="0"} 123456 1234
-ha_cluster_drbd_written{disk_state="uptodate",resource="1-single-1",role="Secondary",volume="0"} 123456 1234
+ha_cluster_drbd_written{resource="1-single-0",volume="0"} 123456 1234
+ha_cluster_drbd_written{resource="1-single-1",volume="0"} 123456 1234
 # HELP ha_cluster_drbd_read KiB read from DRBD; 1 line per res, per volume
 # TYPE ha_cluster_drbd_read gauge
-ha_cluster_drbd_read{disk_state="uptodate",resource="1-single-0",role="Secondary",volume="0"} 654321 1234
-ha_cluster_drbd_read{disk_state="uptodate",resource="1-single-1",role="Secondary",volume="0"} 654321 1234
+ha_cluster_drbd_read{resource="1-single-0",volume="0"} 654321 1234
+ha_cluster_drbd_read{resource="1-single-1",volume="0"} 654321 1234
 # HELP ha_cluster_drbd_al_writes Writes to activity log; 1 line per res, per volume
 # TYPE ha_cluster_drbd_al_writes gauge
-ha_cluster_drbd_al_writes{disk_state="uptodate",resource="1-single-0",role="Secondary",volume="0"} 123 1234
-ha_cluster_drbd_al_writes{disk_state="uptodate",resource="1-single-1",role="Secondary",volume="0"} 123 1234
+ha_cluster_drbd_al_writes{resource="1-single-0",volume="0"} 123 1234
+ha_cluster_drbd_al_writes{resource="1-single-1",volume="0"} 123 1234
 # HELP ha_cluster_drbd_bm_writes Writes to bitmap; 1 line per res, per volume
 # TYPE ha_cluster_drbd_bm_writes gauge
-ha_cluster_drbd_bm_writes{disk_state="uptodate",resource="1-single-0",role="Secondary",volume="0"} 321 1234
-ha_cluster_drbd_bm_writes{disk_state="uptodate",resource="1-single-1",role="Secondary",volume="0"} 321 1234
+ha_cluster_drbd_bm_writes{resource="1-single-0",volume="0"} 321 1234
+ha_cluster_drbd_bm_writes{resource="1-single-1",volume="0"} 321 1234
 # HELP ha_cluster_drbd_upper_pending Upper pending; 1 line per res, per volume
 # TYPE ha_cluster_drbd_upper_pending gauge
-ha_cluster_drbd_upper_pending{disk_state="uptodate",resource="1-single-0",role="Secondary",volume="0"} 1 1234
-ha_cluster_drbd_upper_pending{disk_state="uptodate",resource="1-single-1",role="Secondary",volume="0"} 1 1234
+ha_cluster_drbd_upper_pending{resource="1-single-0",volume="0"} 1 1234
+ha_cluster_drbd_upper_pending{resource="1-single-1",volume="0"} 1 1234
 # HELP ha_cluster_drbd_lower_pending Lower pending; 1 line per res, per volume
 # TYPE ha_cluster_drbd_lower_pending gauge
-ha_cluster_drbd_lower_pending{disk_state="uptodate",resource="1-single-0",role="Secondary",volume="0"} 2 1234
-ha_cluster_drbd_lower_pending{disk_state="uptodate",resource="1-single-1",role="Secondary",volume="0"} 2 1234
+ha_cluster_drbd_lower_pending{resource="1-single-0",volume="0"} 2 1234
+ha_cluster_drbd_lower_pending{resource="1-single-1",volume="0"} 2 1234
 # HELP ha_cluster_drbd_resources The DRBD resources; 1 line per name, per volume
 # TYPE ha_cluster_drbd_resources gauge
 ha_cluster_drbd_resources{disk_state="uptodate",resource="1-single-0",role="Secondary",volume="0"} 1 1234
