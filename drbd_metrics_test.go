@@ -178,15 +178,7 @@ func TestDrbdParsing(t *testing.T) {
 		t.Errorf("received should be 456")
 	}
 
-	if 456 != drbdDevs[1].Connections[0].PeerDevices[0].Received {
-		t.Errorf("received should be 456")
-	}
-
 	if 654 != drbdDevs[0].Connections[0].PeerDevices[0].Sent {
-		t.Errorf("sent should be 654")
-	}
-
-	if 654 != drbdDevs[1].Connections[0].PeerDevices[0].Sent {
 		t.Errorf("sent should be 654")
 	}
 
@@ -194,15 +186,7 @@ func TestDrbdParsing(t *testing.T) {
 		t.Errorf("pending should be 3")
 	}
 
-	if 3 != drbdDevs[1].Connections[0].PeerDevices[0].Pending {
-		t.Errorf("pending should be 3")
-	}
-
 	if 4 != drbdDevs[0].Connections[0].PeerDevices[0].Unacked {
-		t.Errorf("unacked should be 4")
-	}
-
-	if 4 != drbdDevs[1].Connections[0].PeerDevices[0].Unacked {
 		t.Errorf("unacked should be 4")
 	}
 
