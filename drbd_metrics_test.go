@@ -71,7 +71,7 @@ func TestDrbdParsing(t *testing.T) {
         "minor": 3,
         "disk-state": "UpToDate",
         "client": false,
-        "quorum": true,
+        "quorum": false,
         "size": 10200,
         "read": 654321,
         "written": 123456,
@@ -170,8 +170,8 @@ func TestDrbdParsing(t *testing.T) {
 		t.Errorf("quorum should be true")
 	}
 
-	if true != drbdDevs[1].Devices[0].Quorum {
-		t.Errorf("quorum should be true")
+	if false != drbdDevs[1].Devices[0].Quorum {
+		t.Errorf("quorum should be false")
 	}
 
 	if 456 != drbdDevs[0].Connections[0].PeerDevices[0].Received {

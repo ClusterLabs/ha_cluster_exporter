@@ -65,7 +65,7 @@ cat <<EOF
         "minor": 3,
         "disk-state": "UpToDate",
         "client": false,
-        "quorum": true,
+        "quorum": false,
         "size": 10200,
         "read": 654321,
         "written": 123456,
