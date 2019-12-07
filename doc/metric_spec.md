@@ -211,13 +211,14 @@ The DRBD subsystems collect devices stats by parsing its configuration the JSON 
 5. [`ha_cluster_drbd_bm_writes`](#ha_cluster_bm_writes)
 6. [`ha_cluster_drbd_upper_pending`](#ha_cluster_drbd_upper_pending)
 7. [`ha_cluster_drbd_lower_pending`](#ha_cluster_drbd_lower_pending)
-8. [`ha_cluster_drbd_connections`](#ha_cluster_drbd_connections)
-9. [`ha_cluster_drbd_connections_sync`](#ha_cluster_drbd_connections_sync)
-10. [`ha_cluster_drbd_connections_received`](#ha_cluster_drbd_connections_received)
-11. [`ha_cluster_drbd_connections_sent`](#ha_cluster_drbd_connections_sent)
-12. [`ha_cluster_drbd_connections_pending`](#ha_cluster_drbd_connections_pending)
-13. [`ha_cluster_drbd_connections_unacked`](#ha_cluster_drbd_connections_unacked)
-14. [`ha_cluster_drbd_split_brain`](#ha_cluster_drbd_split_brain)
+8. [`ha_cluster_drbd_quorum`](#ha_cluster_drbd_quorum)
+9. [`ha_cluster_drbd_connections`](#ha_cluster_drbd_connections)
+10. [`ha_cluster_drbd_connections_sync`](#ha_cluster_drbd_connections_sync)
+11. [`ha_cluster_drbd_connections_received`](#ha_cluster_drbd_connections_received)
+12. [`ha_cluster_drbd_connections_sent`](#ha_cluster_drbd_connections_sent)
+13. [`ha_cluster_drbd_connections_pending`](#ha_cluster_drbd_connections_pending)
+14. [`ha_cluster_drbd_connections_unacked`](#ha_cluster_drbd_connections_unacked)
+15. [`ha_cluster_drbd_split_brain`](#ha_cluster_drbd_split_brain)
 
 ### `ha_cluster_drbd_connections`
 
@@ -382,6 +383,18 @@ Value is an integer greater than or equal to `0`.
 
 Number of open requests to the local I/O sub-system issued by DRBD; 1 line per `resource`, per `volume`
 Value is an integer greater than or equal to `0`.
+
+#### Labels
+
+- `resource`: the name of the resource.
+- `volume`: the volume number
+
+### `ha_cluster_drbd_quorum`
+
+#### Description
+
+Quorum status of the DRBD resource according to it's configured quorum policies; 1 line per `resource`, per `volume`
+Value is `1` when quorate, or `0` when inquorate.
 
 #### Labels
 
