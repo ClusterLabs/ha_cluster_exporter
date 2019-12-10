@@ -25,6 +25,7 @@ type drbdStatus struct {
 		BmWrites  int    `json:"bm-writes"`
 		UpPending int    `json:"upper-pending"`
 		LoPending int    `json:"lower-pending"`
+		Quorum    bool   `json:"quorum"`
 		DiskState string `json:"disk-state"`
 	} `json:"devices"`
 	Connections []struct {
@@ -53,6 +54,7 @@ var (
 		"bm_writes":            NewMetricDesc("drbd", "bm_writes", "Writes to bitmap; 1 line per res, per volume", []string{"resource", "volume"}),
 		"upper_pending":        NewMetricDesc("drbd", "upper_pending", "Upper pending; 1 line per res, per volume", []string{"resource", "volume"}),
 		"lower_pending":        NewMetricDesc("drbd", "lower_pending", "Lower pending; 1 line per res, per volume", []string{"resource", "volume"}),
+		"quorum":               NewMetricDesc("drbd", "quorum", "Quorum status per resource and per volume", []string{"resource", "volume"}),
 		"connections":          NewMetricDesc("drbd", "connections", "The DRBD resource connections; 1 line per per resource, per peer_node_id", []string{"resource", "peer_node_id", "peer_role", "volume", "peer_disk_state"}),
 		"connections_sync":     NewMetricDesc("drbd", "connections_sync", "The in sync percentage value for DRBD resource connections", []string{"resource", "peer_node_id", "volume"}),
 		"connections_received": NewMetricDesc("drbd", "connections_received", "KiB received per connection", []string{"resource", "peer_node_id", "volume"}),
@@ -121,6 +123,12 @@ func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
 			ch <- c.makeGaugeMetric("upper_pending", float64(device.UpPending), resource.Name, strconv.Itoa(device.Volume))
 
 			ch <- c.makeGaugeMetric("lower_pending", float64(device.LoPending), resource.Name, strconv.Itoa(device.Volume))
+
+			if bool(device.Quorum) == true {
+				ch <- c.makeGaugeMetric("quorum", float64(1), resource.Name, strconv.Itoa(device.Volume))
+			} else {
+				ch <- c.makeGaugeMetric("quorum", float64(0), resource.Name, strconv.Itoa(device.Volume))
+			}
 		}
 		if len(resource.Connections) == 0 {
 			log.Warnf("Could not retrieve connection info for resource '%s'\n", resource.Name)
