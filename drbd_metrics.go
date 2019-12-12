@@ -47,15 +47,15 @@ var (
 	drbdMetrics = metricDescriptors{
 		// the map key will function as an identifier of the metric throughout the rest of the code;
 		// it is arbitrary, but by convention we use the actual metric name
-		"resources":            NewMetricDesc("drbd", "resources", "The DRBD resources; 1 line per name, per volume", []string{"resource", "role", "volume", "disk_state"}),
-		"written":              NewMetricDesc("drbd", "written", "KiB written to DRBD; 1 line per res, per volume", []string{"resource", "volume"}),
-		"read":                 NewMetricDesc("drbd", "read", "KiB read from DRBD; 1 line per res, per volume", []string{"resource", "volume"}),
-		"al_writes":            NewMetricDesc("drbd", "al_writes", "Writes to activity log; 1 line per res, per volume", []string{"resource", "volume"}),
-		"bm_writes":            NewMetricDesc("drbd", "bm_writes", "Writes to bitmap; 1 line per res, per volume", []string{"resource", "volume"}),
-		"upper_pending":        NewMetricDesc("drbd", "upper_pending", "Upper pending; 1 line per res, per volume", []string{"resource", "volume"}),
-		"lower_pending":        NewMetricDesc("drbd", "lower_pending", "Lower pending; 1 line per res, per volume", []string{"resource", "volume"}),
+		"resources":            NewMetricDesc("drbd", "resources", "The DRBD resources per resource,  per volume, diskstate and role name", []string{"resource", "role", "volume", "disk_state"}),
+		"written":              NewMetricDesc("drbd", "written", "KiB written to DRBD per resource and  per volume", []string{"resource", "volume"}),
+		"read":                 NewMetricDesc("drbd", "read", "KiB read from DRBD per resource and per volume", []string{"resource", "volume"}),
+		"al_writes":            NewMetricDesc("drbd", "al_writes", "Writes to activity log metric per resource and per volume", []string{"resource", "volume"}),
+		"bm_writes":            NewMetricDesc("drbd", "bm_writes", "Writes to bitmap per resource and per volume", []string{"resource", "volume"}),
+		"upper_pending":        NewMetricDesc("drbd", "upper_pending", "Upper pending metric  per resource and per volume", []string{"resource", "volume"}),
+		"lower_pending":        NewMetricDesc("drbd", "lower_pending", "Lower pending metric per resource and per volume", []string{"resource", "volume"}),
 		"quorum":               NewMetricDesc("drbd", "quorum", "Quorum status per resource and per volume", []string{"resource", "volume"}),
-		"connections":          NewMetricDesc("drbd", "connections", "The DRBD resource connections; 1 line per per resource, per peer_node_id", []string{"resource", "peer_node_id", "peer_role", "volume", "peer_disk_state"}),
+		"connections":          NewMetricDesc("drbd", "connections", "The DRBD resource connections metric  per resource, per peer_node_id", []string{"resource", "peer_node_id", "peer_role", "volume", "peer_disk_state"}),
 		"connections_sync":     NewMetricDesc("drbd", "connections_sync", "The in sync percentage value for DRBD resource connections", []string{"resource", "peer_node_id", "volume"}),
 		"connections_received": NewMetricDesc("drbd", "connections_received", "KiB received per connection", []string{"resource", "peer_node_id", "volume"}),
 		"connections_sent":     NewMetricDesc("drbd", "connections_sent", "KiB sent per connection", []string{"resource", "peer_node_id", "volume"}),
