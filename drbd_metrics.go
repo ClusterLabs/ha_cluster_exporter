@@ -173,11 +173,9 @@ func (c *drbdCollector) setDrbdSplitBrainMetric(ch chan<- prometheus.Metric) {
 
 	// set split brain metric
 	// by default if the custom hook is not set, the exporter will not be able to detect it
-	files, err := ioutil.ReadDir(c.drbdSplitBrainPath)
-	if err != nil {
-		log.Warnf("Error while reading directory %s: %s", c.drbdSplitBrainPath, err)
-	}
+	files, _ := ioutil.ReadDir(c.drbdSplitBrainPath)
 
+	// the split brain files exists
 	for _, f := range files {
 		// check if in directory there are file of syntax we expect (nil is when there is not any)
 		match, _ := filepath.Glob(c.drbdSplitBrainPath + "/drbd-split-brain-detected-*")
