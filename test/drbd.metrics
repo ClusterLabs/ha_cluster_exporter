@@ -1,35 +1,3 @@
-# HELP ha_cluster_drbd_connections The DRBD resource connections; 1 line per per resource, per peer_node_id
-# TYPE ha_cluster_drbd_connections gauge
-ha_cluster_drbd_connections{peer_disk_state="uptodate",peer_node_id="1",peer_role="Primary",resource="1-single-0",volume="0"} 1 1234
-ha_cluster_drbd_connections{peer_disk_state="uptodate",peer_node_id="1",peer_role="Primary",resource="1-single-1",volume="0"} 1 1234
-# HELP ha_cluster_drbd_connections_sync The in sync percentage value for DRBD resource connections
-# TYPE ha_cluster_drbd_connections_sync gauge
-ha_cluster_drbd_connections_sync{peer_node_id="1",resource="1-single-0",volume="0"} 100 1234
-ha_cluster_drbd_connections_sync{peer_node_id="1",resource="1-single-1",volume="0"} 100 1234
-# HELP ha_cluster_drbd_connections_received KiB received per connection
-# TYPE ha_cluster_drbd_connections_received gauge
-ha_cluster_drbd_connections_received{peer_node_id="1",resource="1-single-0",volume="0"} 456 1234
-ha_cluster_drbd_connections_received{peer_node_id="1",resource="1-single-1",volume="0"} 456 1234
-# HELP ha_cluster_drbd_connections_sent KiB sent per connection
-# TYPE ha_cluster_drbd_connections_sent gauge
-ha_cluster_drbd_connections_sent{peer_node_id="1",resource="1-single-0",volume="0"} 654 1234
-ha_cluster_drbd_connections_sent{peer_node_id="1",resource="1-single-1",volume="0"} 654 1234
-# HELP ha_cluster_drbd_connections_pending Pending value per connection
-# TYPE ha_cluster_drbd_connections_pending gauge
-ha_cluster_drbd_connections_pending{peer_node_id="1",resource="1-single-0",volume="0"} 3 1234
-ha_cluster_drbd_connections_pending{peer_node_id="1",resource="1-single-1",volume="0"} 3 1234
-# HELP ha_cluster_drbd_connections_unacked Unacked value per connection
-# TYPE ha_cluster_drbd_connections_unacked gauge
-ha_cluster_drbd_connections_unacked{peer_node_id="1",resource="1-single-0",volume="0"} 4 1234
-ha_cluster_drbd_connections_unacked{peer_node_id="1",resource="1-single-1",volume="0"} 4 1234
-# HELP ha_cluster_drbd_written KiB written to DRBD; 1 line per res, per volume
-# TYPE ha_cluster_drbd_written gauge
-ha_cluster_drbd_written{resource="1-single-0",volume="0"} 123456 1234
-ha_cluster_drbd_written{resource="1-single-1",volume="0"} 123456 1234
-# HELP ha_cluster_drbd_read KiB read from DRBD; 1 line per res, per volume
-# TYPE ha_cluster_drbd_read gauge
-ha_cluster_drbd_read{resource="1-single-0",volume="0"} 654321 1234
-ha_cluster_drbd_read{resource="1-single-1",volume="0"} 654321 1234
 # HELP ha_cluster_drbd_al_writes Writes to activity log; 1 line per res, per volume
 # TYPE ha_cluster_drbd_al_writes gauge
 ha_cluster_drbd_al_writes{resource="1-single-0",volume="0"} 123 1234
@@ -38,10 +6,30 @@ ha_cluster_drbd_al_writes{resource="1-single-1",volume="0"} 123 1234
 # TYPE ha_cluster_drbd_bm_writes gauge
 ha_cluster_drbd_bm_writes{resource="1-single-0",volume="0"} 321 1234
 ha_cluster_drbd_bm_writes{resource="1-single-1",volume="0"} 321 1234
-# HELP ha_cluster_drbd_upper_pending Upper pending; 1 line per res, per volume
-# TYPE ha_cluster_drbd_upper_pending gauge
-ha_cluster_drbd_upper_pending{resource="1-single-0",volume="0"} 1 1234
-ha_cluster_drbd_upper_pending{resource="1-single-1",volume="0"} 1 1234
+# HELP ha_cluster_drbd_connections The DRBD resource connections; 1 line per per resource, per peer_node_id
+# TYPE ha_cluster_drbd_connections gauge
+ha_cluster_drbd_connections{peer_disk_state="uptodate",peer_node_id="1",peer_role="Primary",resource="1-single-0",volume="0"} 1 1234
+ha_cluster_drbd_connections{peer_disk_state="uptodate",peer_node_id="1",peer_role="Primary",resource="1-single-1",volume="0"} 1 1234
+# HELP ha_cluster_drbd_connections_pending Pending value per connection
+# TYPE ha_cluster_drbd_connections_pending gauge
+ha_cluster_drbd_connections_pending{peer_node_id="1",resource="1-single-0",volume="0"} 3 1234
+ha_cluster_drbd_connections_pending{peer_node_id="1",resource="1-single-1",volume="0"} 3 1234
+# HELP ha_cluster_drbd_connections_received KiB received per connection
+# TYPE ha_cluster_drbd_connections_received gauge
+ha_cluster_drbd_connections_received{peer_node_id="1",resource="1-single-0",volume="0"} 456 1234
+ha_cluster_drbd_connections_received{peer_node_id="1",resource="1-single-1",volume="0"} 456 1234
+# HELP ha_cluster_drbd_connections_sent KiB sent per connection
+# TYPE ha_cluster_drbd_connections_sent gauge
+ha_cluster_drbd_connections_sent{peer_node_id="1",resource="1-single-0",volume="0"} 654 1234
+ha_cluster_drbd_connections_sent{peer_node_id="1",resource="1-single-1",volume="0"} 654 1234
+# HELP ha_cluster_drbd_connections_sync The in sync percentage value for DRBD resource connections
+# TYPE ha_cluster_drbd_connections_sync gauge
+ha_cluster_drbd_connections_sync{peer_node_id="1",resource="1-single-0",volume="0"} 100 1234
+ha_cluster_drbd_connections_sync{peer_node_id="1",resource="1-single-1",volume="0"} 100 1234
+# HELP ha_cluster_drbd_connections_unacked Unacked value per connection
+# TYPE ha_cluster_drbd_connections_unacked gauge
+ha_cluster_drbd_connections_unacked{peer_node_id="1",resource="1-single-0",volume="0"} 4 1234
+ha_cluster_drbd_connections_unacked{peer_node_id="1",resource="1-single-1",volume="0"} 4 1234
 # HELP ha_cluster_drbd_lower_pending Lower pending; 1 line per res, per volume
 # TYPE ha_cluster_drbd_lower_pending gauge
 ha_cluster_drbd_lower_pending{resource="1-single-0",volume="0"} 2 1234
@@ -50,11 +38,19 @@ ha_cluster_drbd_lower_pending{resource="1-single-1",volume="0"} 2 1234
 # TYPE ha_cluster_drbd_quorum gauge
 ha_cluster_drbd_quorum{resource="1-single-0",volume="0"} 1 1234
 ha_cluster_drbd_quorum{resource="1-single-1",volume="0"} 0 1234
+# HELP ha_cluster_drbd_read KiB read from DRBD; 1 line per res, per volume
+# TYPE ha_cluster_drbd_read gauge
+ha_cluster_drbd_read{resource="1-single-0",volume="0"} 654321 1234
+ha_cluster_drbd_read{resource="1-single-1",volume="0"} 654321 1234
 # HELP ha_cluster_drbd_resources The DRBD resources; 1 line per name, per volume
 # TYPE ha_cluster_drbd_resources gauge
 ha_cluster_drbd_resources{disk_state="uptodate",resource="1-single-0",role="Secondary",volume="0"} 1 1234
 ha_cluster_drbd_resources{disk_state="uptodate",resource="1-single-1",role="Secondary",volume="0"} 1 1234
-# HELP ha_cluster_drbd_split_brain Whether a split brain has been detected; 1 line per resource, per volume.
-# TYPE ha_cluster_drbd_split_brain gauge
-ha_cluster_drbd_split_brain{resource="resource01",volume="vol01"} 1 1234
-ha_cluster_drbd_split_brain{resource="resource02",volume="vol02"} 1 1234
+# HELP ha_cluster_drbd_upper_pending Upper pending; 1 line per res, per volume
+# TYPE ha_cluster_drbd_upper_pending gauge
+ha_cluster_drbd_upper_pending{resource="1-single-0",volume="0"} 1 1234
+ha_cluster_drbd_upper_pending{resource="1-single-1",volume="0"} 1 1234
+# HELP ha_cluster_drbd_written KiB written to DRBD; 1 line per res, per volume
+# TYPE ha_cluster_drbd_written gauge
+ha_cluster_drbd_written{resource="1-single-0",volume="0"} 123456 1234
+ha_cluster_drbd_written{resource="1-single-1",volume="0"} 123456 1234

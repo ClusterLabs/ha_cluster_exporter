@@ -2,7 +2,10 @@ package main
 
 import (
 	"os"
+	"strings"
 	"testing"
+
+	"github.com/prometheus/client_golang/prometheus/testutil"
 )
 
 func TestDrbdParsing(t *testing.T) {
@@ -229,6 +232,14 @@ func TestNewDrbdCollectorChecksDrbdsetupExecutableBits(t *testing.T) {
 
 func TestDRBDCollector(t *testing.T) {
 	clock = StoppedClock{}
+
+	collector, _ := NewDrbdCollector("test/fake_drbdsetup.sh", "fake")
+	expectMetrics(t, collector, "drbd.metrics")
+
+}
+
+func TestDRBDSplitbrainCollector(t *testing.T) {
+	clock = StoppedClock{}
 	splitBrainDir := "/var/tmp/drbd/splitbrain"
 	testFiles := [3]string{
 		"drbd-split-brain-detected-resource01-vol01",
@@ -247,8 +258,17 @@ func TestDRBDCollector(t *testing.T) {
 		os.Create(splitBrainDir + "/" + testFile)
 	}
 	defer os.RemoveAll(splitBrainDir)
+	// we use by intent a wrong exec (cibadmin) so we can just have splitbrain metrics
+	collector, _ := NewDrbdCollector("test/fake_cibadmin.sh", splitBrainDir)
 
-	collector, _ := NewDrbdCollector("test/fake_drbdsetup.sh", splitBrainDir)
-	expectMetrics(t, collector, "drbd.metrics")
+	expect := `
+	# HELP ha_cluster_drbd_split_brain Whether a split brain has been detected; 1 line per resource, per volume.
+	# TYPE ha_cluster_drbd_split_brain gauge
+	ha_cluster_drbd_split_brain{resource="resource01",volume="vol01"} 1 1234
+	ha_cluster_drbd_split_brain{resource="resource02",volume="vol02"} 1 1234
+	`
 
+	if err := testutil.CollectAndCompare(collector, strings.NewReader(expect)); err != nil {
+		t.Fatal(err)
+	}
 }
