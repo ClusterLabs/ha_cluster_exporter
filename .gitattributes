@@ -1,4 +1,2 @@
 /.* export-ignore
-/test export-ignore
-*_test.go export-ignore
 /ha_cluster_exporter.spec export-ignore
