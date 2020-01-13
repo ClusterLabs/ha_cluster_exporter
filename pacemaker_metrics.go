@@ -267,8 +267,8 @@ func (c *pacemakerCollector) recordResourceAgentsChanges(pacemakerStatus pacemak
 		log.Warnln(err)
 		return
 	}
-	// we record the timestamp of the last change as a float counter metric, which is in turn timestamped with the time it was checked
-	ch <- prometheus.NewMetricWithTimestamp(clock.Now(), prometheus.MustNewConstMetric(c.metrics["config_last_change"], prometheus.CounterValue, float64(t.Unix())))
+	// we record the timestamp of the last change as a float counter metric
+	ch <- c.makeCounterMetric("config_last_change", float64(t.Unix()))
 }
 
 func (c *pacemakerCollector) recordMigrationThresholdMetrics(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {

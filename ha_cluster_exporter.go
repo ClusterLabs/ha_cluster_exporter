@@ -41,12 +41,20 @@ func (c *DefaultCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *DefaultCollector) makeGaugeMetric(metricKey string, value float64, labelValues ...string) prometheus.Metric {
+	return c.makeMetric(metricKey, value, prometheus.GaugeValue, labelValues ...)
+}
+
+func (c *DefaultCollector) makeCounterMetric(metricKey string, value float64, labelValues ...string) prometheus.Metric {
+	return c.makeMetric(metricKey, value, prometheus.CounterValue, labelValues ...)
+}
+
+func (c *DefaultCollector) makeMetric(metricKey string, value float64, valueType prometheus.ValueType, labelValues ...string) prometheus.Metric {
 	desc, ok := c.metrics[metricKey]
 	if !ok {
 		// we hard panic on this because it's most certainly a coding error
 		panic(errors.Errorf("undeclared metric '%s'", metricKey))
 	}
-	metric := prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, value, labelValues...)
+	metric := prometheus.MustNewConstMetric(desc, valueType, value, labelValues...)
 	if config.GetBool("timestamp") {
 		metric = prometheus.NewMetricWithTimestamp(clock.Now(), metric)
 	}

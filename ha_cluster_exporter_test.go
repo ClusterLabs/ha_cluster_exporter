@@ -50,6 +50,10 @@ func TestMetricFactory(t *testing.T) {
 
 func TestMetricFactoryWithTimestamp(t *testing.T) {
 	config.Set("timestamp", true)
+	defer func() {
+		config.Set("timestamp", false)
+	}()
+
 	clock = StoppedClock{}
 	SUT := &DefaultCollector{
 		metrics: metricDescriptors{
