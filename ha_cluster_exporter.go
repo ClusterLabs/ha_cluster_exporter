@@ -46,7 +46,11 @@ func (c *DefaultCollector) makeGaugeMetric(metricKey string, value float64, labe
 		// we hard panic on this because it's most certainly a coding error
 		panic(errors.Errorf("undeclared metric '%s'", metricKey))
 	}
-	return prometheus.NewMetricWithTimestamp(clock.Now(), prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, value, labelValues...))
+	metric := prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, value, labelValues...)
+	if config.GetBool("timestamp") {
+		metric = prometheus.NewMetricWithTimestamp(clock.Now(), metric)
+	}
+	return metric
 }
 
 // Convenience wrapper around Prometheus constructors.
@@ -127,6 +131,7 @@ func init() {
 	flag.String("sbd-config-path", "/etc/sysconfig/sbd", "path to sbd configuration")
 	flag.String("drbdsetup-path", "/sbin/drbdsetup", "path to drbdsetup executable")
 	flag.String("drbdsplitbrain-path", "/var/run/drbd/splitbrain", "path to drbd splitbrain hooks temporary files")
+	flag.Bool("timestamp", false, "Add the timestamp to every metric line (hint: don't do this unless you really know what you are doing)")
 
 	err := config.BindPFlags(flag.CommandLine)
 	if err != nil {
