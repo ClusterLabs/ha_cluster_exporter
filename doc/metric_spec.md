@@ -9,7 +9,7 @@ General notes:
   - their labels contain the relevant data you may want to track or use for aggregation and filtering;
   - either their value is `1`, or the line is absent altogether; this is because each line represents one entity of the cluster, but the exporter itself is stateless, i.e. we don't track the life-cycle of entities that do not exist anymore in the cluster.
 
-- If the `timestamp` option is enabled, all the metrics will be timestamped with the Unix epoch time in milliseconds.
+- If the `enable-timestamps` option is on, all the metrics will be timestamped with the Unix epoch time in milliseconds.
 
 These are the currently implemented subsystems.
 

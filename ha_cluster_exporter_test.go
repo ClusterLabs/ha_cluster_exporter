@@ -49,9 +49,10 @@ func TestMetricFactory(t *testing.T) {
 }
 
 func TestMetricFactoryWithTimestamp(t *testing.T) {
-	config.Set("timestamp", true)
+	config.Set("enable-timestamps", true)
 	defer func() {
-		config.Set("timestamp", false)
+		config.Set("enable-timestamps", false)
+		clock = SystemClock{}
 	}()
 
 	clock = StoppedClock{}

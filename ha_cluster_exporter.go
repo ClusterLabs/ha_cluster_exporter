@@ -55,7 +55,7 @@ func (c *DefaultCollector) makeMetric(metricKey string, value float64, valueType
 		panic(errors.Errorf("undeclared metric '%s'", metricKey))
 	}
 	metric := prometheus.MustNewConstMetric(desc, valueType, value, labelValues...)
-	if config.GetBool("timestamp") {
+	if config.GetBool("enable-timestamps") {
 		metric = prometheus.NewMetricWithTimestamp(clock.Now(), metric)
 	}
 	return metric
@@ -139,7 +139,7 @@ func init() {
 	flag.String("sbd-config-path", "/etc/sysconfig/sbd", "path to sbd configuration")
 	flag.String("drbdsetup-path", "/sbin/drbdsetup", "path to drbdsetup executable")
 	flag.String("drbdsplitbrain-path", "/var/run/drbd/splitbrain", "path to drbd splitbrain hooks temporary files")
-	flag.Bool("timestamp", false, "Add the timestamp to every metric line (hint: don't do this unless you really know what you are doing)")
+	flag.Bool("enable-timestamps", false, "Add the timestamp to every metric line (hint: don't do this unless you really know what you are doing)")
 
 	err := config.BindPFlags(flag.CommandLine)
 	if err != nil {

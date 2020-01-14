@@ -9,4 +9,4 @@ corosync-quorumtool-path: "/usr/sbin/corosync-quorumtool"
 sbd-path: "/usr/sbin/sbd"
 sbd-config-path: "/etc/sysconfig/sbd"
 drbdsetup-path: "/sbin/drbdsetup"
-timestamp: false
+enable-timestamps: false
