@@ -267,8 +267,6 @@ func TestNewSbdCollectorChecksSbdExecutableBits(t *testing.T) {
 }
 
 func TestSBDCollector(t *testing.T) {
-	clock = StoppedClock{}
-
 	collector, _ := NewSbdCollector("test/fake_sbd.sh", "test/fake_sbdconfig")
 	expectMetrics(t, collector, "sbd.metrics")
 }

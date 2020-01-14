@@ -231,15 +231,11 @@ func TestNewDrbdCollectorChecksDrbdsetupExecutableBits(t *testing.T) {
 }
 
 func TestDRBDCollector(t *testing.T) {
-	clock = StoppedClock{}
-
 	collector, _ := NewDrbdCollector("test/fake_drbdsetup.sh", "fake")
 	expectMetrics(t, collector, "drbd.metrics")
-
 }
 
 func TestDRBDSplitbrainCollector(t *testing.T) {
-	clock = StoppedClock{}
 	splitBrainDir := "/var/tmp/drbd/splitbrain"
 	testFiles := [3]string{
 		"drbd-split-brain-detected-resource01-vol01",
@@ -264,8 +260,8 @@ func TestDRBDSplitbrainCollector(t *testing.T) {
 	expect := `
 	# HELP ha_cluster_drbd_split_brain Whether a split brain has been detected; 1 line per resource, per volume.
 	# TYPE ha_cluster_drbd_split_brain gauge
-	ha_cluster_drbd_split_brain{resource="resource01",volume="vol01"} 1 1234
-	ha_cluster_drbd_split_brain{resource="resource02",volume="vol02"} 1 1234
+	ha_cluster_drbd_split_brain{resource="resource01",volume="vol01"} 1
+	ha_cluster_drbd_split_brain{resource="resource02",volume="vol02"} 1
 	`
 
 	if err := testutil.CollectAndCompare(collector, strings.NewReader(expect)); err != nil {

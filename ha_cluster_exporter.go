@@ -41,12 +41,24 @@ func (c *DefaultCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *DefaultCollector) makeGaugeMetric(metricKey string, value float64, labelValues ...string) prometheus.Metric {
+	return c.makeMetric(metricKey, value, prometheus.GaugeValue, labelValues...)
+}
+
+func (c *DefaultCollector) makeCounterMetric(metricKey string, value float64, labelValues ...string) prometheus.Metric {
+	return c.makeMetric(metricKey, value, prometheus.CounterValue, labelValues...)
+}
+
+func (c *DefaultCollector) makeMetric(metricKey string, value float64, valueType prometheus.ValueType, labelValues ...string) prometheus.Metric {
 	desc, ok := c.metrics[metricKey]
 	if !ok {
 		// we hard panic on this because it's most certainly a coding error
 		panic(errors.Errorf("undeclared metric '%s'", metricKey))
 	}
-	return prometheus.NewMetricWithTimestamp(clock.Now(), prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, value, labelValues...))
+	metric := prometheus.MustNewConstMetric(desc, valueType, value, labelValues...)
+	if config.GetBool("enable-timestamps") {
+		metric = prometheus.NewMetricWithTimestamp(clock.Now(), metric)
+	}
+	return metric
 }
 
 // Convenience wrapper around Prometheus constructors.
@@ -127,6 +139,7 @@ func init() {
 	flag.String("sbd-config-path", "/etc/sysconfig/sbd", "path to sbd configuration")
 	flag.String("drbdsetup-path", "/sbin/drbdsetup", "path to drbdsetup executable")
 	flag.String("drbdsplitbrain-path", "/var/run/drbd/splitbrain", "path to drbd splitbrain hooks temporary files")
+	flag.Bool("enable-timestamps", false, "Add the timestamp to every metric line (hint: don't do this unless you really know what you are doing)")
 
 	err := config.BindPFlags(flag.CommandLine)
 	if err != nil {

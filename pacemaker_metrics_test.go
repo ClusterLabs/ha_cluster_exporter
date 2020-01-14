@@ -168,7 +168,6 @@ func TestNewPacemakerCollectorChecksCrmMonExecutableBits(t *testing.T) {
 }
 
 func TestPacemakerCollector(t *testing.T) {
-	clock = StoppedClock{}
 	collector, err := NewPacemakerCollector("test/fake_crm_mon.sh", "test/fake_cibadmin.sh")
 	if err != nil {
 		t.Fatal(err)
