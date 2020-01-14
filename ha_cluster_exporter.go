@@ -41,11 +41,11 @@ func (c *DefaultCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *DefaultCollector) makeGaugeMetric(metricKey string, value float64, labelValues ...string) prometheus.Metric {
-	return c.makeMetric(metricKey, value, prometheus.GaugeValue, labelValues ...)
+	return c.makeMetric(metricKey, value, prometheus.GaugeValue, labelValues...)
 }
 
 func (c *DefaultCollector) makeCounterMetric(metricKey string, value float64, labelValues ...string) prometheus.Metric {
-	return c.makeMetric(metricKey, value, prometheus.CounterValue, labelValues ...)
+	return c.makeMetric(metricKey, value, prometheus.CounterValue, labelValues...)
 }
 
 func (c *DefaultCollector) makeMetric(metricKey string, value float64, valueType prometheus.ValueType, labelValues ...string) prometheus.Metric {
