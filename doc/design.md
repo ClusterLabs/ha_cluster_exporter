@@ -27,4 +27,4 @@ To avoid concurrent reads of the same source, all `Collect` methods are serializ
 
 The collectors are very simple: they usually just invoke a bunch of system commands, then parse the output into bespoke data structures that can be used to build Prometheus metrics.
 
-More details about these metrics can be found in the [metrics specification document](metric_spec.md).
+More details about these metrics can be found in the [metrics specification document](metrics.md).
