@@ -18,7 +18,8 @@ Exported data include:
 - Pacemaker cluster summary, nodes and resources stats 
 - Corosync ring errors and quorum votes
 - SBD devices health status 
-- DRBD resources and connections stats
+- DRBD resources and connections stats  
+  (note: only DBRD v9 is supported; for v8.4, please refer to the [Prometheus Node Exporter](https://github.com/prometheus/node_exporter) project)
 
 A comprehensive list of all the metrics can be found in the [metrics document](doc/metric_spec.md).
 
