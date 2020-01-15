@@ -44,9 +44,6 @@ type corosyncCollector struct {
 }
 
 func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-
 	log.Infoln("Collecting corosync metrics...")
 
 	err := c.collectRingErrorsTotal(ch)

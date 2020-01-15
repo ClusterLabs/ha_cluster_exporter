@@ -51,9 +51,6 @@ type sbdCollector struct {
 }
 
 func (c *sbdCollector) Collect(ch chan<- prometheus.Metric) {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-
 	log.Infoln("Collecting SBD metrics...")
 
 	sbdConfiguration, err := readSdbFile(c.sbdConfigPath)

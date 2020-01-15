@@ -87,9 +87,6 @@ type drbdCollector struct {
 }
 
 func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-
 	log.Infoln("Collecting DRBD metrics...")
 
 	// set split brain metric
