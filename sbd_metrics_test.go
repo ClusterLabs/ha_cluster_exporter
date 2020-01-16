@@ -2,21 +2,15 @@ package main
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestReadSbdConfFileError(t *testing.T) {
 	sbdConfFile, err := readSdbFile("test/nonexistent")
 
-	if sbdConfFile != nil {
-		t.Errorf("SbdConfig file should be empty in case of error")
-	}
-
-	// we expect that in ci we fail to read the config file
-	// since there shouldn't be any sbd config in ci
-	if err == nil {
-		t.Errorf("Error should be not nil got %s", err)
-	}
-
+	assert.Nil(t, sbdConfFile)
+	assert.Error(t, err)
 }
 
 func TestGetSbdDevicesWithoutDoubleQuotes(t *testing.T) {
@@ -118,31 +112,15 @@ func TestGetSbdDevicesWithoutDoubleQuotes(t *testing.T) {
 	 # Additional options for starting sbd
 	 #
 	 SBD_OPTS=
-	 SBD_DEVICE=/dev/vdc;/dev/brother;/dev/syster																					
-			`
+	 SBD_DEVICE=/dev/vda;/dev/vdb;/dev/vdc
+`
 
 	sbdDevices := getSbdDevices([]byte(sbdConfig))
 
-	if len(sbdDevices) != 3 {
-		t.Fatalf("length of SbdDevice should be 3 got %d", len(sbdDevices))
-	}
-
-	// we should have 3 devices
-	expected := "/dev/vdc"
-	if sbdDevices[0] != expected {
-		t.Errorf("sbdDevice was incorrect, got: %s, expected: %s ", sbdDevices[0], expected)
-	}
-
-	expected = "/dev/brother"
-	if sbdDevices[1] != expected {
-		t.Errorf("sbdDevice was incorrect, got: %s, expected: %s ", sbdDevices[0], expected)
-	}
-
-	expected = "/dev/syster"
-	if sbdDevices[2] != expected {
-		t.Errorf("sbdDevice was incorrect, got: %s, expected: %s ", sbdDevices[0], expected)
-	}
-
+	assert.Len(t, sbdDevices, 3)
+	assert.Equal(t, "/dev/vda", sbdDevices[0])
+	assert.Equal(t, "/dev/vdb", sbdDevices[1])
+	assert.Equal(t, "/dev/vdc", sbdDevices[2])
 }
 
 // test the other case with double quotes, and put the string in random place
@@ -158,7 +136,7 @@ func TestGetSbdDevicesWithDoubleQuotes(t *testing.T) {
 
 	 SBD_WATCHDOG_TIMEOUT=5
 	 
-	 SBD_DEVICE="/dev/vdc;/dev/brother;/dev/syster"
+	 SBD_DEVICE="/dev/vda;/dev/vdb;/dev/vdc"
 
 	 SBD_TIMEOUT_ACTION=flush,reboot
 	 
@@ -171,25 +149,10 @@ func TestGetSbdDevicesWithDoubleQuotes(t *testing.T) {
 
 	sbdDevices := getSbdDevices([]byte(sbdConfig))
 
-	if len(sbdDevices) != 3 {
-		t.Fatalf("length of SbdDevice should be 3 got %d", len(sbdDevices))
-	}
-
-	// we should have 3 devices
-	expected := "/dev/vdc"
-	if sbdDevices[0] != expected {
-		t.Errorf("sbdDevice was incorrect, got: %s, expected: %s ", sbdDevices[0], expected)
-	}
-	expected = "/dev/brother"
-	if sbdDevices[1] != expected {
-		t.Errorf("sbdDevice was incorrect, got: %s, expected: %s ", sbdDevices[0], expected)
-	}
-
-	expected = "/dev/syster"
-	if sbdDevices[2] != expected {
-		t.Errorf("sbdDevice was incorrect, got: %s, expected: %s ", sbdDevices[0], expected)
-	}
-
+	assert.Len(t, sbdDevices, 3)
+	assert.Equal(t, "/dev/vda", sbdDevices[0])
+	assert.Equal(t, "/dev/vdb", sbdDevices[1])
+	assert.Equal(t, "/dev/vdc", sbdDevices[2])
 }
 
 // test the other case with double quotes, and put the string in random place
@@ -205,15 +168,8 @@ func TestOnlyOneDeviceSbd(t *testing.T) {
 
 	sbdDevices := getSbdDevices([]byte(sbdConfig))
 
-	if len(sbdDevices) != 1 {
-		t.Fatalf("length of SbdDevice should be 1 got %d", len(sbdDevices))
-	}
-
-	// we should have 1 device
-	expected := "/dev/vdc"
-	if sbdDevices[0] != expected {
-		t.Errorf("sbdDevice was incorrect, got: %s, expected: %s ", sbdDevices[0], expected)
-	}
+	assert.Len(t, sbdDevices, 1)
+	assert.Equal(t, "/dev/vdc", sbdDevices[0])
 }
 
 func TestSbdDeviceParserWithFullCommentBeforeActualSetting(t *testing.T) {
@@ -223,47 +179,36 @@ SBD_DEVICE=/dev/vdc;/dev/vdd`
 
 	sbdDevices := getSbdDevices([]byte(sbdConfig))
 
-	expectedLength := 2
-	if len(sbdDevices) != expectedLength {
-		t.Fatalf("length of SbdDevice should be %d, got %d", expectedLength, len(sbdDevices))
-	}
+	assert.Len(t, sbdDevices, 2)
+	assert.Equal(t, "/dev/vdc", sbdDevices[0])
+	assert.Equal(t, "/dev/vdd", sbdDevices[1])
 }
 
 func TestNewSbdCollector(t *testing.T) {
 	_, err := NewSbdCollector("test/fake_sbd.sh", "test/fake_sbdconfig")
-	if err != nil {
-		t.Errorf("Unexpected error, got: %v", err)
-	}
+
+	assert.Nil(t, err)
 }
 
 func TestNewSbdCollectorChecksSbdConfigExistence(t *testing.T) {
 	_, err := NewSbdCollector("test/fake_sbd.sh", "test/nonexistent")
-	if err == nil {
-		t.Fatal("a non nil error was expected")
-	}
-	if err.Error() != "could not initialize SBD collector: 'test/nonexistent' does not exist" {
-		t.Errorf("Unexpected error: %v", err)
-	}
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "'test/nonexistent' does not exist")
 }
 
 func TestNewSbdCollectorChecksSbdExistence(t *testing.T) {
 	_, err := NewSbdCollector("test/nonexistent", "test/fake_sbdconfig")
-	if err == nil {
-		t.Fatal("a non nil error was expected")
-	}
-	if err.Error() != "could not initialize SBD collector: 'test/nonexistent' does not exist" {
-		t.Errorf("Unexpected error: %v", err)
-	}
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "'test/nonexistent' does not exist")
 }
 
 func TestNewSbdCollectorChecksSbdExecutableBits(t *testing.T) {
 	_, err := NewSbdCollector("test/dummy", "test/fake_sbdconfig")
-	if err == nil {
-		t.Fatalf("a non nil error was expected")
-	}
-	if err.Error() != "could not initialize SBD collector: 'test/dummy' is not executable" {
-		t.Errorf("Unexpected error: %v", err)
-	}
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "'test/dummy' is not executable")
 }
 
 func TestSBDCollector(t *testing.T) {

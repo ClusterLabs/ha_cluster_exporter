@@ -132,9 +132,6 @@ type pacemakerCollector struct {
 }
 
 func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-
 	log.Infoln("Collecting pacemaker metrics...")
 
 	pacemakerStatus, err := c.getPacemakerStatus()

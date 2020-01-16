@@ -1,11 +1,11 @@
 package main
 
 import (
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus/testutil"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDrbdParsing(t *testing.T) {
@@ -116,118 +116,48 @@ func TestDrbdParsing(t *testing.T) {
 ]`)
 
 	drbdDevs, err := parseDrbdStatus(drbdDataRaw)
-	if err != nil {
-		t.Error(err)
-	}
 
-	// test attributes
-	if "1-single-0" != drbdDevs[0].Name {
-		t.Errorf("name doesn't correspond! fail got %s", drbdDevs[0].Name)
-	}
-
-	if "Secondary" != drbdDevs[0].Role {
-		t.Errorf("role doesn't correspond! fail got %s", drbdDevs[0].Role)
-	}
-
-	if "UpToDate" != drbdDevs[0].Devices[0].DiskState {
-		t.Errorf("disk-states doesn't correspond! fail got %s", drbdDevs[0].Devices[0].DiskState)
-	}
-
-	if 1 != drbdDevs[0].Connections[0].PeerNodeID {
-		t.Errorf("peerNodeID doesn't correspond! fail got %d", drbdDevs[0].Connections[0].PeerNodeID)
-	}
-
-	if "UpToDate" != drbdDevs[0].Connections[0].PeerDevices[0].PeerDiskState {
-		t.Errorf("peerDiskState doesn't correspond! fail got %s", drbdDevs[0].Connections[0].PeerDevices[0].PeerDiskState)
-	}
-
-	if 0 != drbdDevs[0].Devices[0].Volume {
-		t.Errorf("volumes should be 0")
-	}
-
-	if 123456 != drbdDevs[0].Devices[0].Written {
-		t.Errorf("written should be 123456")
-	}
-
-	if 654321 != drbdDevs[0].Devices[0].Read {
-		t.Errorf("read should be 654321")
-	}
-
-	if 123 != drbdDevs[0].Devices[0].AlWrites {
-		t.Errorf("al-writes should be 123")
-	}
-
-	if 321 != drbdDevs[0].Devices[0].BmWrites {
-		t.Errorf("bm-writes should be 321")
-	}
-
-	if 1 != drbdDevs[0].Devices[0].UpPending {
-		t.Errorf("upper-pending should be 1")
-	}
-
-	if 2 != drbdDevs[0].Devices[0].LoPending {
-		t.Errorf("lower-pending should be 2")
-	}
-
-	if true != drbdDevs[0].Devices[0].Quorum {
-		t.Errorf("quorum should be true")
-	}
-
-	if false != drbdDevs[1].Devices[0].Quorum {
-		t.Errorf("quorum should be false")
-	}
-
-	if 456 != drbdDevs[0].Connections[0].PeerDevices[0].Received {
-		t.Errorf("received should be 456")
-	}
-
-	if 654 != drbdDevs[0].Connections[0].PeerDevices[0].Sent {
-		t.Errorf("sent should be 654")
-	}
-
-	if 3 != drbdDevs[0].Connections[0].PeerDevices[0].Pending {
-		t.Errorf("pending should be 3")
-	}
-
-	if 4 != drbdDevs[0].Connections[0].PeerDevices[0].Unacked {
-		t.Errorf("unacked should be 4")
-	}
-
-	if 100 != drbdDevs[0].Connections[0].PeerDevices[0].PercentInSync {
-		t.Errorf("PercentInSync doesn't correspond! fail got %f", drbdDevs[0].Connections[0].PeerDevices[0].PercentInSync)
-	}
-
-	if 99.8 != drbdDevs[1].Connections[0].PeerDevices[0].PercentInSync {
-		t.Errorf("Float PercentInSync doesn't correspond! fail got %f", drbdDevs[1].Connections[0].PeerDevices[0].PercentInSync)
-	}
-
+	assert.Nil(t, err)
+	assert.Equal(t, "1-single-0", drbdDevs[0].Name)
+	assert.Equal(t, "Secondary", drbdDevs[0].Role)
+	assert.Equal(t, "UpToDate", drbdDevs[0].Devices[0].DiskState)
+	assert.Equal(t, 1, drbdDevs[0].Connections[0].PeerNodeID)
+	assert.Equal(t, "UpToDate", drbdDevs[0].Connections[0].PeerDevices[0].PeerDiskState)
+	assert.Equal(t, 0, drbdDevs[0].Devices[0].Volume)
+	assert.Equal(t, 123456, drbdDevs[0].Devices[0].Written)
+	assert.Equal(t, 654321, drbdDevs[0].Devices[0].Read)
+	assert.Equal(t, 123, drbdDevs[0].Devices[0].AlWrites)
+	assert.Equal(t, 321, drbdDevs[0].Devices[0].BmWrites)
+	assert.Equal(t, 1, drbdDevs[0].Devices[0].UpPending)
+	assert.Equal(t, 2, drbdDevs[0].Devices[0].LoPending)
+	assert.Equal(t, true, drbdDevs[0].Devices[0].Quorum)
+	assert.Equal(t, false, drbdDevs[1].Devices[0].Quorum)
+	assert.Equal(t, 456, drbdDevs[0].Connections[0].PeerDevices[0].Received)
+	assert.Equal(t, 654, drbdDevs[0].Connections[0].PeerDevices[0].Sent)
+	assert.Equal(t, 3, drbdDevs[0].Connections[0].PeerDevices[0].Pending)
+	assert.Equal(t, 4, drbdDevs[0].Connections[0].PeerDevices[0].Unacked)
+	assert.Equal(t, 100.0, drbdDevs[0].Connections[0].PeerDevices[0].PercentInSync)
+	assert.Equal(t, 99.8, drbdDevs[1].Connections[0].PeerDevices[0].PercentInSync)
 }
 
 func TestNewDrbdCollector(t *testing.T) {
 	_, err := NewDrbdCollector("test/fake_drbdsetup.sh", "splitbrainpath")
-	if err != nil {
-		t.Errorf("Unexpected error, got: %v", err)
-	}
+
+	assert.Nil(t, err)
 }
 
 func TestNewDrbdCollectorChecksDrbdsetupExistence(t *testing.T) {
 	_, err := NewDrbdCollector("test/nonexistent", "splitbrainfake")
-	if err == nil {
-		t.Fatal("a non nil error was expected")
-	}
-	if err.Error() != "could not initialize DRBD collector: 'test/nonexistent' does not exist" {
-		t.Errorf("Unexpected error: %v", err)
-	}
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "'test/nonexistent' does not exist")
 }
 
 func TestNewDrbdCollectorChecksDrbdsetupExecutableBits(t *testing.T) {
 	_, err := NewDrbdCollector("test/dummy", "splibrainfake")
-	if err == nil {
-		t.Fatalf("a non nil error was expected")
-	}
-	if err.Error() != "could not initialize DRBD collector: 'test/dummy' is not executable" {
-		t.Errorf("Unexpected error: %v", err)
-	}
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "'test/dummy' is not executable")
 }
 
 func TestDRBDCollector(t *testing.T) {
@@ -236,26 +166,7 @@ func TestDRBDCollector(t *testing.T) {
 }
 
 func TestDRBDSplitbrainCollector(t *testing.T) {
-	splitBrainDir := "/var/tmp/drbd/splitbrain"
-	testFiles := [3]string{
-		"drbd-split-brain-detected-resource01-vol01",
-		"drbd-split-brain-detected-resource02-vol02",
-		"drbd-split-brain-detected-missingthingsWrongSkippedMetricS",
-	}
-	// create dir for putting temp file if not existings
-	if _, err := os.Stat(splitBrainDir); os.IsNotExist(err) {
-		err := os.MkdirAll(splitBrainDir, os.ModePerm)
-		if err != nil {
-			t.Errorf("Unexpected error: %v", err)
-		}
-	}
-
-	for _, testFile := range testFiles {
-		os.Create(splitBrainDir + "/" + testFile)
-	}
-	defer os.RemoveAll(splitBrainDir)
-	// we use by intent a wrong exec (cibadmin) so we can just have splitbrain metrics
-	collector, _ := NewDrbdCollector("test/fake_cibadmin.sh", splitBrainDir)
+	collector, _ := NewDrbdCollector("test/fake_drbdsetup.sh", "test/drbd-splitbrain")
 
 	expect := `
 	# HELP ha_cluster_drbd_split_brain Whether a split brain has been detected; 1 line per resource, per volume.
@@ -264,7 +175,7 @@ func TestDRBDSplitbrainCollector(t *testing.T) {
 	ha_cluster_drbd_split_brain{resource="resource02",volume="vol02"} 1
 	`
 
-	if err := testutil.CollectAndCompare(collector, strings.NewReader(expect)); err != nil {
-		t.Fatal(err)
-	}
+	err := testutil.CollectAndCompare(collector, strings.NewReader(expect), "ha_cluster_drbd_split_brain")
+
+	assert.Nil(t, err)
 }

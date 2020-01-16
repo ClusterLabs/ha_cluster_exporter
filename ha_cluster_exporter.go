@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -31,7 +30,6 @@ type metricDescriptors map[string]*prometheus.Desc
 
 type DefaultCollector struct {
 	metrics metricDescriptors
-	mutex   sync.RWMutex
 }
 
 func (c *DefaultCollector) Describe(ch chan<- *prometheus.Desc) {
