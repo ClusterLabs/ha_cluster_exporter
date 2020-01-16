@@ -89,8 +89,7 @@ type drbdCollector struct {
 func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
 	log.Infoln("Collecting DRBD metrics...")
 
-	// set split brain metric
-	c.setDrbdSplitBrainMetric(ch)
+	c.recordDrbdSplitBrainMetric(ch)
 
 	drbdStatusRaw, err := exec.Command(c.drbdsetupPath, "status", "--json").Output()
 	if err != nil {
@@ -166,7 +165,7 @@ func parseDrbdStatus(statusRaw []byte) ([]drbdStatus, error) {
 	return drbdDevs, nil
 }
 
-func (c *drbdCollector) setDrbdSplitBrainMetric(ch chan<- prometheus.Metric) {
+func (c *drbdCollector) recordDrbdSplitBrainMetric(ch chan<- prometheus.Metric) {
 
 	// set split brain metric
 	// by default if the custom hook is not set, the exporter will not be able to detect it

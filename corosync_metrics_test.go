@@ -2,6 +2,8 @@ package main
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // TEST group quorum metrics
@@ -33,24 +35,11 @@ func TestQuoromMetricParsing(t *testing.T) {
 	`
 	voteQuorumInfo, quorate, _ := parseQuoromStatus([]byte(quoromStatus))
 
-	if voteQuorumInfo["expected_votes"] != 232 {
-		t.Errorf("expectedVotes should be 232 got instead: %d", voteQuorumInfo["expectedVotes"])
-	}
-	if voteQuorumInfo["highest_expected"] != 22 {
-		t.Errorf("expectedVotes should be 232 got instead: %d", voteQuorumInfo["highestExpected"])
-	}
-
-	if voteQuorumInfo["total_votes"] != 21 {
-		t.Errorf("expectedVotes should be 232 got instead: %d", voteQuorumInfo["totalVotes"])
-	}
-
-	if voteQuorumInfo["quorum"] != 421 {
-		t.Errorf("expectedVotes should be 421 got instead: %d", voteQuorumInfo["quorum"])
-	}
-
-	if quorate != 1 {
-		t.Errorf("quorate should be 1, got %v", quorate)
-	}
+	assert.Equal(t, 232, voteQuorumInfo["expected_votes"])
+	assert.Equal(t, 22, voteQuorumInfo["highest_expected"])
+	assert.Equal(t, 21, voteQuorumInfo["total_votes"])
+	assert.Equal(t, 421, voteQuorumInfo["quorum"])
+	assert.Equal(t, 1.0, quorate)
 }
 
 // TEST group RING metrics
@@ -67,13 +56,9 @@ func TestOneRingError(t *testing.T) {
 			`
 
 	ringErrorsTotal, err := parseRingStatus([]byte(ringStatusWithOneError))
-	RingExpectedErrors := 1
-	if ringErrorsTotal != RingExpectedErrors {
-		t.Errorf("ringErrors was incorrect, got: %d, expected: %d.", ringErrorsTotal, RingExpectedErrors)
-	}
-	if err != nil {
-		t.Errorf("error should be nil got instead: %s", err)
-	}
+
+	assert.Nil(t, err)
+	assert.Equal(t, 1, ringErrorsTotal)
 }
 
 func TestZeroRingErrors(t *testing.T) {
@@ -88,13 +73,9 @@ func TestZeroRingErrors(t *testing.T) {
 			`
 
 	ringErrorsTotal, err := parseRingStatus([]byte(ringStatusWithOneError))
-	RingExpectedErrors := 0
-	if ringErrorsTotal != RingExpectedErrors {
-		t.Errorf("ringErrors was incorrect, got: %d, expected: %d.", ringErrorsTotal, RingExpectedErrors)
-	}
-	if err != nil {
-		t.Errorf("error should be nil got instead: %s", err)
-	}
+
+	assert.Nil(t, err)
+	assert.Equal(t, 0, ringErrorsTotal)
 }
 
 // test that we recognize 3 rings error (for increasing metric later)
@@ -121,73 +102,51 @@ func TestMultipleRingErrors(t *testing.T) {
 			status  = ring 1 active with no faults
 																											   
 	`
-	ringErrorsTotal, err := parseRingStatus([]byte(ringStatusWithOneError))
-	if err != nil {
-		t.Error(err)
-	}
 
-	RingExpectedErrors := 3
-	if ringErrorsTotal != RingExpectedErrors {
-		t.Errorf("ringErrors was incorrect, got: %d, expected: %d.", ringErrorsTotal, RingExpectedErrors)
-	}
+	ringErrorsTotal, err := parseRingStatus([]byte(ringStatusWithOneError))
+
+	assert.Nil(t, err)
+	assert.Equal(t, 3, ringErrorsTotal)
 }
 
 func TestRingStatusParsingError(t *testing.T) {
 	_, err := parseRingStatus([]byte("some error occurred"))
-	if err == nil {
-		t.Fatal("a non nil error was expected")
-	}
-	if err.Error() != "corosync-cfgtool returned unexpected output: some error occurred" {
-		t.Errorf("Unexpected error: %v", err)
-	}
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "some error occurred")
 }
 
 func TestNewCorosyncCollector(t *testing.T) {
 	_, err := NewCorosyncCollector("test/fake_corosync-cfgtool.sh", "test/fake_corosync-quorumtool.sh")
-	if err != nil {
-		t.Errorf("Unexpected error, got: %v", err)
-	}
+	assert.Nil(t, err)
 }
 
 func TestNewCorosyncCollectorChecksCfgtoolExistence(t *testing.T) {
 	_, err := NewCorosyncCollector("test/nonexistent", "test/fake_corosync-quorumtool.sh")
-	if err == nil {
-		t.Fatal("a non nil error was expected")
-	}
-	if err.Error() != "could not initialize Corosync collector: 'test/nonexistent' does not exist" {
-		t.Errorf("Unexpected error: %v", err)
-	}
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "'test/nonexistent' does not exist")
 }
 
 func TestNewCorosyncCollectorChecksQuorumtoolExistence(t *testing.T) {
-
 	_, err := NewCorosyncCollector("test/fake_corosync-cfgtool.sh", "test/nonexistent")
-	if err == nil {
-		t.Fatal("a non nil error was expected")
-	}
-	if err.Error() != "could not initialize Corosync collector: 'test/nonexistent' does not exist" {
-		t.Errorf("Unexpected error: %v", err)
-	}
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "'test/nonexistent' does not exist")
 }
 
 func TestNewCorosyncCollectorChecksCfgtoolExecutableBits(t *testing.T) {
 	_, err := NewCorosyncCollector("test/dummy", "test/fake_corosync-quorumtool.sh")
-	if err == nil {
-		t.Fatal("a non nil error was expected")
-	}
-	if err.Error() != "could not initialize Corosync collector: 'test/dummy' is not executable" {
-		t.Errorf("Unexpected error: %v", err)
-	}
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "'test/dummy' is not executable")
 }
 
 func TestNewCorosyncCollectorChecksQuorumtoolExecutableBits(t *testing.T) {
 	_, err := NewCorosyncCollector("test/fake_corosync-cfgtool.sh", "test/dummy")
-	if err == nil {
-		t.Fatal("a non nil error was expected")
-	}
-	if err.Error() != "could not initialize Corosync collector: 'test/dummy' is not executable" {
-		t.Errorf("Unexpected error: %v", err)
-	}
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "'test/dummy' is not executable")
 }
 
 func TestCorosyncCollector(t *testing.T) {

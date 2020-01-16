@@ -2,6 +2,8 @@ package main
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParsePacemakerXML(t *testing.T) {
@@ -67,110 +69,49 @@ func TestParsePacemakerXML(t *testing.T) {
 	</crm_mon>`
 
 	status, err := parsePacemakerStatus([]byte(pacemakerxml))
-	if err != nil {
-		t.Errorf("Unexpected error, got: %v", err)
-	}
 
-	if status.Version != "2.0.0" {
-		t.Errorf("Version was incorrect, got: %s, expected: %s ", status.Version, "2.0.0")
-	}
-
-	var expected int
-	expected = 3
-
-	if status.Summary.Resources.Number != expected {
-		t.Errorf("sbdDevice was incorrect, got: %d, expected: %d ", status.Summary.Resources.Number, expected)
-	}
-
-	expected = 0
-	if status.Summary.Resources.Disabled != expected {
-		t.Errorf("Disabled was incorrect, got: %d, expected: %d ", status.Summary.Resources.Disabled, expected)
-	}
-
-	if status.Summary.Resources.Blocked != expected {
-		t.Errorf("Blocked was incorrect, got: %d, expected: %d ", status.Summary.Resources.Blocked, expected)
-	}
-
-	if status.Summary.LastChange.Time != "Tue Jan 15 22:19:59 2019" {
-		t.Errorf("Blocked was incorrect, got: %s, expected: Tue Jan 15 22:19:59 2019", status.Summary.LastChange.Time)
-	}
-
-	expected = 2
-	if status.Summary.Nodes.Number != expected {
-		t.Errorf("sbdDevice was incorrect, got: %d, expected: %d ", status.Summary.Nodes.Number, expected)
-	}
-
-	if status.Nodes.Node[0].Name != "Hawk3-1" {
-		t.Errorf("node should be called Hawk3-1 got instead: %s", status.Nodes.Node[0].Name)
-	}
-
-	if status.Nodes.Node[0].ID != "168430211" {
-		t.Errorf("node ID should be 168430211 got instead: %s", status.Nodes.Node[0].ID)
-	}
-
-	if status.Nodes.Node[0].Online != true {
-		t.Errorf("node should be online got instead: %t", status.Nodes.Node[0].Online)
-	}
-
-	if status.Nodes.Node[1].Name != "Hawk3-2" {
-		t.Errorf("node should be called Hawk3-2 got instead: %s", status.Nodes.Node[1].Name)
-	}
-
-	if status.Nodes.Node[1].ID != "168430212" {
-		t.Errorf("node ID should be 168430212 got instead: %s", status.Nodes.Node[1].ID)
-	}
-
-	if status.Nodes.Node[1].Online != true {
-		t.Errorf("node should be online got instead: %t", status.Nodes.Node[1].Online)
-	}
-	if status.NodeHistory.Node[0].Name != "Hawk3-2" {
-		t.Errorf("node should be called Hawk3-2 got instead: %s", status.NodeHistory.Node[0].Name)
-	}
-
-	if status.NodeHistory.Node[0].ResourceHistory[0].MigrationThreshold != 3 {
-		t.Errorf("migration-treshold should be 3 got instead: %d", status.NodeHistory.Node[0].ResourceHistory[0].MigrationThreshold)
-	}
-
-	if status.NodeHistory.Node[0].ResourceHistory[1].FailCount != 1000000 {
-		t.Errorf("fail-count should be 1000000 got instead: %d", status.NodeHistory.Node[0].ResourceHistory[1].FailCount)
-	}
-
-	if status.NodeHistory.Node[0].ResourceHistory[0].Name != "vip1" {
-		t.Errorf("resource should be called vip1 got instead: %s", status.NodeHistory.Node[0].ResourceHistory[0].Name)
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, "2.0.0", status.Version)
+	assert.Equal(t, 3, status.Summary.Resources.Number)
+	assert.Equal(t, 0, status.Summary.Resources.Disabled)
+	assert.Equal(t, 0, status.Summary.Resources.Blocked)
+	assert.Equal(t, "Tue Jan 15 22:19:59 2019", status.Summary.LastChange.Time)
+	assert.Equal(t, 2, status.Summary.Nodes.Number)
+	assert.Equal(t, "Hawk3-1", status.Nodes.Node[0].Name)
+	assert.Equal(t, "168430211", status.Nodes.Node[0].ID)
+	assert.Equal(t, true, status.Nodes.Node[0].Online)
+	assert.Equal(t, "Hawk3-2", status.Nodes.Node[1].Name)
+	assert.Equal(t, "168430212", status.Nodes.Node[1].ID)
+	assert.Equal(t, true, status.Nodes.Node[1].Online)
+	assert.Equal(t, "Hawk3-2", status.NodeHistory.Node[0].Name)
+	assert.Equal(t, 3, status.NodeHistory.Node[0].ResourceHistory[0].MigrationThreshold)
+	assert.Equal(t, 1000000, status.NodeHistory.Node[0].ResourceHistory[1].FailCount)
+	assert.Equal(t, "vip1", status.NodeHistory.Node[0].ResourceHistory[0].Name)
 }
 
 func TestNewPacemakerCollector(t *testing.T) {
 	_, err := NewPacemakerCollector("test/fake_crm_mon.sh", "test/fake_cibadmin.sh")
-	if err != nil {
-		t.Errorf("Unexpected error, got: %v", err)
-	}
+
+	assert.Nil(t, err)
 }
 
 func TestNewPacemakerCollectorChecksCrmMonExistence(t *testing.T) {
 	_, err := NewPacemakerCollector("test/nonexistent", "")
-	if err == nil {
-		t.Fatal("a non nil error was expected")
-	}
-	if err.Error() != "could not initialize Pacemaker collector: 'test/nonexistent' does not exist" {
-		t.Errorf("Unexpected error: %v", err)
-	}
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "'test/nonexistent' does not exist")
 }
 
 func TestNewPacemakerCollectorChecksCrmMonExecutableBits(t *testing.T) {
 	_, err := NewPacemakerCollector("test/dummy", "")
-	if err == nil {
-		t.Fatal("a non nil error was expected")
-	}
-	if err.Error() != "could not initialize Pacemaker collector: 'test/dummy' is not executable" {
-		t.Errorf("Unexpected error: %v", err)
-	}
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "'test/dummy' is not executable")
 }
 
 func TestPacemakerCollector(t *testing.T) {
 	collector, err := NewPacemakerCollector("test/fake_crm_mon.sh", "test/fake_cibadmin.sh")
-	if err != nil {
-		t.Fatal(err)
-	}
+
+	assert.Nil(t, err)
 	expectMetrics(t, collector, "pacemaker.metrics")
 }
