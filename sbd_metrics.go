@@ -13,8 +13,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const SBD_STATUS_UNHEALTHY = 0
-const SBD_STATUS_HEALTHY = 1
+const SBD_STATUS_UNHEALTHY = "unhealthy"
+const SBD_STATUS_HEALTHY = "healthy"
 
 func NewSbdCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error) {
 	err := CheckExecutables(sbdPath)
@@ -34,8 +34,7 @@ func NewSbdCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error
 		sbdConfigPath,
 	}
 
-	collector.setDescriptor("device_status", "Whether or not an SBD device is healthy; one line per device", []string{"device"})
-	collector.setDescriptor("devices_total", "Total count of configured SBD devices", nil)
+	collector.setDescriptor("devices", "SBD devices; one line per device", []string{"device", "status"})
 
 	return collector, nil
 }
@@ -56,11 +55,10 @@ func (c *sbdCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	sbdDevices := getSbdDevices(sbdConfiguration)
-	ch <- c.makeGaugeMetric("devices_total", float64(len(sbdDevices)))
 
 	sbdStatuses := c.getSbdDeviceStatuses(sbdDevices)
 	for sbdDev, sbdStatus := range sbdStatuses {
-		ch <- c.makeGaugeMetric("device_status", sbdStatus, sbdDev)
+		ch <- c.makeGaugeMetric("devices", 1, sbdDev, sbdStatus)
 	}
 }
 
@@ -103,8 +101,8 @@ func getSbdDevices(sbdConfigRaw []byte) []string {
 
 // this function takes a list of sbd devices and returns
 // a map of SBD device names with 1 if healthy, 0 if not
-func (c *sbdCollector) getSbdDeviceStatuses(sbdDevices []string) map[string]float64 {
-	sbdStatuses := make(map[string]float64)
+func (c *sbdCollector) getSbdDeviceStatuses(sbdDevices []string) map[string]string {
+	sbdStatuses := make(map[string]string)
 	for _, sbdDev := range sbdDevices {
 		_, err := exec.Command(c.sbdPath, "-d", sbdDev, "dump").Output()
 
