@@ -7,6 +7,6 @@ ha_cluster_corosync_quorum_votes{type="expected_votes"} 2
 ha_cluster_corosync_quorum_votes{type="highest_expected"} 2
 ha_cluster_corosync_quorum_votes{type="quorum"} 1
 ha_cluster_corosync_quorum_votes{type="total_votes"} 2
-# HELP ha_cluster_corosync_ring_errors_total Total number of corosync ring errors
-# TYPE ha_cluster_corosync_ring_errors_total gauge
-ha_cluster_corosync_ring_errors_total 1
+# HELP ha_cluster_corosync_ring_errors The number of corosync ring errors
+# TYPE ha_cluster_corosync_ring_errors gauge
+ha_cluster_corosync_ring_errors 1

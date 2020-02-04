@@ -26,7 +26,7 @@ func NewCorosyncCollector(cfgToolPath string, quorumToolPath string) (*corosyncC
 		quorumToolPath,
 	}
 	collector.setDescriptor("quorate", "Whether or not the cluster is quorate", nil)
-	collector.setDescriptor("ring_errors_total", "Total number of corosync ring errors", nil)
+	collector.setDescriptor("ring_errors", "The number of corosync ring errors", nil)
 	collector.setDescriptor("quorum_votes", "Cluster quorum votes; one line per type", []string{"type"})
 
 	return collector, nil
@@ -67,7 +67,7 @@ func (c *corosyncCollector) collectRingErrorsTotal(ch chan<- prometheus.Metric) 
 		return errors.Wrap(err, "cannot parse ring status")
 	}
 
-	ch <- c.makeGaugeMetric("ring_errors_total", float64(ringErrorsTotal))
+	ch <- c.makeGaugeMetric("ring_errors", float64(ringErrorsTotal))
 
 	return nil
 }

@@ -106,9 +106,7 @@ func NewPacemakerCollector(crmMonPath string, cibAdminPath string) (*pacemakerCo
 		cibAdminPath,
 	}
 	collector.setDescriptor("nodes", "The nodes in the cluster; one line per name, per status", []string{"node", "type", "status"})
-	collector.setDescriptor("nodes_total", "Total number of nodes in the cluster", nil)
 	collector.setDescriptor("resources", "The resources in the cluster; one line per id, per status", []string{"node", "resource", "role", "managed", "status"})
-	collector.setDescriptor("resources_total", "Total number of resources in the cluster", nil)
 	collector.setDescriptor("stonith_enabled", "Whether or not stonith is enabled", nil)
 	collector.setDescriptor("fail_count", "The Fail count number per node and resource id", []string{"node", "resource"})
 	collector.setDescriptor("migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"})
@@ -144,8 +142,6 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 		stonithEnabled = 1
 	}
 
-	ch <- c.makeGaugeMetric("nodes_total", float64(pacemakerStatus.Summary.Nodes.Number))
-	ch <- c.makeGaugeMetric("resources_total", float64(pacemakerStatus.Summary.Resources.Number))
 	ch <- c.makeGaugeMetric("stonith_enabled", stonithEnabled)
 
 	c.recordNodeMetrics(pacemakerStatus, ch)
