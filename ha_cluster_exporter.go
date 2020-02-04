@@ -26,47 +26,53 @@ func (SystemClock) Now() time.Time {
 	return time.Now()
 }
 
-type metricDescriptors map[string]*prometheus.Desc
-
 type DefaultCollector struct {
-	metrics metricDescriptors
+	subsystem string
+	descriptors map[string]*prometheus.Desc
+}
+
+func (c *DefaultCollector) getDescriptor(name string) *prometheus.Desc {
+	desc, ok := c.descriptors[name]
+	if !ok {
+		// we hard panic on this because it's most certainly a coding error
+		panic(errors.Errorf("undeclared metric '%s'", name))
+	}
+	return desc
+}
+
+// Convenience wrapper around prometheus.NewDesc constructor.
+// Stores a metric descriptor with a fully qualified name like `NAMESPACE_subsystem_name`.
+// `name` is the last and most relevant part of the metrics Full Qualified Name;
+// `help` is the message displayed in the HELP line
+// `variableLabels` is a list of labels to declare. Use `nil` to declare no labels.
+func (c *DefaultCollector) setDescriptor(name, help string, variableLabels []string) {
+	if c.descriptors == nil {
+		c.descriptors = make(map[string]*prometheus.Desc)
+	}
+	c.descriptors[name] = prometheus.NewDesc(prometheus.BuildFQName(NAMESPACE, c.subsystem, name), help, variableLabels, nil)
 }
 
 func (c *DefaultCollector) Describe(ch chan<- *prometheus.Desc) {
-	for _, metric := range c.metrics {
-		ch <- metric
+	for _, descriptor := range c.descriptors {
+		ch <- descriptor
 	}
 }
 
-func (c *DefaultCollector) makeGaugeMetric(metricKey string, value float64, labelValues ...string) prometheus.Metric {
-	return c.makeMetric(metricKey, value, prometheus.GaugeValue, labelValues...)
+func (c *DefaultCollector) makeGaugeMetric(name string, value float64, labelValues ...string) prometheus.Metric {
+	return c.makeMetric(name, value, prometheus.GaugeValue, labelValues...)
 }
 
-func (c *DefaultCollector) makeCounterMetric(metricKey string, value float64, labelValues ...string) prometheus.Metric {
-	return c.makeMetric(metricKey, value, prometheus.CounterValue, labelValues...)
+func (c *DefaultCollector) makeCounterMetric(name string, value float64, labelValues ...string) prometheus.Metric {
+	return c.makeMetric(name, value, prometheus.CounterValue, labelValues...)
 }
 
-func (c *DefaultCollector) makeMetric(metricKey string, value float64, valueType prometheus.ValueType, labelValues ...string) prometheus.Metric {
-	desc, ok := c.metrics[metricKey]
-	if !ok {
-		// we hard panic on this because it's most certainly a coding error
-		panic(errors.Errorf("undeclared metric '%s'", metricKey))
-	}
+func (c *DefaultCollector) makeMetric(name string, value float64, valueType prometheus.ValueType, labelValues ...string) prometheus.Metric {
+	desc := c.getDescriptor(name)
 	metric := prometheus.MustNewConstMetric(desc, valueType, value, labelValues...)
 	if config.GetBool("enable-timestamps") {
 		metric = prometheus.NewMetricWithTimestamp(clock.Now(), metric)
 	}
 	return metric
-}
-
-// Convenience wrapper around Prometheus constructors.
-// Produces a metric with name `NAMESPACE_subsystem_name`.
-// `NAMESPACE` is a global project constant;
-// `subsystem` is an arbitrary name used to group related metrics under the same name prefix;
-// `name` is the last and most relevant part of the metrics Full Qualified Name;
-// `variableLabels` is a list of labels to declare. Use `nil` to declare no labels.
-func NewMetricDesc(subsystem, name, help string, variableLabels []string) *prometheus.Desc {
-	return prometheus.NewDesc(prometheus.BuildFQName(NAMESPACE, subsystem, name), help, variableLabels, nil)
 }
 
 // check that all the given paths exist and are executable files

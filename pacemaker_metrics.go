@@ -94,35 +94,28 @@ type CIB struct {
 	} `xml:"configuration"`
 }
 
-var (
-	pacemakerMetrics = metricDescriptors{
-		// the map key will function as an identifier of the metric throughout the rest of the code;
-		// it is arbitrary, but by convention we use the actual metric name
-		"nodes":                NewMetricDesc("pacemaker", "nodes", "The nodes in the cluster; one line per name, per status", []string{"node", "type", "status"}),
-		"nodes_total":          NewMetricDesc("pacemaker", "nodes_total", "Total number of nodes in the cluster", nil),
-		"resources":            NewMetricDesc("pacemaker", "resources", "The resources in the cluster; one line per id, per status", []string{"node", "resource", "role", "managed", "status"}),
-		"resources_total":      NewMetricDesc("pacemaker", "resources_total", "Total number of resources in the cluster", nil),
-		"stonith_enabled":      NewMetricDesc("pacemaker", "stonith_enabled", "Whether or not stonith is enabled", nil),
-		"fail_count":           NewMetricDesc("pacemaker", "fail_count", "The Fail count number per node and resource id", []string{"node", "resource"}),
-		"migration_threshold":  NewMetricDesc("pacemaker", "migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"}),
-		"config_last_change":   NewMetricDesc("pacemaker", "config_last_change", "The timestamp of the last change of the cluster configuration", nil),
-		"location_constraints": NewMetricDesc("pacemaker", "location_constraints", "Resource location constraints. The value indicates the score.", []string{"constraint", "node", "resource", "role"}),
-	}
-)
-
 func NewPacemakerCollector(crmMonPath string, cibAdminPath string) (*pacemakerCollector, error) {
 	err := CheckExecutables(crmMonPath, cibAdminPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not initialize Pacemaker collector")
 	}
 
-	return &pacemakerCollector{
-		DefaultCollector{
-			metrics: pacemakerMetrics,
-		},
+	collector := &pacemakerCollector{
+		DefaultCollector{subsystem: "pacemaker"},
 		crmMonPath,
 		cibAdminPath,
-	}, nil
+	}
+	collector.setDescriptor("nodes", "The nodes in the cluster; one line per name, per status", []string{"node", "type", "status"})
+	collector.setDescriptor("nodes_total", "Total number of nodes in the cluster", nil)
+	collector.setDescriptor("resources", "The resources in the cluster; one line per id, per status", []string{"node", "resource", "role", "managed", "status"})
+	collector.setDescriptor("resources_total", "Total number of resources in the cluster", nil)
+	collector.setDescriptor("stonith_enabled", "Whether or not stonith is enabled", nil)
+	collector.setDescriptor("fail_count", "The Fail count number per node and resource id", []string{"node", "resource"})
+	collector.setDescriptor("migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"})
+	collector.setDescriptor("config_last_change", "The timestamp of the last change of the cluster configuration", nil)
+	collector.setDescriptor("location_constraints", "Resource location constraints. The value indicates the score.", []string{"constraint", "node", "resource", "role"})
+
+	return collector, nil
 }
 
 type pacemakerCollector struct {

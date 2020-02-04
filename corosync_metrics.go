@@ -12,29 +12,24 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var (
-	corosyncMetrics = metricDescriptors{
-		// the map key will function as an identifier of the metric throughout the rest of the code;
-		// it is arbitrary, but by convention we use the actual metric name
-		"quorate":           NewMetricDesc("corosync", "quorate", "Whether or not the cluster is quorate", nil),
-		"ring_errors_total": NewMetricDesc("corosync", "ring_errors_total", "Total number of corosync ring errors", nil),
-		"quorum_votes":      NewMetricDesc("corosync", "quorum_votes", "Cluster quorum votes; one line per type", []string{"type"}),
-	}
-)
-
 func NewCorosyncCollector(cfgToolPath string, quorumToolPath string) (*corosyncCollector, error) {
 	err := CheckExecutables(cfgToolPath, quorumToolPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not initialize Corosync collector")
 	}
 
-	return &corosyncCollector{
+	collector := &corosyncCollector{
 		DefaultCollector{
-			metrics: corosyncMetrics,
+			subsystem: "corosync",
 		},
 		cfgToolPath,
 		quorumToolPath,
-	}, nil
+	}
+	collector.setDescriptor("quorate", "Whether or not the cluster is quorate", nil)
+	collector.setDescriptor("ring_errors_total", "Total number of corosync ring errors", nil)
+	collector.setDescriptor("quorum_votes", "Cluster quorum votes; one line per type", []string{"type"})
+
+	return collector, nil
 }
 
 type corosyncCollector struct {

@@ -37,15 +37,12 @@ func expectMetrics(t *testing.T, c prometheus.Collector, fixture string) {
 }
 
 func TestMetricFactory(t *testing.T) {
-	SUT := &DefaultCollector{
-		metrics: metricDescriptors{
-			"test_metric": NewMetricDesc("test", "metric", "", nil),
-		},
-	}
+	SUT := &DefaultCollector{}
+	SUT.setDescriptor("test_metric", "", nil)
 
 	metric := SUT.makeGaugeMetric("test_metric", 1)
 
-	assert.Equal(t, SUT.metrics["test_metric"], metric.Desc())
+	assert.Equal(t, SUT.getDescriptor("test_metric"), metric.Desc())
 }
 
 func TestMetricFactoryWithTimestamp(t *testing.T) {
@@ -56,11 +53,8 @@ func TestMetricFactoryWithTimestamp(t *testing.T) {
 	}()
 
 	clock = StoppedClock{}
-	SUT := &DefaultCollector{
-		metrics: metricDescriptors{
-			"test_metric": NewMetricDesc("test", "metric", "", nil),
-		},
-	}
+	SUT := &DefaultCollector{}
+	SUT.setDescriptor("test_metric", "", nil)
 
 	metric := SUT.makeGaugeMetric("test_metric", 1)
 	metricDto := &dto.Metric{}

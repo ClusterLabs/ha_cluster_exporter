@@ -16,15 +16,6 @@ import (
 const SBD_STATUS_UNHEALTHY = 0
 const SBD_STATUS_HEALTHY = 1
 
-var (
-	sbdMetrics = metricDescriptors{
-		// the map key will function as an identifier of the metric throughout the rest of the code;
-		// it is arbitrary, but by convention we use the actual metric name
-		"device_status": NewMetricDesc("sbd", "device_status", "Whether or not an SBD device is healthy; one line per device", []string{"device"}),
-		"devices_total": NewMetricDesc("sbd", "devices_total", "Total count of configured SBD devices", nil),
-	}
-)
-
 func NewSbdCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error) {
 	err := CheckExecutables(sbdPath)
 	if err != nil {
@@ -35,13 +26,18 @@ func NewSbdCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error
 		return nil, errors.Errorf("could not initialize SBD collector: '%s' does not exist", sbdConfigPath)
 	}
 
-	return &sbdCollector{
+	collector :=  &sbdCollector{
 		DefaultCollector{
-			metrics: sbdMetrics,
+			subsystem: "sbd",
 		},
 		sbdPath,
 		sbdConfigPath,
-	}, nil
+	}
+
+	collector.setDescriptor("device_status", "Whether or not an SBD device is healthy; one line per device", []string{"device"})
+	collector.setDescriptor("devices_total", "Total count of configured SBD devices", nil)
+
+	return collector, nil
 }
 
 type sbdCollector struct {
