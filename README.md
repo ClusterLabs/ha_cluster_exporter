@@ -62,12 +62,12 @@ You can run the exporter in any of the cluster nodes.
 
 ```
 $ ./ha_cluster_exporter  
-INFO[0000] Serving metrics on 0.0.0.0:9964
+INFO[0000] Serving metrics on 0.0.0.0:9664
 ```
 
 Though not strictly required, it is _strongly_ advised to run it in all the nodes.
 
-It will export the metrics under the `/metrics` path, on port `9964` by default.
+It will export the metrics under the `/metrics` path, on port `9664` by default.
 
 While the exporter can run outside a HA cluster node, it won't export any metric it can't collect; e.g. it won't export DRBD metrics if it can't be locally inspected with `drbdsetup`.  
 A warning message will inform the user of such cases.
