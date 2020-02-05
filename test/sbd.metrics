@@ -1,7 +1,4 @@
-# HELP ha_cluster_sbd_device_status Whether or not an SBD device is healthy; one line per device
-# TYPE ha_cluster_sbd_device_status gauge
-ha_cluster_sbd_device_status{device="/dev/vdc"} 1
-ha_cluster_sbd_device_status{device="/dev/vdd"} 0
-# HELP ha_cluster_sbd_devices_total Total count of configured SBD devices
-# TYPE ha_cluster_sbd_devices_total gauge
-ha_cluster_sbd_devices_total 2
+# HELP ha_cluster_sbd_devices SBD devices; one line per device
+# TYPE ha_cluster_sbd_devices gauge
+ha_cluster_sbd_devices{device="/dev/vdc",status="healthy"} 1
+ha_cluster_sbd_devices{device="/dev/vdd",status="unhealthy"} 1

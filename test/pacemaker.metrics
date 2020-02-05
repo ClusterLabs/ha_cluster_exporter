@@ -30,9 +30,6 @@ ha_cluster_pacemaker_nodes{node="hana01",status="expected_up",type="member"} 1
 ha_cluster_pacemaker_nodes{node="hana01",status="online",type="member"} 1
 ha_cluster_pacemaker_nodes{node="hana02",status="expected_up",type="member"} 1
 ha_cluster_pacemaker_nodes{node="hana02",status="online",type="member"} 1
-# HELP ha_cluster_pacemaker_nodes_total Total number of nodes in the cluster
-# TYPE ha_cluster_pacemaker_nodes_total gauge
-ha_cluster_pacemaker_nodes_total 2
 # HELP ha_cluster_pacemaker_resources The resources in the cluster; one line per id, per status
 # TYPE ha_cluster_pacemaker_resources gauge
 ha_cluster_pacemaker_resources{managed="true",node="hana01",resource="rsc_ip_PRD_HDB00",role="started",status="active"} 1
@@ -41,9 +38,6 @@ ha_cluster_pacemaker_resources{managed="true",node="hana01",resource="rsc_SAPHan
 ha_cluster_pacemaker_resources{managed="true",node="hana01",resource="stonith-sbd",role="started",status="active"} 1
 ha_cluster_pacemaker_resources{managed="true",node="hana02",resource="rsc_SAPHana_PRD_HDB00",role="slave",status="active"} 1
 ha_cluster_pacemaker_resources{managed="true",node="hana02",resource="rsc_SAPHanaTopology_PRD_HDB00",role="started",status="active"} 1
-# HELP ha_cluster_pacemaker_resources_total Total number of resources in the cluster
-# TYPE ha_cluster_pacemaker_resources_total gauge
-ha_cluster_pacemaker_resources_total 6
 # HELP ha_cluster_pacemaker_stonith_enabled Whether or not stonith is enabled
 # TYPE ha_cluster_pacemaker_stonith_enabled gauge
 ha_cluster_pacemaker_stonith_enabled 1

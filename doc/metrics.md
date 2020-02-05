@@ -25,14 +25,12 @@ The Pacemaker subsystem collects an atomic snapshot of the HA cluster directly f
 
 0. [Sample](../test/pacemaker.metrics)
 1. [`ha_cluster_pacemaker_config_last_change`](#ha_cluster_pacemaker_config_last_change)
-3. [`ha_cluster_pacemaker_fail_count`](#ha_cluster_pacemaker_fail_count)
-2. [`ha_cluster_pacemaker_location_constraints`](#ha_cluster_pacemaker_location_constraints)
+2. [`ha_cluster_pacemaker_fail_count`](#ha_cluster_pacemaker_fail_count)
+3. [`ha_cluster_pacemaker_location_constraints`](#ha_cluster_pacemaker_location_constraints)
 4. [`ha_cluster_pacemaker_migration_threshold`](#ha_cluster_pacemaker_migration_threshold)
-5. [`ha_cluster_pacemaker_nodes_total`](#ha_cluster_pacemaker_nodes_total)
-6. [`ha_cluster_pacemaker_nodes`](#ha_cluster_pacemaker_nodes)
-7. [`ha_cluster_pacemaker_resources_total`](#ha_cluster_pacemaker_resources_total)
-8. [`ha_cluster_pacemaker_resources`](#ha_cluster_pacemaker_resources)
-9. [`ha_cluster_pacemaker_stonith_enabled`](#ha_cluster_pacemaker_stonith_enabled)
+5. [`ha_cluster_pacemaker_nodes`](#ha_cluster_pacemaker_nodes)
+6. [`ha_cluster_pacemaker_resources`](#ha_cluster_pacemaker_resources)
+7. [`ha_cluster_pacemaker_stonith_enabled`](#ha_cluster_pacemaker_stonith_enabled)
 
 
 ### `ha_cluster_pacemaker_config_last_change`
@@ -92,13 +90,6 @@ Either the value is `1`, or the line is absent altogether.
 The total number of lines for this metric will be the cardinality of `name` times the cardinality of `status`.
 
 
-### `ha_cluster_pacemaker_nodes_total` 
-
-#### Description
-
-The total number of *configured* nodes in the cluster. This value is mostly static and *does not* take into account the status of the nodes. It only changes when the Pacemaker configuration changes.
-
-
 ### `ha_cluster_pacemaker_resources` 
 
 #### Description
@@ -117,13 +108,6 @@ Either the value is `1`, or the line is absent altogether.
 The total number of lines for this metric will be the cardinality of `id` times the cardinality of `status`.
 
 
-### `ha_cluster_pacemaker_resources_total` 
-
-#### Description
-
-The total number of *configured* resources in the cluster. This value is mostly static and *does not* take into account the status of the resources. It only changes when the Pacemaker configuration changes.
-
-
 ### `ha_cluster_pacemaker_stonith_enabled`
 
 #### Description
@@ -139,7 +123,7 @@ The Corosync subsystem collects cluster quorum votes and ring status by parsing 
 0. [Sample](../test/corosync.metrics)
 1. [`ha_cluster_corosync_quorate`](#ha_cluster_corosync_quorate)
 2. [`ha_cluster_corosync_quorum_votes`](#ha_cluster_corosync_quorum_votes)
-3. [`ha_cluster_corosync_ring_errors_total`](#ha_cluster_corosync_ring_errors_total)
+3. [`ha_cluster_corosync_ring_errors`](#ha_cluster_corosync_ring_errors)
 
 
 ### `ha_cluster_corosync_quorate`
@@ -161,42 +145,33 @@ Cluster quorum votes; one line per type.
 - `type`: one of `expected_votes|highest_expected|total_votes|quorum`
 
 
-### `ha_cluster_corosync_ring_errors_total`
+### `ha_cluster_corosync_ring_errors`
 
 #### Description
 
-Total number of corosync ring errors.
+The number of corosync ring errors.
 
 
 ## SBD
 
-The SBD subsystems collect devices stats by parsing its configuration the output of `sbd --dump`.
+The SBD subsystems collect devices stats by parsing its configuration and the output of `sbd --dump`.
 
 0. [Sample](../test/sbd.metrics)
-1. [`ha_cluster_sbd_device_status`](#ha_cluster_sbd_device_status)
-2. [`ha_cluster_sbd_devices_total`](#ha_cluster_sbd_devices_total)
+2. [`ha_cluster_sbd_devices`](#ha_cluster_sbd_devices)
 
-
-### `ha_cluster_sbd_device_status`
+### `ha_cluster_sbd_devices`
 
 #### Description
 
-Whether or not an SBD device is healthy. One line per `device`.  
-Value is either `1` or `0`.
+The SBD devices in the cluster; one line per device.  
+Either the value is `1`, or the line is absent altogether.
 
 #### Labels
 
-- `device`: the path of the device.
+- `device`: the path of the SBD device
+- `status`: one of `healthy|unhealthy`
 
 The total number of lines for this metric will be the cardinality of `device`.
-
-
-### `ha_cluster_sbd_devices_total`
-
-#### Description
-
-Total count of configured SBD devices.  
-Value is an integer greater than or equal to `0`.
 
 
 ## DRBD

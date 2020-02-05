@@ -48,7 +48,7 @@ go get github.com/ClusterLabs/ha_cluster_exporter
 ```
 
 ### RPM
-You can find the repositories for RPM based distributions in [SUSE's Open Build Service](https://build.opensuse.org/repositories/server:monitoring/prometheus-ha_cluster_exporter).  
+You can find the repositories for RPM based distributions in [SUSE's Open Build Service](https://build.opensuse.org/package/show/server:monitoring/prometheus-ha_cluster_exporter).  
 On openSUSE or SUSE Linux Enterprise you can just use the `zypper` system package manager:
 ```shell
 export DISTRO=SLE_15_SP1 # change as desired
