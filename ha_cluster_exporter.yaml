@@ -1,5 +1,5 @@
 # sample config
-port: "9964"
+port: "9664"
 addres: "0.0.0.0"
 log-level: "info"
 crm-mon-path: "/usr/sbin/crm_mon"
