@@ -26,7 +26,7 @@ func NewSbdCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error
 		return nil, errors.Errorf("could not initialize SBD collector: '%s' does not exist", sbdConfigPath)
 	}
 
-	collector :=  &sbdCollector{
+	collector := &sbdCollector{
 		DefaultCollector{
 			subsystem: "sbd",
 		},

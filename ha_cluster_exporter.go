@@ -27,7 +27,7 @@ func (SystemClock) Now() time.Time {
 }
 
 type DefaultCollector struct {
-	subsystem string
+	subsystem   string
 	descriptors map[string]*prometheus.Desc
 }
 
