@@ -9,6 +9,7 @@ This is a bespoke Prometheus exporter used to enable the monitoring of Pacemaker
 2. [Installation](#installation)
 3. [Usage](#usage)
 4. [Development](#development)
+5. [License](#license)
 
 ## Features
 
@@ -125,3 +126,17 @@ Note that, by default, `dev` is used as the RPM `Version` field, as well as a su
 To prepare an actual release, you can use the `VERSION` environment variable to set this value to an actual release tag.
 
 To commit the release to OBS, run `make obs-commit`.
+
+## License
+
+Copyright (c) 2019 SUSE LLC
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+[GNU General Public License](LICENSE) for more details.
