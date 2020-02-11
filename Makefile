@@ -71,7 +71,7 @@ build/obs:
 	git archive --format=tar HEAD | tar -x -C build/obs/$(OBS_PACKAGE)
 	cd build/obs/$(OBS_PACKAGE); go mod vendor
 	rm build/obs/*.tar.gz
-	tar -cvzf build/obs/$(VERSION).tar.gz -C build/obs/$(OBS_PACKAGE) .
+	tar -cvzf build/obs/$(OBS_PACKAGE)-$(VERSION).tar.gz -C build/obs/$(OBS_PACKAGE) .
 	.ci/gh_release_to_obs_changeset.py $(REPOSITORY) -a $(AUTHOR) -t $(VERSION) -f build/obs/$(OBS_PACKAGE).changes || true
 
 obs-commit: obs-workdir
