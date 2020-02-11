@@ -22,7 +22,8 @@ License:        Apache-2.0
 Summary:        Prometheus exporter for Pacemaker HA clusters metrics
 Group:          System/Monitoring
 Url:            https://github.com/ClusterLabs/ha_cluster_exporter
-Source:         %{name}-%{version}.tar.gz
+# The GitHub tarball will not actually be used. We provide a local archive with the vendored dependencies inside.
+Source:         https://github.com/ClusterLabs/%{name}/archive/%{version}.tar.gz
 ExclusiveArch:  aarch64 x86_64 ppc64le s390x
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  go >= 1.11
