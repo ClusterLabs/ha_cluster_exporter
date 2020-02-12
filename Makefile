@@ -64,7 +64,6 @@ clean-obs:
 
 obs-workdir: build/obs
 build/obs:
-	@mkdir -p build/obs/$(OBS_PACKAGE)
 	osc checkout $(OBS_PROJECT)/$(OBS_PACKAGE) -o build/obs
 	rm build/obs/*.tar.gz
 	cp -rv .ci/obs/* build/obs/
