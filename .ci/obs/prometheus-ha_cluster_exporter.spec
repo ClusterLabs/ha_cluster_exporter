@@ -15,15 +15,15 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 Name:           prometheus-ha_cluster_exporter
-# Version will be processed via Makefile
-Version:        %%VERSION%%
+# Version will be processed via set_version source service
+Version:        0
 Release:        0
 License:        Apache-2.0
 Summary:        Prometheus exporter for Pacemaker HA clusters metrics
 Group:          System/Monitoring
 Url:            https://github.com/ClusterLabs/ha_cluster_exporter
-# The GitHub tarball will not actually be used during build: instead, we provide a local archive with the vendored dependencies inside.
-Source:         https://github.com/ClusterLabs/ha_cluster_exporter/archive/%{version}.tar.gz
+Source:         %{name}-%{version}.tar.gz
+Source1:        vendor.tar.gz
 ExclusiveArch:  aarch64 x86_64 ppc64le s390x
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildRequires:  go >= 1.11
@@ -41,7 +41,8 @@ Provides:       %{name}-devel-static = %{version}
 Prometheus exporter for Pacemaker HA clusters metrics
 
 %prep
-%setup -q -c # unpack project sources
+%setup -q            # unpack project sources
+%setup -q -T -D -a 1 # unpack go dependencies in vendor.tar.gz, which was prepared by the source services
 
 %define shortname ha_cluster_exporter
 

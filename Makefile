@@ -66,12 +66,10 @@ obs-workdir: build/obs
 build/obs:
 	@mkdir -p build/obs/$(OBS_PACKAGE)
 	osc checkout $(OBS_PROJECT)/$(OBS_PACKAGE) -o build/obs
-	cp ha_cluster_exporter.spec build/obs/$(OBS_PACKAGE).spec
-	sed -i 's/%%VERSION%%/$(VERSION)/' build/obs/$(OBS_PACKAGE).spec
-	git archive --format=tar HEAD | tar -x -C build/obs/$(OBS_PACKAGE)
-	cd build/obs/$(OBS_PACKAGE); go mod vendor
 	rm build/obs/*.tar.gz
-	tar -cvzf build/obs/$(VERSION).tar.gz -C build/obs/$(OBS_PACKAGE) .
+	cp -rv .ci/obs/* build/obs/
+	sed -i 's/%%VERSION%%/$(VERSION)/' build/obs/_service
+	cd build/obs; osc service runall
 	.ci/gh_release_to_obs_changeset.py $(REPOSITORY) -a $(AUTHOR) -t $(VERSION) -f build/obs/$(OBS_PACKAGE).changes || true
 
 obs-commit: obs-workdir
