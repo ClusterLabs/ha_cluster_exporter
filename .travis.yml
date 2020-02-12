@@ -36,4 +36,4 @@ jobs:
           docker run --rm -t -v "$(pwd):/package" -v "$GOPATH/pkg/mod:/root/go/pkg/mod" -w /package \
           -e OBS_USER -e OBS_PASS -e OBS_PROJECT -e OBS_PACKAGE -e VERSION -e REPOSITORY=$TRAVIS_REPO_SLUG \
           shap/continuous_deliver \
-          bash -c ".ci/init_osc_creds.sh && make obs-commit"
+          bash -c "/scripts/init_osc_creds.sh && make obs-commit"
