@@ -3,109 +3,35 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
-	"time"
 
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
 	config "github.com/spf13/viper"
+
+	"github.com/ClusterLabs/ha_cluster_exporter/collector/corosync"
+	"github.com/ClusterLabs/ha_cluster_exporter/collector/drbd"
+	"github.com/ClusterLabs/ha_cluster_exporter/collector/pacemaker"
+	"github.com/ClusterLabs/ha_cluster_exporter/collector/sbd"
 )
-
-const NAMESPACE = "ha_cluster"
-
-type Clock interface {
-	Now() time.Time
-}
-
-type SystemClock struct{}
-
-func (SystemClock) Now() time.Time {
-	return time.Now()
-}
-
-type DefaultCollector struct {
-	subsystem   string
-	descriptors map[string]*prometheus.Desc
-}
-
-func (c *DefaultCollector) getDescriptor(name string) *prometheus.Desc {
-	desc, ok := c.descriptors[name]
-	if !ok {
-		// we hard panic on this because it's most certainly a coding error
-		panic(errors.Errorf("undeclared metric '%s'", name))
-	}
-	return desc
-}
-
-// Convenience wrapper around prometheus.NewDesc constructor.
-// Stores a metric descriptor with a fully qualified name like `NAMESPACE_subsystem_name`.
-// `name` is the last and most relevant part of the metrics Full Qualified Name;
-// `help` is the message displayed in the HELP line
-// `variableLabels` is a list of labels to declare. Use `nil` to declare no labels.
-func (c *DefaultCollector) setDescriptor(name, help string, variableLabels []string) {
-	if c.descriptors == nil {
-		c.descriptors = make(map[string]*prometheus.Desc)
-	}
-	c.descriptors[name] = prometheus.NewDesc(prometheus.BuildFQName(NAMESPACE, c.subsystem, name), help, variableLabels, nil)
-}
-
-func (c *DefaultCollector) Describe(ch chan<- *prometheus.Desc) {
-	for _, descriptor := range c.descriptors {
-		ch <- descriptor
-	}
-}
-
-func (c *DefaultCollector) makeGaugeMetric(name string, value float64, labelValues ...string) prometheus.Metric {
-	return c.makeMetric(name, value, prometheus.GaugeValue, labelValues...)
-}
-
-func (c *DefaultCollector) makeCounterMetric(name string, value float64, labelValues ...string) prometheus.Metric {
-	return c.makeMetric(name, value, prometheus.CounterValue, labelValues...)
-}
-
-func (c *DefaultCollector) makeMetric(name string, value float64, valueType prometheus.ValueType, labelValues ...string) prometheus.Metric {
-	desc := c.getDescriptor(name)
-	metric := prometheus.MustNewConstMetric(desc, valueType, value, labelValues...)
-	if config.GetBool("enable-timestamps") {
-		metric = prometheus.NewMetricWithTimestamp(clock.Now(), metric)
-	}
-	return metric
-}
-
-// check that all the given paths exist and are executable files
-func CheckExecutables(paths ...string) error {
-	for _, path := range paths {
-		fileInfo, err := os.Stat(path)
-		if err != nil || os.IsNotExist(err) {
-			return errors.Errorf("'%s' does not exist", path)
-		}
-		if fileInfo.IsDir() {
-			return errors.Errorf("'%s' is a directory", path)
-		}
-		if (fileInfo.Mode() & 0111) == 0 {
-			return errors.Errorf("'%s' is not executable", path)
-		}
-	}
-	return nil
-}
 
 // Landing Page (for /)
 func landingpage(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(`<html>
-		<head>
-			<title>HACluster Exporter</title>
-		</head>
-		<body>
-			<h1>HACluster Exporter</h1>
-			<p><a href="metrics">Metrics</a></p>
-			<br />
-			<h2>More information:</h2>
-			<p><a href="https://github.com/ClusterLabs/ha_cluster_exporter">github.com/ClusterLabs/ha_cluster_exporter</a></p>
-		</body>
-		</html>`))
+	body := []byte(`<html>
+<head>
+	<title>ClusterLabs Linux HA Cluster Exporter</title>
+</head>
+<body>
+	<h1>ClusterLabs Linux HA Cluster </h1>
+	<p><a href="metrics">Metrics</a></p>
+	<br />
+	<h2>More information:</h2>
+	<p><a href="https://github.com/ClusterLabs/ha_cluster_exporter">github.com/ClusterLabs/ha_cluster_exporter</a></p>
+</body>
+</html>
+`)
+	w.Write(body)
 }
 
 func loglevel(level string) {
@@ -122,8 +48,6 @@ func loglevel(level string) {
 		log.Warnln("Unrecognized minimum log level; using 'info' as default")
 	}
 }
-
-var clock Clock = &SystemClock{}
 
 func init() {
 	config.SetConfigName("ha_cluster_exporter")
@@ -166,7 +90,7 @@ func main() {
 
 	loglevel(config.GetString("log-level"))
 
-	pacemakerCollector, err := NewPacemakerCollector(
+	pacemakerCollector, err := pacemaker.NewCollector(
 		config.GetString("crm-mon-path"),
 		config.GetString("cibadmin-path"),
 	)
@@ -177,7 +101,7 @@ func main() {
 		log.Info("Pacemaker collector registered")
 	}
 
-	corosyncCollector, err := NewCorosyncCollector(
+	corosyncCollector, err := corosync.NewCollector(
 		config.GetString("corosync-cfgtoolpath-path"),
 		config.GetString("corosync-quorumtool-path"),
 	)
@@ -188,7 +112,7 @@ func main() {
 		log.Info("Corosync collector registered")
 	}
 
-	sbdCollector, err := NewSbdCollector(
+	sbdCollector, err := sbd.NewCollector(
 		config.GetString("sbd-path"),
 		config.GetString("sbd-config-path"),
 	)
@@ -199,7 +123,7 @@ func main() {
 		log.Info("SBD collector registered")
 	}
 
-	drbdCollector, err := NewDrbdCollector(config.GetString("drbdsetup-path"), config.GetString("drbdsplitbrain-path"))
+	drbdCollector, err := drbd.NewCollector(config.GetString("drbdsetup-path"), config.GetString("drbdsplitbrain-path"))
 	if err != nil {
 		log.Warn(err)
 	} else {

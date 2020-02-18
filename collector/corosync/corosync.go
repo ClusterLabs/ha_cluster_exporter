@@ -1,4 +1,4 @@
-package main
+package corosync
 
 import (
 	"fmt"
@@ -10,30 +10,30 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/ClusterLabs/ha_cluster_exporter/collector"
 )
 
-func NewCorosyncCollector(cfgToolPath string, quorumToolPath string) (*corosyncCollector, error) {
-	err := CheckExecutables(cfgToolPath, quorumToolPath)
+func NewCollector(cfgToolPath string, quorumToolPath string) (*corosyncCollector, error) {
+	err := collector.CheckExecutables(cfgToolPath, quorumToolPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not initialize Corosync collector")
 	}
 
-	collector := &corosyncCollector{
-		DefaultCollector{
-			subsystem: "corosync",
-		},
+	c := &corosyncCollector{
+		collector.NewDefaultCollector("corosync"),
 		cfgToolPath,
 		quorumToolPath,
 	}
-	collector.setDescriptor("quorate", "Whether or not the cluster is quorate", nil)
-	collector.setDescriptor("ring_errors", "The number of corosync ring errors", nil)
-	collector.setDescriptor("quorum_votes", "Cluster quorum votes; one line per type", []string{"type"})
+	c.SetDescriptor("quorate", "Whether or not the cluster is quorate", nil)
+	c.SetDescriptor("ring_errors", "The number of corosync ring errors", nil)
+	c.SetDescriptor("quorum_votes", "Cluster quorum votes; one line per type", []string{"type"})
 
-	return collector, nil
+	return c, nil
 }
 
 type corosyncCollector struct {
-	DefaultCollector
+	collector.DefaultCollector
 	cfgToolPath    string
 	quorumToolPath string
 }
@@ -53,10 +53,10 @@ func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 
-	ch <- c.makeGaugeMetric("quorate", quorate)
+	ch <- c.MakeGaugeMetric("quorate", quorate)
 
 	for voteType, value := range quorumStatus {
-		ch <- c.makeGaugeMetric("quorum_votes", float64(value), voteType)
+		ch <- c.MakeGaugeMetric("quorum_votes", float64(value), voteType)
 	}
 }
 
@@ -67,7 +67,7 @@ func (c *corosyncCollector) collectRingErrorsTotal(ch chan<- prometheus.Metric) 
 		return errors.Wrap(err, "cannot parse ring status")
 	}
 
-	ch <- c.makeGaugeMetric("ring_errors", float64(ringErrorsTotal))
+	ch <- c.MakeGaugeMetric("ring_errors", float64(ringErrorsTotal))
 
 	return nil
 }

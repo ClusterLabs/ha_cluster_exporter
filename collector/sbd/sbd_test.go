@@ -1,13 +1,15 @@
-package main
+package sbd
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	assertcustom "github.com/ClusterLabs/ha_cluster_exporter/internal/assert"
 )
 
 func TestReadSbdConfFileError(t *testing.T) {
-	sbdConfFile, err := readSdbFile("test/nonexistent")
+	sbdConfFile, err := readSdbFile("../../test/nonexistent")
 
 	assert.Nil(t, sbdConfFile)
 	assert.Error(t, err)
@@ -185,33 +187,33 @@ SBD_DEVICE=/dev/vdc;/dev/vdd`
 }
 
 func TestNewSbdCollector(t *testing.T) {
-	_, err := NewSbdCollector("test/fake_sbd.sh", "test/fake_sbdconfig")
+	_, err := NewCollector("../../test/fake_sbd.sh", "../../test/fake_sbdconfig")
 
 	assert.Nil(t, err)
 }
 
 func TestNewSbdCollectorChecksSbdConfigExistence(t *testing.T) {
-	_, err := NewSbdCollector("test/fake_sbd.sh", "test/nonexistent")
+	_, err := NewCollector("../../test/fake_sbd.sh", "../../test/nonexistent")
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "'test/nonexistent' does not exist")
+	assert.Contains(t, err.Error(), "'../../test/nonexistent' does not exist")
 }
 
 func TestNewSbdCollectorChecksSbdExistence(t *testing.T) {
-	_, err := NewSbdCollector("test/nonexistent", "test/fake_sbdconfig")
+	_, err := NewCollector("../../test/nonexistent", "../../test/fake_sbdconfig")
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "'test/nonexistent' does not exist")
+	assert.Contains(t, err.Error(), "'../../test/nonexistent' does not exist")
 }
 
 func TestNewSbdCollectorChecksSbdExecutableBits(t *testing.T) {
-	_, err := NewSbdCollector("test/dummy", "test/fake_sbdconfig")
+	_, err := NewCollector("../../test/dummy", "../../test/fake_sbdconfig")
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "'test/dummy' is not executable")
+	assert.Contains(t, err.Error(), "'../../test/dummy' is not executable")
 }
 
 func TestSBDCollector(t *testing.T) {
-	collector, _ := NewSbdCollector("test/fake_sbd.sh", "test/fake_sbdconfig")
-	expectMetrics(t, collector, "sbd.metrics")
+	collector, _ := NewCollector("../../test/fake_sbd.sh", "../../test/fake_sbdconfig")
+	assertcustom.Metrics(t, collector, "sbd.metrics")
 }

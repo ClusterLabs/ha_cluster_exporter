@@ -33,10 +33,10 @@ install:
 static-checks: vet-check fmt-check
 
 vet-check: download
-	go vet .
+	go vet ./...
 
 fmt:
-	go fmt
+	go fmt ./...
 
 mod-tidy:
 	go mod tidy
@@ -45,11 +45,11 @@ fmt-check:
 	.ci/go_lint.sh
 
 test: download
-	go test -v
+	go test -v ./...
 
 coverage: coverage.out
 coverage.out:
-	go test -cover -coverprofile=coverage.out
+	go test -cover -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out
 
 clean: clean-bin clean-obs
