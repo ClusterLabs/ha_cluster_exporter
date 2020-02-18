@@ -1,9 +1,11 @@
-package main
+package corosync
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	assertcustom "github.com/ClusterLabs/ha_cluster_exporter/internal/assert"
 )
 
 // TEST group quorum metrics
@@ -151,5 +153,5 @@ func TestNewCorosyncCollectorChecksQuorumtoolExecutableBits(t *testing.T) {
 
 func TestCorosyncCollector(t *testing.T) {
 	collector, _ := NewCorosyncCollector("test/fake_corosync-cfgtool.sh", "test/fake_corosync-quorumtool.sh")
-	expectMetrics(t, collector, "corosync.metrics")
+	assertcustom.Metrics(t, collector, "corosync.metrics")
 }
