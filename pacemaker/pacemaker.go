@@ -1,4 +1,4 @@
-package main
+package pacemaker
 
 import (
 	"encoding/xml"
@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ClusterLabs/ha_cluster_exporter/collector"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -95,29 +97,29 @@ type CIB struct {
 }
 
 func NewPacemakerCollector(crmMonPath string, cibAdminPath string) (*pacemakerCollector, error) {
-	err := CheckExecutables(crmMonPath, cibAdminPath)
+	err := collector.CheckExecutables(crmMonPath, cibAdminPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not initialize Pacemaker collector")
 	}
 
-	collector := &pacemakerCollector{
-		DefaultCollector{subsystem: "pacemaker"},
+	c := &pacemakerCollector{
+		collector.DefaultCollector{Subsystem: "pacemaker", Clock: &internal.SystemClock{}},
 		crmMonPath,
 		cibAdminPath,
 	}
-	collector.setDescriptor("nodes", "The nodes in the cluster; one line per name, per status", []string{"node", "type", "status"})
-	collector.setDescriptor("resources", "The resources in the cluster; one line per id, per status", []string{"node", "resource", "role", "managed", "status"})
-	collector.setDescriptor("stonith_enabled", "Whether or not stonith is enabled", nil)
-	collector.setDescriptor("fail_count", "The Fail count number per node and resource id", []string{"node", "resource"})
-	collector.setDescriptor("migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"})
-	collector.setDescriptor("config_last_change", "The timestamp of the last change of the cluster configuration", nil)
-	collector.setDescriptor("location_constraints", "Resource location constraints. The value indicates the score.", []string{"constraint", "node", "resource", "role"})
+	c.SetDescriptor("nodes", "The nodes in the cluster; one line per name, per status", []string{"node", "type", "status"})
+	c.SetDescriptor("resources", "The resources in the cluster; one line per id, per status", []string{"node", "resource", "role", "managed", "status"})
+	c.SetDescriptor("stonith_enabled", "Whether or not stonith is enabled", nil)
+	c.SetDescriptor("fail_count", "The Fail count number per node and resource id", []string{"node", "resource"})
+	c.SetDescriptor("migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"})
+	c.SetDescriptor("config_last_change", "The timestamp of the last change of the cluster configuration", nil)
+	c.SetDescriptor("location_constraints", "Resource location constraints. The value indicates the score.", []string{"constraint", "node", "resource", "role"})
 
-	return collector, nil
+	return c, nil
 }
 
 type pacemakerCollector struct {
-	DefaultCollector
+	collector.DefaultCollector
 	crmMonPath   string
 	cibAdminPath string
 }
@@ -142,7 +144,7 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 		stonithEnabled = 1
 	}
 
-	ch <- c.makeGaugeMetric("stonith_enabled", stonithEnabled)
+	ch <- c.MakeGaugeMetric("stonith_enabled", stonithEnabled)
 
 	c.recordNodeMetrics(pacemakerStatus, ch)
 	c.recordFailCountMetrics(pacemakerStatus, ch)
@@ -165,6 +167,7 @@ func (c *pacemakerCollector) getPacemakerStatus() (pacemakerStatus, error) {
 
 	return pacemakerStatus, nil
 }
+
 func parsePacemakerStatus(pacemakerXMLRaw []byte) (pacemakerStatus, error) {
 	var pacemakerStatus pacemakerStatus
 	err := xml.Unmarshal(pacemakerXMLRaw, &pacemakerStatus)
@@ -199,7 +202,7 @@ func (c *pacemakerCollector) recordNodeMetrics(pacemakerStatus pacemakerStatus, 
 
 		for nodeStatus, isActive := range nodeStatuses {
 			if isActive {
-				ch <- c.makeGaugeMetric("nodes", float64(1), node.Name, nodeType, nodeStatus)
+				ch <- c.MakeGaugeMetric("nodes", float64(1), node.Name, nodeType, nodeStatus)
 			}
 		}
 
@@ -218,7 +221,7 @@ func (c *pacemakerCollector) recordResourcesMetrics(node node, ch chan<- prometh
 		}
 		for resourceStatus, isActive := range resourceStatuses {
 			if isActive {
-				ch <- c.makeGaugeMetric(
+				ch <- c.MakeGaugeMetric(
 					"resources",
 					float64(1),
 					node.Name,
@@ -241,7 +244,7 @@ func (c *pacemakerCollector) recordFailCountMetrics(pacemakerStatus pacemakerSta
 				failCount = math.Inf(1)
 			}
 
-			ch <- c.makeGaugeMetric("fail_count", failCount, node.Name, resHistory.Name)
+			ch <- c.MakeGaugeMetric("fail_count", failCount, node.Name, resHistory.Name)
 
 		}
 	}
@@ -254,13 +257,13 @@ func (c *pacemakerCollector) recordResourceAgentsChanges(pacemakerStatus pacemak
 		return
 	}
 	// we record the timestamp of the last change as a float counter metric
-	ch <- c.makeCounterMetric("config_last_change", float64(t.Unix()))
+	ch <- c.MakeCounterMetric("config_last_change", float64(t.Unix()))
 }
 
 func (c *pacemakerCollector) recordMigrationThresholdMetrics(pacemakerStatus pacemakerStatus, ch chan<- prometheus.Metric) {
 	for _, node := range pacemakerStatus.NodeHistory.Node {
 		for _, resHistory := range node.ResourceHistory {
-			ch <- c.makeGaugeMetric("migration_threshold", float64(resHistory.MigrationThreshold), node.Name, resHistory.Name)
+			ch <- c.MakeGaugeMetric("migration_threshold", float64(resHistory.MigrationThreshold), node.Name, resHistory.Name)
 		}
 	}
 }
@@ -293,6 +296,6 @@ func (c *pacemakerCollector) recordConstraintsMetrics(cib CIB, ch chan<- prometh
 			constraintScore = float64(s)
 		}
 
-		ch <- c.makeGaugeMetric("location_constraints", constraintScore, constraint.Id, constraint.Node, constraint.Resource, strings.ToLower(constraint.Role))
+		ch <- c.MakeGaugeMetric("location_constraints", constraintScore, constraint.Id, constraint.Node, constraint.Resource, strings.ToLower(constraint.Role))
 	}
 }

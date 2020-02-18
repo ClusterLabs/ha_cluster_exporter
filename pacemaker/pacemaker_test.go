@@ -1,9 +1,11 @@
-package main
+package pacemaker
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	assertcustom "github.com/ClusterLabs/ha_cluster_exporter/internal/assert"
 )
 
 func TestParsePacemakerXML(t *testing.T) {
@@ -113,5 +115,5 @@ func TestPacemakerCollector(t *testing.T) {
 	collector, err := NewPacemakerCollector("test/fake_crm_mon.sh", "test/fake_cibadmin.sh")
 
 	assert.Nil(t, err)
-	expectMetrics(t, collector, "pacemaker.metrics")
+	assertcustom.Metrics(t, collector, "pacemaker.metrics")
 }

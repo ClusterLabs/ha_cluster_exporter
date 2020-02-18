@@ -3,10 +3,9 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
-	"time"
 
-	"github.com/pkg/errors"
+	"github.com/ClusterLabs/ha_cluster_exporter/pacemaker"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
@@ -14,83 +13,6 @@ import (
 	config "github.com/spf13/viper"
 )
 
-const NAMESPACE = "ha_cluster"
-
-type Clock interface {
-	Now() time.Time
-}
-
-type SystemClock struct{}
-
-func (SystemClock) Now() time.Time {
-	return time.Now()
-}
-
-type DefaultCollector struct {
-	subsystem   string
-	descriptors map[string]*prometheus.Desc
-}
-
-func (c *DefaultCollector) getDescriptor(name string) *prometheus.Desc {
-	desc, ok := c.descriptors[name]
-	if !ok {
-		// we hard panic on this because it's most certainly a coding error
-		panic(errors.Errorf("undeclared metric '%s'", name))
-	}
-	return desc
-}
-
-// Convenience wrapper around prometheus.NewDesc constructor.
-// Stores a metric descriptor with a fully qualified name like `NAMESPACE_subsystem_name`.
-// `name` is the last and most relevant part of the metrics Full Qualified Name;
-// `help` is the message displayed in the HELP line
-// `variableLabels` is a list of labels to declare. Use `nil` to declare no labels.
-func (c *DefaultCollector) setDescriptor(name, help string, variableLabels []string) {
-	if c.descriptors == nil {
-		c.descriptors = make(map[string]*prometheus.Desc)
-	}
-	c.descriptors[name] = prometheus.NewDesc(prometheus.BuildFQName(NAMESPACE, c.subsystem, name), help, variableLabels, nil)
-}
-
-func (c *DefaultCollector) Describe(ch chan<- *prometheus.Desc) {
-	for _, descriptor := range c.descriptors {
-		ch <- descriptor
-	}
-}
-
-func (c *DefaultCollector) makeGaugeMetric(name string, value float64, labelValues ...string) prometheus.Metric {
-	return c.makeMetric(name, value, prometheus.GaugeValue, labelValues...)
-}
-
-func (c *DefaultCollector) makeCounterMetric(name string, value float64, labelValues ...string) prometheus.Metric {
-	return c.makeMetric(name, value, prometheus.CounterValue, labelValues...)
-}
-
-func (c *DefaultCollector) makeMetric(name string, value float64, valueType prometheus.ValueType, labelValues ...string) prometheus.Metric {
-	desc := c.getDescriptor(name)
-	metric := prometheus.MustNewConstMetric(desc, valueType, value, labelValues...)
-	if config.GetBool("enable-timestamps") {
-		metric = prometheus.NewMetricWithTimestamp(clock.Now(), metric)
-	}
-	return metric
-}
-
-// check that all the given paths exist and are executable files
-func CheckExecutables(paths ...string) error {
-	for _, path := range paths {
-		fileInfo, err := os.Stat(path)
-		if err != nil || os.IsNotExist(err) {
-			return errors.Errorf("'%s' does not exist", path)
-		}
-		if fileInfo.IsDir() {
-			return errors.Errorf("'%s' is a directory", path)
-		}
-		if (fileInfo.Mode() & 0111) == 0 {
-			return errors.Errorf("'%s' is not executable", path)
-		}
-	}
-	return nil
-}
 
 // Landing Page (for /)
 func landingpage(w http.ResponseWriter, r *http.Request) {
@@ -122,8 +44,6 @@ func loglevel(level string) {
 		log.Warnln("Unrecognized minimum log level; using 'info' as default")
 	}
 }
-
-var clock Clock = &SystemClock{}
 
 func init() {
 	config.SetConfigName("ha_cluster_exporter")
@@ -166,7 +86,7 @@ func main() {
 
 	loglevel(config.GetString("log-level"))
 
-	pacemakerCollector, err := NewPacemakerCollector(
+	pacemakerCollector, err := pacemaker.NewPacemakerCollector(
 		config.GetString("crm-mon-path"),
 		config.GetString("cibadmin-path"),
 	)
