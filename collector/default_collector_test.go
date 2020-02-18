@@ -1,4 +1,4 @@
-package main
+package collector
 
 import (
 	"testing"
@@ -7,12 +7,11 @@ import (
 	config "github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ClusterLabs/ha_cluster_exporter/collector"
 	"github.com/ClusterLabs/ha_cluster_exporter/internal/clock"
 )
 
 func TestMetricFactory(t *testing.T) {
-	SUT := &collector.DefaultCollector{}
+	SUT := NewDefaultCollector("test")
 	SUT.SetDescriptor("test_metric", "", nil)
 
 	metric := SUT.MakeGaugeMetric("test_metric", 1)
@@ -24,7 +23,7 @@ func TestMetricFactoryWithTimestamp(t *testing.T) {
 	config.Set("enable-timestamps", true)
 	defer config.Set("enable-timestamps", false)
 
-	SUT := &collector.DefaultCollector{}
+	SUT := NewDefaultCollector("test")
 	SUT.Clock = &clock.StoppedClock{}
 	SUT.SetDescriptor("test_metric", "", nil)
 

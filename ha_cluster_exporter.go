@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ClusterLabs/ha_cluster_exporter/pacemaker"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
 	config "github.com/spf13/viper"
+
+	"github.com/ClusterLabs/ha_cluster_exporter/collector/corosync"
+	"github.com/ClusterLabs/ha_cluster_exporter/collector/drbd"
+	"github.com/ClusterLabs/ha_cluster_exporter/collector/pacemaker"
+	"github.com/ClusterLabs/ha_cluster_exporter/collector/sbd"
 )
 
 
@@ -86,7 +89,7 @@ func main() {
 
 	loglevel(config.GetString("log-level"))
 
-	pacemakerCollector, err := pacemaker.NewPacemakerCollector(
+	pacemakerCollector, err := pacemaker.NewCollector(
 		config.GetString("crm-mon-path"),
 		config.GetString("cibadmin-path"),
 	)
@@ -97,7 +100,7 @@ func main() {
 		log.Info("Pacemaker collector registered")
 	}
 
-	corosyncCollector, err := NewCorosyncCollector(
+	corosyncCollector, err := corosync.NewCollector(
 		config.GetString("corosync-cfgtoolpath-path"),
 		config.GetString("corosync-quorumtool-path"),
 	)
@@ -108,7 +111,7 @@ func main() {
 		log.Info("Corosync collector registered")
 	}
 
-	sbdCollector, err := NewSbdCollector(
+	sbdCollector, err := sbd.NewCollector(
 		config.GetString("sbd-path"),
 		config.GetString("sbd-config-path"),
 	)
@@ -119,7 +122,7 @@ func main() {
 		log.Info("SBD collector registered")
 	}
 
-	drbdCollector, err := NewDrbdCollector(config.GetString("drbdsetup-path"), config.GetString("drbdsplitbrain-path"))
+	drbdCollector, err := drbd.NewCollector(config.GetString("drbdsetup-path"), config.GetString("drbdsplitbrain-path"))
 	if err != nil {
 		log.Warn(err)
 	} else {

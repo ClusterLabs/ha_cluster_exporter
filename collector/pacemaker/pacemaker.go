@@ -96,14 +96,14 @@ type CIB struct {
 	} `xml:"configuration"`
 }
 
-func NewPacemakerCollector(crmMonPath string, cibAdminPath string) (*pacemakerCollector, error) {
+func NewCollector(crmMonPath string, cibAdminPath string) (*pacemakerCollector, error) {
 	err := collector.CheckExecutables(crmMonPath, cibAdminPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not initialize Pacemaker collector")
 	}
 
 	c := &pacemakerCollector{
-		collector.DefaultCollector{Subsystem: "pacemaker", Clock: &internal.SystemClock{}},
+		collector.NewDefaultCollector("pacemaker"),
 		crmMonPath,
 		cibAdminPath,
 	}

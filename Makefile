@@ -45,7 +45,7 @@ fmt-check:
 	.ci/go_lint.sh
 
 test: download
-	go test -v
+	go test -v ./...
 
 coverage: coverage.out
 coverage.out:

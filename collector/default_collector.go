@@ -11,9 +11,17 @@ import (
 const NAMESPACE = "ha_cluster"
 
 type DefaultCollector struct {
-	Subsystem   string
-	Clock 		clock.Clock
+	subsystem   string
 	descriptors map[string]*prometheus.Desc
+	Clock       clock.Clock
+}
+
+func NewDefaultCollector(subsystem string) DefaultCollector {
+	return DefaultCollector{
+		subsystem,
+		make(map[string]*prometheus.Desc),
+		&clock.SystemClock{},
+	}
 }
 
 func (c *DefaultCollector) GetDescriptor(name string) *prometheus.Desc {
@@ -31,9 +39,6 @@ func (c *DefaultCollector) GetDescriptor(name string) *prometheus.Desc {
 // `help` is the message displayed in the HELP line
 // `variableLabels` is a list of labels to declare. Use `nil` to declare no labels.
 func (c *DefaultCollector) SetDescriptor(name, help string, variableLabels []string) {
-	if c.descriptors == nil {
-		c.descriptors = make(map[string]*prometheus.Desc)
-	}
 	c.descriptors[name] = prometheus.NewDesc(prometheus.BuildFQName(NAMESPACE, c.subsystem, name), help, variableLabels, nil)
 }
 

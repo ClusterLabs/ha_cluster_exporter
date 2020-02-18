@@ -1,4 +1,4 @@
-package main
+package sbd
 
 import (
 	"fmt"
@@ -11,13 +11,15 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/ClusterLabs/ha_cluster_exporter/collector"
 )
 
 const SBD_STATUS_UNHEALTHY = "unhealthy"
 const SBD_STATUS_HEALTHY = "healthy"
 
-func NewSbdCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error) {
-	err := CheckExecutables(sbdPath)
+func NewCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error) {
+	err := collector.CheckExecutables(sbdPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not initialize SBD collector")
 	}
@@ -26,21 +28,19 @@ func NewSbdCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error
 		return nil, errors.Errorf("could not initialize SBD collector: '%s' does not exist", sbdConfigPath)
 	}
 
-	collector := &sbdCollector{
-		DefaultCollector{
-			subsystem: "sbd",
-		},
+	c := &sbdCollector{
+		collector.NewDefaultCollector("sbd"),
 		sbdPath,
 		sbdConfigPath,
 	}
 
-	collector.setDescriptor("devices", "SBD devices; one line per device", []string{"device", "status"})
+	c.SetDescriptor("devices", "SBD devices; one line per device", []string{"device", "status"})
 
-	return collector, nil
+	return c, nil
 }
 
 type sbdCollector struct {
-	DefaultCollector
+	collector.DefaultCollector
 	sbdPath       string
 	sbdConfigPath string
 }
@@ -58,7 +58,7 @@ func (c *sbdCollector) Collect(ch chan<- prometheus.Metric) {
 
 	sbdStatuses := c.getSbdDeviceStatuses(sbdDevices)
 	for sbdDev, sbdStatus := range sbdStatuses {
-		ch <- c.makeGaugeMetric("devices", 1, sbdDev, sbdStatus)
+		ch <- c.MakeGaugeMetric("devices", 1, sbdDev, sbdStatus)
 	}
 }
 

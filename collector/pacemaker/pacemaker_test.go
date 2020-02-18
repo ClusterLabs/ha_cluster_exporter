@@ -92,27 +92,27 @@ func TestParsePacemakerXML(t *testing.T) {
 }
 
 func TestNewPacemakerCollector(t *testing.T) {
-	_, err := NewPacemakerCollector("test/fake_crm_mon.sh", "test/fake_cibadmin.sh")
+	_, err := NewCollector("../../test/fake_crm_mon.sh", "../../test/fake_cibadmin.sh")
 
 	assert.Nil(t, err)
 }
 
 func TestNewPacemakerCollectorChecksCrmMonExistence(t *testing.T) {
-	_, err := NewPacemakerCollector("test/nonexistent", "")
+	_, err := NewCollector("../../test/nonexistent", "")
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "'test/nonexistent' does not exist")
+	assert.Contains(t, err.Error(), "'../../test/nonexistent' does not exist")
 }
 
 func TestNewPacemakerCollectorChecksCrmMonExecutableBits(t *testing.T) {
-	_, err := NewPacemakerCollector("test/dummy", "")
+	_, err := NewCollector("../../test/dummy", "")
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "'test/dummy' is not executable")
+	assert.Contains(t, err.Error(), "'../../test/dummy' is not executable")
 }
 
 func TestPacemakerCollector(t *testing.T) {
-	collector, err := NewPacemakerCollector("test/fake_crm_mon.sh", "test/fake_cibadmin.sh")
+	collector, err := NewCollector("../../test/fake_crm_mon.sh", "../../test/fake_cibadmin.sh")
 
 	assert.Nil(t, err)
 	assertcustom.Metrics(t, collector, "pacemaker.metrics")
