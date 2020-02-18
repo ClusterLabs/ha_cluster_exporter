@@ -1,11 +1,11 @@
 package collector
 
 import (
-	"os"
 	"github.com/ClusterLabs/ha_cluster_exporter/internal/clock"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	config "github.com/spf13/viper"
+	"os"
 )
 
 const NAMESPACE = "ha_cluster"

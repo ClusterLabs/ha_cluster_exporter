@@ -16,7 +16,6 @@ import (
 	"github.com/ClusterLabs/ha_cluster_exporter/collector/sbd"
 )
 
-
 // Landing Page (for /)
 func landingpage(w http.ResponseWriter, r *http.Request) {
 	body := []byte(`<html>
