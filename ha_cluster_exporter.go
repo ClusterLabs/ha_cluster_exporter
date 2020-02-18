@@ -19,18 +19,20 @@ import (
 
 // Landing Page (for /)
 func landingpage(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(`<html>
-		<head>
-			<title>HACluster Exporter</title>
-		</head>
-		<body>
-			<h1>HACluster Exporter</h1>
-			<p><a href="metrics">Metrics</a></p>
-			<br />
-			<h2>More information:</h2>
-			<p><a href="https://github.com/ClusterLabs/ha_cluster_exporter">github.com/ClusterLabs/ha_cluster_exporter</a></p>
-		</body>
-		</html>`))
+	body := []byte(`<html>
+<head>
+	<title>ClusterLabs Linux HA Cluster Exporter</title>
+</head>
+<body>
+	<h1>ClusterLabs Linux HA Cluster </h1>
+	<p><a href="metrics">Metrics</a></p>
+	<br />
+	<h2>More information:</h2>
+	<p><a href="https://github.com/ClusterLabs/ha_cluster_exporter">github.com/ClusterLabs/ha_cluster_exporter</a></p>
+</body>
+</html>
+`)
+	w.Write(body)
 }
 
 func loglevel(level string) {
