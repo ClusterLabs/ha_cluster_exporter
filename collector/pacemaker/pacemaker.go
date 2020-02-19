@@ -84,6 +84,20 @@ type resource struct {
 // Pacemaker CIB is queried from cibadmin and unmarshaled from XML
 type CIB struct {
 	Configuration struct {
+		Nodes struct {
+			Node []struct {
+				Id string `xml:"id,attr"`
+				Uname string `xml:"uname,attr"`
+				InstanceAttributes struct {
+					Id string `xml:"id,attr"`
+					NvPairs []struct {
+						Id    string `xml:"id,attr"`
+						Name  string `xml:"name,attr"`
+						Value string `xml:"value,attr"`
+					}
+				} `xml:"instance_attributes"`
+			} `xml:"node"`
+		} `xml:"nodes"`
 		Constraints struct {
 			RscLocations []struct {
 				Id       string `xml:"id,attr"`
