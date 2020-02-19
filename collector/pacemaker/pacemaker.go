@@ -84,20 +84,16 @@ type resource struct {
 // Pacemaker CIB is queried from cibadmin and unmarshaled from XML
 type CIB struct {
 	Configuration struct {
-		Nodes struct {
-			Node []struct {
-				Id string `xml:"id,attr"`
-				Uname string `xml:"uname,attr"`
-				InstanceAttributes struct {
-					Id string `xml:"id,attr"`
-					NvPairs []struct {
-						Id    string `xml:"id,attr"`
-						Name  string `xml:"name,attr"`
-						Value string `xml:"value,attr"`
-					}
-				} `xml:"instance_attributes"`
-			} `xml:"node"`
-		} `xml:"nodes"`
+		Nodes []struct {
+			Id                 string     `xml:"id,attr"`
+			Uname              string     `xml:"uname,attr"`
+			InstanceAttributes Attributes `xml:"instance_attributes"`
+		} `xml:"nodes>node"`
+		Resources struct {
+			Primitives []Primitive `xml:"primitive"`
+			Masters []Clone `xml:"master"`
+			Clones []Clone `xml:"clone"`
+		} `xml:"resources"`
 		Constraints struct {
 			RscLocations []struct {
 				Id       string `xml:"id,attr"`
@@ -108,6 +104,37 @@ type CIB struct {
 			} `xml:"rsc_location"`
 		} `xml:"constraints"`
 	} `xml:"configuration"`
+}
+
+type Attributes struct {
+	Id string `xml:"id,attr"`
+	NvPairs []struct {
+		Id    string `xml:"id,attr"`
+		Name  string `xml:"name,attr"`
+		Value string `xml:"value,attr"`
+	} `xml:"nvpair"`
+}
+
+type Primitive struct {
+	Id                 string     `xml:"id,attr"`
+	Class              string     `xml:"class,attr"`
+	Type               string     `xml:"type,attr"`
+	Provider           string     `xml:"provider,attr"`
+	InstanceAttributes Attributes `xml:"instance_attributes"`
+	MetaAttributes     Attributes `xml:"meta_attributes"`
+	Operations         []struct {
+		Id       string `xml:"id,attr"`
+		Name     string `xml:"name,attr"`
+		Role     string `xml:"role,attr"`
+		Interval int    `xml:"interval,attr"`
+		Timeout  int    `xml:"timeout,attr"`
+	} `xml:"operations>op"`
+}
+
+type Clone struct {
+	Id             string     `xml:"id,attr"`
+	MetaAttributes Attributes `xml:"meta_attributes"`
+	Primitive      Primitive  `xml:"primitive"`
 }
 
 func NewCollector(crmMonPath string, cibAdminPath string) (*pacemakerCollector, error) {
