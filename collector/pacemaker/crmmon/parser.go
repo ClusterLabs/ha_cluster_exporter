@@ -32,4 +32,3 @@ func (c *crmMonParser) Parse() (crmMon Root, err error) {
 func NewCrmMonParser(crmMonPath string) *crmMonParser {
 	return &crmMonParser{crmMonPath}
 }
-

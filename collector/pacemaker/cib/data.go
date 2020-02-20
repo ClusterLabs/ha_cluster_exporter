@@ -6,19 +6,19 @@ The Root manager (pacemaker-based) keeps the Root synchronized across the cluste
 
 https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html-single/Pacemaker_Administration/index.html
 
- */
+*/
 
 type Root struct {
 	Configuration struct {
 		Nodes []struct {
-			Id                 string        `xml:"id,attr"`
-			Uname              string        `xml:"uname,attr"`
+			Id                 string     `xml:"id,attr"`
+			Uname              string     `xml:"uname,attr"`
 			InstanceAttributes Attributes `xml:"instance_attributes"`
 		} `xml:"nodes>node"`
 		Resources struct {
 			Primitives []Primitive `xml:"primitive"`
-			Masters []Clone        `xml:"master"`
-			Clones []Clone         `xml:"clone"`
+			Masters    []Clone     `xml:"master"`
+			Clones     []Clone     `xml:"clone"`
 		} `xml:"resources"`
 		Constraints struct {
 			RscLocations []struct {
@@ -33,7 +33,7 @@ type Root struct {
 }
 
 type Attributes struct {
-	Id string `xml:"id,attr"`
+	Id      string `xml:"id,attr"`
 	NvPairs []struct {
 		Id    string `xml:"id,attr"`
 		Name  string `xml:"name,attr"`
@@ -42,10 +42,10 @@ type Attributes struct {
 }
 
 type Primitive struct {
-	Id                 string        `xml:"id,attr"`
-	Class              string        `xml:"class,attr"`
-	Type               string        `xml:"type,attr"`
-	Provider           string        `xml:"provider,attr"`
+	Id                 string     `xml:"id,attr"`
+	Class              string     `xml:"class,attr"`
+	Type               string     `xml:"type,attr"`
+	Provider           string     `xml:"provider,attr"`
 	InstanceAttributes Attributes `xml:"instance_attributes"`
 	MetaAttributes     Attributes `xml:"meta_attributes"`
 	Operations         []struct {
@@ -58,7 +58,7 @@ type Primitive struct {
 }
 
 type Clone struct {
-	Id             string        `xml:"id,attr"`
+	Id             string     `xml:"id,attr"`
 	MetaAttributes Attributes `xml:"meta_attributes"`
 	Primitive      Primitive  `xml:"primitive"`
 }

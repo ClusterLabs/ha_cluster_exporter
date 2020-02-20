@@ -15,7 +15,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-
 func NewCollector(crmMonPath string, cibAdminPath string) (*pacemakerCollector, error) {
 	err := collector.CheckExecutables(crmMonPath, cibAdminPath)
 	if err != nil {
@@ -41,7 +40,7 @@ func NewCollector(crmMonPath string, cibAdminPath string) (*pacemakerCollector, 
 type pacemakerCollector struct {
 	collector.DefaultCollector
 	crmMonParser crmmon.Parser
-	cibParser cib.Parser
+	cibParser    cib.Parser
 }
 
 func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
