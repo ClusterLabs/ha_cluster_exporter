@@ -29,7 +29,7 @@ Inside the `collector` package, you wil find the code of the main logic of the p
 
 Common functionality is provided by composing the [`DefaultCollector`](../collector/default_collector.go). 
 
-Each subsystem collector has a dedicated package; some are very simple, some are little more nuanced. In general, they depend on external, globally available, system tools, to introspect the components. 
+Each subsystem collector has a dedicated package; some are very simple, some are little more nuanced. In general, they depend on external, globally available, system tools, to introspect the subsystems. 
 
 The collectors usually just invoke these system commands, parsing the output into bespoke data structures.
 When building these data structures involves a significant amount of code, for a better separation of concerns this responsibility is extracted in dedicated subpackages, like [`collector/pacemaker/cib`](../collector/pacemaker/cib).
