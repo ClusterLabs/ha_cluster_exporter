@@ -48,12 +48,11 @@ Prometheus exporter for Pacemaker HA clusters metrics
 
 %build
 
-# s390x GOARCH doesn't support PIE
-%ifnarch s390x
-export GOFLAGS="-buildmode=pie"
-%endif
-
-go build -mod=vendor -ldflags="-s -w -X main.version=%{version}" -o %{shortname}
+export CGO_ENABLED=0
+go build -mod=vendor \
+         -buildmode=pie \
+         -ldflags="-s -w -X main.version=%{version}" \
+         -o %{shortname}
 
 %install
 
