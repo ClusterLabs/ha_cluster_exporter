@@ -66,7 +66,7 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 	ch <- c.MakeGaugeMetric("stonith_enabled", stonithEnabled)
 
 	c.recordNodes(crmMon, ch)
-	c.recordResources(crmMon, ch)
+	c.recordUngroupedResources(crmMon, ch)
 	c.recordFailCounts(crmMon, ch)
 	c.recordMigrationThresholds(crmMon, ch)
 	c.recordResourceAgentsChanges(crmMon, ch)
@@ -96,8 +96,8 @@ func (c *pacemakerCollector) recordNodes(crmMon crmmon.Root, ch chan<- prometheu
 			nodeType = "unknown"
 		}
 
-		for nodeStatus, isActive := range nodeStatuses {
-			if isActive {
+		for nodeStatus, flag := range nodeStatuses {
+			if flag {
 				ch <- c.MakeGaugeMetric("nodes", float64(1), node.Name, nodeType, nodeStatus)
 			}
 		}
@@ -107,39 +107,40 @@ func (c *pacemakerCollector) recordNodes(crmMon crmmon.Root, ch chan<- prometheu
 }
 
 func (c *pacemakerCollector) recordNodeResources(node crmmon.Node, ch chan<- prometheus.Metric) {
+	nodeName := node.Name
 	for _, resource := range node.Resources {
-		resourceStatuses := map[string]bool{
-			"active":          resource.Active,
-			"orphaned":        resource.Orphaned,
-			"blocked":         resource.Blocked,
-			"failed":          resource.Failed,
-			"failure_ignored": resource.FailureIgnored,
-		}
-		for resourceStatus, flag := range resourceStatuses {
-			if flag {
-				ch <- c.MakeGaugeMetric(
-					"resources",
-					float64(1),
-					node.Name,
-					resource.ID,
-					strings.ToLower(resource.Role),
-					strconv.FormatBool(resource.Managed),
-					resourceStatus)
-			}
-		}
+		c.recordResource(resource, nodeName, ch)
 	}
 }
 
-func (c *pacemakerCollector) recordResources(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
-	for _, resource := range crmMon.Resources {
+func (c *pacemakerCollector) recordResource(resource crmmon.Resource, nodeName string, ch chan<- prometheus.Metric) {
+	resourceStatuses := map[string]bool{
+		"active":          resource.Active,
+		"orphaned":        resource.Orphaned,
+		"blocked":         resource.Blocked,
+		"failed":          resource.Failed,
+		"failure_ignored": resource.FailureIgnored,
+		// if no status flag is active we record an empty status; probably a stopped resource, which is tracked in the "role" label instead
+		"":				   !(resource.Active || resource.Orphaned || resource.Blocked || resource.Failed || resource.FailureIgnored),
+	}
+	for resourceStatus, flag := range resourceStatuses {
+		if ! flag {
+			continue
+		}
 		ch <- c.MakeGaugeMetric(
 			"resources",
 			float64(1),
-			"",
+			nodeName,
 			resource.ID,
 			strings.ToLower(resource.Role),
 			strconv.FormatBool(resource.Managed),
-			"")
+			resourceStatus)
+	}
+}
+
+func (c *pacemakerCollector) recordUngroupedResources(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
+	for _, resource := range crmMon.Resources {
+		c.recordResource(resource, "", ch)
 	}
 }
 
