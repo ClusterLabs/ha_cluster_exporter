@@ -35,24 +35,24 @@ type Root struct {
 }
 
 type Node struct {
-	Name             string     `xml:"name,attr"`
-	ID               string     `xml:"id,attr"`
-	Online           bool       `xml:"online,attr"`
-	Standby          bool       `xml:"standby,attr"`
-	StandbyOnFail    bool       `xml:"standby_onfail,attr"`
-	Maintenance      bool       `xml:"maintenance,attr"`
-	Pending          bool       `xml:"pending,attr"`
-	Unclean          bool       `xml:"unclean,attr"`
-	Shutdown         bool       `xml:"shutdown,attr"`
-	ExpectedUp       bool       `xml:"expected_up,attr"`
-	DC               bool       `xml:"is_dc,attr"`
-	ResourcesRunning int        `xml:"resources_running,attr"`
+	Name             string `xml:"name,attr"`
+	Id               string `xml:"id,attr"`
+	Online           bool   `xml:"online,attr"`
+	Standby          bool   `xml:"standby,attr"`
+	StandbyOnFail    bool   `xml:"standby_onfail,attr"`
+	Maintenance      bool   `xml:"maintenance,attr"`
+	Pending          bool   `xml:"pending,attr"`
+	Unclean          bool   `xml:"unclean,attr"`
+	Shutdown         bool   `xml:"shutdown,attr"`
+	ExpectedUp       bool   `xml:"expected_up,attr"`
+	DC               bool   `xml:"is_dc,attr"`
+	ResourcesRunning int    `xml:"resources_running,attr"`
 	Type             string     `xml:"type,attr"`
 	Resources        []Resource `xml:"resource"`
 }
 
 type Resource struct {
-	ID             string `xml:"id,attr"`
+	Id             string `xml:"id,attr"`
 	Agent          string `xml:"resource_agent,attr"`
 	Role           string `xml:"role,attr"`
 	Active         bool   `xml:"active,attr"`

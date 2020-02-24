@@ -131,7 +131,7 @@ func (c *pacemakerCollector) recordResource(resource crmmon.Resource, nodeName s
 			"resources",
 			float64(1),
 			nodeName,
-			resource.ID,
+			resource.Id,
 			strings.ToLower(resource.Role),
 			strconv.FormatBool(resource.Managed),
 			resourceStatus)
