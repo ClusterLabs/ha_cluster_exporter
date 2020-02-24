@@ -31,6 +31,7 @@ type Root struct {
 			} `xml:"resource_history"`
 		} `xml:"node"`
 	} `xml:"node_history"`
+	Resources []Resource `xml:"resources>resource"`
 }
 
 type Node struct {

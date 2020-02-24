@@ -98,6 +98,11 @@ cat <<EOF
         </primitive>
       </clone>
       <primitive id="test" class="ocf" provider="heartbeat" type="Dummy"/>
+      <primitive id="test-stop" class="ocf" provider="heartbeat" type="Dummy">
+        <meta_attributes id="test-stop-meta_attributes">
+          <nvpair id="test-stop-meta_attributes-target-role" name="target-role" value="Stopped"/>
+        </meta_attributes>
+      </primitive>
     </resources>
     <constraints>
       <rsc_colocation id="col_saphana_ip_PRD_HDB00" score="2000" rsc="rsc_ip_PRD_HDB00" rsc-role="Started" with-rsc="msl_SAPHana_PRD_HDB00" with-rsc-role="Master"/>
@@ -152,6 +157,9 @@ cat <<EOF
           <lrm_resource id="test" type="Dummy" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="test_last_0" operation_key="test_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.1.0" transition-key="8:6863:0:70ea6528-73ad-48be-9eb7-583ee933f216" transition-magic="0:0;8:6863:0:70ea6528-73ad-48be-9eb7-583ee933f216" exit-reason="" on_node="hana01" call-id="37" rc-code="0" op-status="0" interval="0" last-run="1574095329" last-rc-change="1574095329" exec-time="10" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
+          <lrm_resource id="test-stop" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="test-stop_last_0" operation_key="test-stop_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.1.0" transition-key="7:13662:7:5a2e7427-7cbd-4bd9-8e8c-fd633866c4a9" transition-magic="0:7;7:13662:7:5a2e7427-7cbd-4bd9-8e8c-fd633866c4a9" exit-reason="" on_node="stefanotorresi2-hana01" call-id="40" rc-code="7" op-status="0" interval="0" last-run="1582534010" last-rc-change="1582534010" exec-time="9" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
         </lrm_resources>
       </lrm>
     </node_state>
@@ -175,6 +183,9 @@ cat <<EOF
           </lrm_resource>
           <lrm_resource id="test" type="Dummy" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="test_last_0" operation_key="test_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.1.0" transition-key="7:6863:0:70ea6528-73ad-48be-9eb7-583ee933f216" transition-magic="0:0;7:6863:0:70ea6528-73ad-48be-9eb7-583ee933f216" exit-reason="" on_node="hana02" call-id="28" rc-code="0" op-status="0" interval="0" last-run="1574095329" last-rc-change="1574095329" exec-time="12" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="test-stop" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="test-stop_last_0" operation_key="test-stop_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.1.0" transition-key="35:13663:0:5a2e7427-7cbd-4bd9-8e8c-fd633866c4a9" transition-magic="0:0;35:13663:0:5a2e7427-7cbd-4bd9-8e8c-fd633866c4a9" exit-reason="" on_node="stefanotorresi2-hana02" call-id="35" rc-code="0" op-status="0" interval="0" last-run="1582534018" last-rc-change="1582534018" exec-time="12" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

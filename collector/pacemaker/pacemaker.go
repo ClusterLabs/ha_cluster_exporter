@@ -65,14 +65,15 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 
 	ch <- c.MakeGaugeMetric("stonith_enabled", stonithEnabled)
 
-	c.recordNodeMetrics(crmMon, ch)
-	c.recordFailCountMetrics(crmMon, ch)
-	c.recordMigrationThresholdMetrics(crmMon, ch)
+	c.recordNodes(crmMon, ch)
+	c.recordResources(crmMon, ch)
+	c.recordFailCounts(crmMon, ch)
+	c.recordMigrationThresholds(crmMon, ch)
 	c.recordResourceAgentsChanges(crmMon, ch)
-	c.recordConstraintsMetrics(CIB, ch)
+	c.recordConstraints(CIB, ch)
 }
 
-func (c *pacemakerCollector) recordNodeMetrics(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
+func (c *pacemakerCollector) recordNodes(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
 	for _, node := range crmMon.Nodes {
 		nodeStatuses := map[string]bool{
 			"online":         node.Online,
@@ -101,11 +102,11 @@ func (c *pacemakerCollector) recordNodeMetrics(crmMon crmmon.Root, ch chan<- pro
 			}
 		}
 
-		c.recordResourcesMetrics(node, ch)
+		c.recordNodeResources(node, ch)
 	}
 }
 
-func (c *pacemakerCollector) recordResourcesMetrics(node crmmon.Node, ch chan<- prometheus.Metric) {
+func (c *pacemakerCollector) recordNodeResources(node crmmon.Node, ch chan<- prometheus.Metric) {
 	for _, resource := range node.Resources {
 		resourceStatuses := map[string]bool{
 			"active":          resource.Active,
@@ -114,8 +115,8 @@ func (c *pacemakerCollector) recordResourcesMetrics(node crmmon.Node, ch chan<- 
 			"failed":          resource.Failed,
 			"failure_ignored": resource.FailureIgnored,
 		}
-		for resourceStatus, isActive := range resourceStatuses {
-			if isActive {
+		for resourceStatus, flag := range resourceStatuses {
+			if flag {
 				ch <- c.MakeGaugeMetric(
 					"resources",
 					float64(1),
@@ -129,7 +130,20 @@ func (c *pacemakerCollector) recordResourcesMetrics(node crmmon.Node, ch chan<- 
 	}
 }
 
-func (c *pacemakerCollector) recordFailCountMetrics(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
+func (c *pacemakerCollector) recordResources(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
+	for _, resource := range crmMon.Resources {
+		ch <- c.MakeGaugeMetric(
+			"resources",
+			float64(1),
+			"",
+			resource.ID,
+			strings.ToLower(resource.Role),
+			strconv.FormatBool(resource.Managed),
+			"")
+	}
+}
+
+func (c *pacemakerCollector) recordFailCounts(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
 	for _, node := range crmMon.NodeHistory.Node {
 		for _, resHistory := range node.ResourceHistory {
 			failCount := float64(resHistory.FailCount)
@@ -155,7 +169,7 @@ func (c *pacemakerCollector) recordResourceAgentsChanges(crmMon crmmon.Root, ch 
 	ch <- c.MakeCounterMetric("config_last_change", float64(t.Unix()))
 }
 
-func (c *pacemakerCollector) recordMigrationThresholdMetrics(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
+func (c *pacemakerCollector) recordMigrationThresholds(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
 	for _, node := range crmMon.NodeHistory.Node {
 		for _, resHistory := range node.ResourceHistory {
 			ch <- c.MakeGaugeMetric("migration_threshold", float64(resHistory.MigrationThreshold), node.Name, resHistory.Name)
@@ -163,7 +177,7 @@ func (c *pacemakerCollector) recordMigrationThresholdMetrics(crmMon crmmon.Root,
 	}
 }
 
-func (c *pacemakerCollector) recordConstraintsMetrics(CIB cib.Root, ch chan<- prometheus.Metric) {
+func (c *pacemakerCollector) recordConstraints(CIB cib.Root, ch chan<- prometheus.Metric) {
 	for _, constraint := range CIB.Configuration.Constraints.RscLocations {
 		var constraintScore float64
 		switch constraint.Score {
