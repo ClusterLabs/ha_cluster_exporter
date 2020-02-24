@@ -121,10 +121,10 @@ func (c *pacemakerCollector) recordResource(resource crmmon.Resource, nodeName s
 		"failed":          resource.Failed,
 		"failure_ignored": resource.FailureIgnored,
 		// if no status flag is active we record an empty status; probably a stopped resource, which is tracked in the "role" label instead
-		"":				   !(resource.Active || resource.Orphaned || resource.Blocked || resource.Failed || resource.FailureIgnored),
+		"": !(resource.Active || resource.Orphaned || resource.Blocked || resource.Failed || resource.FailureIgnored),
 	}
 	for resourceStatus, flag := range resourceStatuses {
-		if ! flag {
+		if !flag {
 			continue
 		}
 		ch <- c.MakeGaugeMetric(
