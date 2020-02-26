@@ -11,9 +11,9 @@ https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html-single/Pacemaker_
 type Root struct {
 	Configuration struct {
 		Nodes []struct {
-			Id                 string     `xml:"id,attr"`
-			Uname              string     `xml:"uname,attr"`
-			InstanceAttributes Attributes `xml:"instance_attributes"`
+			Id                 string      `xml:"id,attr"`
+			Uname              string      `xml:"uname,attr"`
+			InstanceAttributes []Attribute `xml:"instance_attributes>nvpair"`
 		} `xml:"nodes>node"`
 		Resources struct {
 			Primitives []Primitive `xml:"primitive"`
@@ -32,22 +32,19 @@ type Root struct {
 	} `xml:"configuration"`
 }
 
-type Attributes struct {
-	Id      string `xml:"id,attr"`
-	NvPairs []struct {
-		Id    string `xml:"id,attr"`
-		Name  string `xml:"name,attr"`
-		Value string `xml:"value,attr"`
-	} `xml:"nvpair"`
+type Attribute struct {
+	Id    string `xml:"id,attr"`
+	Name  string `xml:"name,attr"`
+	Value string `xml:"value,attr"`
 }
 
 type Primitive struct {
-	Id                 string     `xml:"id,attr"`
-	Class              string     `xml:"class,attr"`
-	Type               string     `xml:"type,attr"`
-	Provider           string     `xml:"provider,attr"`
-	InstanceAttributes Attributes `xml:"instance_attributes"`
-	MetaAttributes     Attributes `xml:"meta_attributes"`
+	Id                 string      `xml:"id,attr"`
+	Class              string      `xml:"class,attr"`
+	Type               string      `xml:"type,attr"`
+	Provider           string      `xml:"provider,attr"`
+	InstanceAttributes []Attribute `xml:"instance_attributes>nvpair"`
+	MetaAttributes     []Attribute `xml:"meta_attributes>nvpair"`
 	Operations         []struct {
 		Id       string `xml:"id,attr"`
 		Name     string `xml:"name,attr"`
@@ -58,7 +55,7 @@ type Primitive struct {
 }
 
 type Clone struct {
-	Id             string     `xml:"id,attr"`
-	MetaAttributes Attributes `xml:"meta_attributes"`
-	Primitive      Primitive  `xml:"primitive"`
+	Id             string      `xml:"id,attr"`
+	MetaAttributes []Attribute `xml:"meta_attributes>nvpair"`
+	Primitive      Primitive   `xml:"primitive"`
 }
