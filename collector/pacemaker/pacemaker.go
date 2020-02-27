@@ -75,6 +75,16 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 
 func (c *pacemakerCollector) recordNodes(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
 	for _, node := range crmMon.Nodes {
+		var nodeType string
+		switch node.Type {
+		case "member", "ping", "remote":
+			nodeType = node.Type
+			break
+		default:
+			nodeType = "unknown"
+		}
+
+		// this is a map of boolean flags for each possible status of the node
 		nodeStatuses := map[string]bool{
 			"online":         node.Online,
 			"standby":        node.Standby,
@@ -87,15 +97,8 @@ func (c *pacemakerCollector) recordNodes(crmMon crmmon.Root, ch chan<- prometheu
 			"dc":             node.DC,
 		}
 
-		var nodeType string
-		switch node.Type {
-		case "member", "ping", "remote":
-			nodeType = node.Type
-			break
-		default:
-			nodeType = "unknown"
-		}
-
+		// since we have a combined cardinality of node * status, we cycle through all the possible statuses
+		// and we record a new metric if the flag for that status is on
 		for nodeStatus, flag := range nodeStatuses {
 			if flag {
 				ch <- c.MakeGaugeMetric("nodes", float64(1), node.Name, nodeType, nodeStatus)
@@ -114,6 +117,8 @@ func (c *pacemakerCollector) recordNodeResources(node crmmon.Node, ch chan<- pro
 }
 
 func (c *pacemakerCollector) recordResource(resource crmmon.Resource, nodeName string, ch chan<- prometheus.Metric) {
+
+	// this is a map of boolean flags for each possible status of the resource
 	resourceStatuses := map[string]bool{
 		"active":          resource.Active,
 		"orphaned":        resource.Orphaned,
@@ -123,6 +128,9 @@ func (c *pacemakerCollector) recordResource(resource crmmon.Resource, nodeName s
 		// if no status flag is active we record an empty status; probably a stopped resource, which is tracked in the "role" label instead
 		"": !(resource.Active || resource.Orphaned || resource.Blocked || resource.Failed || resource.FailureIgnored),
 	}
+
+	// since we have a combined cardinality of resource * status, we cycle through all the possible statuses
+	// and we record a new metric if the flag for that status is on
 	for resourceStatus, flag := range resourceStatuses {
 		if !flag {
 			continue
