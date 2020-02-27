@@ -9,7 +9,7 @@ cat <<EOF
         <last_update time="Fri Oct 18 11:48:54 2019" />
         <last_change time="Fri Oct 18 11:48:22 2019" user="root" client="crm_attribute" origin="hana01" />
         <nodes_configured number="2" />
-        <resources_configured number="6" disabled="0" blocked="0" />
+        <resources_configured number="8" disabled="1" blocked="0" />
         <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" />
     </summary>
     <nodes>
@@ -22,8 +22,12 @@ cat <<EOF
         <node name="hana02" id="1084783376" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="2" type="member" >
             <resource id="rsc_SAPHana_PRD_HDB00" resource_agent="ocf::suse:SAPHana" role="Slave" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1" />
             <resource id="rsc_SAPHanaTopology_PRD_HDB00" resource_agent="ocf::suse:SAPHanaTopology" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1" />
+            <resource id="test" resource_agent="ocf::heartbeat:Dummy" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1" />
         </node>
     </nodes>
+    <resources>
+        <resource id="test-stop" resource_agent="ocf::heartbeat:Dummy" role="Stopped" target_role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0" />
+    </resources>
     <node_attributes>
         <node name="hana01">
             <attribute name="hana_prd_clone_state" value="PROMOTED" />
@@ -79,6 +83,12 @@ cat <<EOF
             <resource_history id="rsc_SAPHanaTopology_PRD_HDB00" orphan="false" migration-threshold="3">
                 <operation_history call="20" task="start" last-rc-change="Thu Oct 17 15:22:37 2019" last-run="Thu Oct 17 15:22:37 2019" exec-time="2905ms" queue-time="0ms" rc="0" rc_text="ok" />
                 <operation_history call="21" task="monitor" interval="10000ms" last-rc-change="Thu Oct 17 15:22:40 2019" exec-time="3347ms" queue-time="0ms" rc="0" rc_text="ok" />
+            </resource_history>
+            <resource_history id="test" orphan="false" migration-threshold="5000">
+                <operation_history call="29" task="start" last-rc-change="Mon Feb 24 09:45:49 2020" last-run="Mon Feb 24 09:45:49 2020" exec-time="11ms" queue-time="0ms" rc="0" rc_text="ok" />
+            </resource_history>
+            <resource_history id="test-stop" orphan="false" migration-threshold="5000">
+                <operation_history call="35" task="stop" last-rc-change="Mon Feb 24 09:46:58 2020" last-run="Mon Feb 24 09:46:58 2020" exec-time="12ms" queue-time="0ms" rc="0" rc_text="ok" />
             </resource_history>
         </node>
     </node_history>

@@ -31,11 +31,12 @@ type Root struct {
 			} `xml:"resource_history"`
 		} `xml:"node"`
 	} `xml:"node_history"`
+	Resources []Resource `xml:"resources>resource"`
 }
 
 type Node struct {
 	Name             string     `xml:"name,attr"`
-	ID               string     `xml:"id,attr"`
+	Id               string     `xml:"id,attr"`
 	Online           bool       `xml:"online,attr"`
 	Standby          bool       `xml:"standby,attr"`
 	StandbyOnFail    bool       `xml:"standby_onfail,attr"`
@@ -51,7 +52,7 @@ type Node struct {
 }
 
 type Resource struct {
-	ID             string `xml:"id,attr"`
+	Id             string `xml:"id,attr"`
 	Agent          string `xml:"resource_agent,attr"`
 	Role           string `xml:"role,attr"`
 	Active         bool   `xml:"active,attr"`

@@ -9,6 +9,8 @@ ha_cluster_pacemaker_fail_count{node="hana01",resource="rsc_ip_PRD_HDB00"} 2
 ha_cluster_pacemaker_fail_count{node="hana01",resource="stonith-sbd"} 0
 ha_cluster_pacemaker_fail_count{node="hana02",resource="rsc_SAPHanaTopology_PRD_HDB00"} 0
 ha_cluster_pacemaker_fail_count{node="hana02",resource="rsc_SAPHana_PRD_HDB00"} 300
+ha_cluster_pacemaker_fail_count{node="hana02",resource="test"} 0
+ha_cluster_pacemaker_fail_count{node="hana02",resource="test-stop"} 0
 # HELP ha_cluster_pacemaker_location_constraints Resource location constraints. The value indicates the score.
 # TYPE ha_cluster_pacemaker_location_constraints gauge
 ha_cluster_pacemaker_location_constraints{constraint="cli-ban-msl_SAPHana_PRD_HDB00-on-hana01",node="hana01",resource="msl_SAPHana_PRD_HDB00",role="started"} -Inf
@@ -23,6 +25,8 @@ ha_cluster_pacemaker_migration_threshold{node="hana01",resource="rsc_ip_PRD_HDB0
 ha_cluster_pacemaker_migration_threshold{node="hana01",resource="stonith-sbd"} 5000
 ha_cluster_pacemaker_migration_threshold{node="hana02",resource="rsc_SAPHanaTopology_PRD_HDB00"} 3
 ha_cluster_pacemaker_migration_threshold{node="hana02",resource="rsc_SAPHana_PRD_HDB00"} 50
+ha_cluster_pacemaker_migration_threshold{node="hana02",resource="test"} 5000
+ha_cluster_pacemaker_migration_threshold{node="hana02",resource="test-stop"} 5000
 # HELP ha_cluster_pacemaker_nodes The nodes in the cluster; one line per name, per status
 # TYPE ha_cluster_pacemaker_nodes gauge
 ha_cluster_pacemaker_nodes{node="hana01",status="dc",type="member"} 1
@@ -38,6 +42,8 @@ ha_cluster_pacemaker_resources{managed="true",node="hana01",resource="rsc_SAPHan
 ha_cluster_pacemaker_resources{managed="true",node="hana01",resource="stonith-sbd",role="started",status="active"} 1
 ha_cluster_pacemaker_resources{managed="true",node="hana02",resource="rsc_SAPHana_PRD_HDB00",role="slave",status="active"} 1
 ha_cluster_pacemaker_resources{managed="true",node="hana02",resource="rsc_SAPHanaTopology_PRD_HDB00",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{managed="true",node="hana02",resource="test",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{managed="true",node="",resource="test-stop",role="stopped",status=""} 1
 # HELP ha_cluster_pacemaker_stonith_enabled Whether or not stonith is enabled
 # TYPE ha_cluster_pacemaker_stonith_enabled gauge
 ha_cluster_pacemaker_stonith_enabled 1
