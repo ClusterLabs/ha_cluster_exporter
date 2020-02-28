@@ -65,7 +65,7 @@ clean-obs:
 obs-workdir: build/obs
 build/obs:
 	osc checkout $(OBS_PROJECT)/$(OBS_PACKAGE) -o build/obs
-	rm build/obs/*.tar.gz
+	rm -f build/obs/*.tar.gz
 	cp -rv .ci/obs/* build/obs/
 	sed -i 's/%%VERSION%%/$(VERSION)/' build/obs/_service
 	cd build/obs; osc service runall
