@@ -83,7 +83,7 @@ type drbdCollector struct {
 }
 
 func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
-	log.Infoln("Collecting DRBD metrics...")
+	log.Debugln("Collecting DRBD metrics...")
 
 	c.recordDrbdSplitBrainMetric(ch)
 

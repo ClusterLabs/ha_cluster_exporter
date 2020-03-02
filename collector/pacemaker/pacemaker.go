@@ -44,7 +44,7 @@ type pacemakerCollector struct {
 }
 
 func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
-	log.Infoln("Collecting pacemaker metrics...")
+	log.Debugln("Collecting pacemaker metrics...")
 
 	crmMon, err := c.crmMonParser.Parse()
 	if err != nil {

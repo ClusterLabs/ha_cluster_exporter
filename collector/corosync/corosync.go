@@ -39,7 +39,7 @@ type corosyncCollector struct {
 }
 
 func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {
-	log.Infoln("Collecting corosync metrics...")
+	log.Debugln("Collecting corosync metrics...")
 
 	err := c.collectRingErrorsTotal(ch)
 	if err != nil {

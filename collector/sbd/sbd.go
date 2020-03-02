@@ -46,7 +46,7 @@ type sbdCollector struct {
 }
 
 func (c *sbdCollector) Collect(ch chan<- prometheus.Metric) {
-	log.Infoln("Collecting SBD metrics...")
+	log.Debugln("Collecting SBD metrics...")
 
 	sbdConfiguration, err := readSdbFile(c.sbdConfigPath)
 	if err != nil {
