@@ -55,8 +55,11 @@ with tempfile.TemporaryFile("r+") as temp:
     temp.seek(0)
 
     if args.file:
-        with open(args.file, "a+") as prev:
-            old = prev.read()
+        try:
+            with open(args.file, "r") as prev:
+                old = prev.read()
+        except FileNotFoundError:
+            old = ""
         with open(args.file, "w") as new:
             for line in temp:
                 new.write(line)
