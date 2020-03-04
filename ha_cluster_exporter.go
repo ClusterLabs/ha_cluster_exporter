@@ -14,40 +14,8 @@ import (
 	"github.com/ClusterLabs/ha_cluster_exporter/collector/drbd"
 	"github.com/ClusterLabs/ha_cluster_exporter/collector/pacemaker"
 	"github.com/ClusterLabs/ha_cluster_exporter/collector/sbd"
+	"github.com/ClusterLabs/ha_cluster_exporter/internal"
 )
-
-// Landing Page (for /)
-func landingpage(w http.ResponseWriter, r *http.Request) {
-	body := []byte(`<html>
-<head>
-	<title>ClusterLabs Linux HA Cluster Exporter</title>
-</head>
-<body>
-	<h1>ClusterLabs Linux HA Cluster </h1>
-	<p><a href="metrics">Metrics</a></p>
-	<br />
-	<h2>More information:</h2>
-	<p><a href="https://github.com/ClusterLabs/ha_cluster_exporter">github.com/ClusterLabs/ha_cluster_exporter</a></p>
-</body>
-</html>
-`)
-	w.Write(body)
-}
-
-func loglevel(level string) {
-	switch level {
-	case "error":
-		log.SetLevel(log.ErrorLevel)
-	case "warn":
-		log.SetLevel(log.WarnLevel)
-	case "info":
-		log.SetLevel(log.InfoLevel)
-	case "debug":
-		log.SetLevel(log.DebugLevel)
-	default:
-		log.Warnln("Unrecognized minimum log level; using 'info' as default")
-	}
-}
 
 func init() {
 	config.SetConfigName("ha_cluster_exporter")
@@ -88,7 +56,7 @@ func main() {
 		log.Info("Using config file: ", config.ConfigFileUsed())
 	}
 
-	loglevel(config.GetString("log-level"))
+	internal.SetLogLevel(config.GetString("log-level"))
 
 	pacemakerCollector, err := pacemaker.NewCollector(
 		config.GetString("crm-mon-path"),
@@ -133,7 +101,7 @@ func main() {
 
 	fullListenAddress := fmt.Sprintf("%s:%s", config.Get("address"), config.Get("port"))
 
-	http.HandleFunc("/", landingpage)
+	http.HandleFunc("/", internal.Landing)
 	http.Handle("/metrics", promhttp.Handler())
 
 	log.Infof("Serving metrics on %s", fullListenAddress)
