@@ -49,8 +49,8 @@ type Primitive struct {
 		Id       string `xml:"id,attr"`
 		Name     string `xml:"name,attr"`
 		Role     string `xml:"role,attr"`
-		Interval int    `xml:"interval,attr"`
-		Timeout  int    `xml:"timeout,attr"`
+		Interval string `xml:"interval,attr"`
+		Timeout  string `xml:"timeout,attr"`
 	} `xml:"operations>op"`
 }
 
