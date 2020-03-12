@@ -46,9 +46,10 @@ type Primitive struct {
 	InstanceAttributes []Attribute `xml:"instance_attributes>nvpair"`
 	MetaAttributes     []Attribute `xml:"meta_attributes>nvpair"`
 	Operations         []struct {
-		Id       string `xml:"id,attr"`
-		Name     string `xml:"name,attr"`
-		Role     string `xml:"role,attr"`
+		Id   string `xml:"id,attr"`
+		Name string `xml:"name,attr"`
+		Role string `xml:"role,attr"`
+		// todo: interval and timeout are time based vars. We should in future parse them correctly insteaf of string
 		Interval string `xml:"interval,attr"`
 		Timeout  string `xml:"timeout,attr"`
 	} `xml:"operations>op"`
