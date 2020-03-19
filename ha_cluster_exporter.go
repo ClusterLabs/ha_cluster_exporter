@@ -99,6 +99,10 @@ func main() {
 		log.Info("DRBD collector registered")
 	}
 
+	if !log.IsLevelEnabled(log.DebugLevel) {
+		prometheus.Unregister(prometheus.NewGoCollector())
+	}
+
 	fullListenAddress := fmt.Sprintf("%s:%s", config.Get("address"), config.Get("port"))
 
 	http.HandleFunc("/", internal.Landing)
