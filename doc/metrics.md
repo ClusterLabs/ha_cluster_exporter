@@ -99,11 +99,12 @@ Either the value is `1`, or the line is absent altogether.
 
 #### Labels
 
-- `resource`: the unique resource name.
-- `node`: the name of the node hosting the resource.
+- `agent`: the name of the resource agent for this resource.
 - `managed`: either `true` or `false`.
+- `node`: the name of the node hosting the resource.
+- `resource`: the unique resource name.
 - `role`:  one of `started|stopped|master|slave` or one of `starting|stopping|migrating|promoting|demoting`.
-- `status` one of `active|orphaned|blocked|failed|failure_ignored`.
+- `status`: one of `active|orphaned|blocked|failed|failure_ignored`.
 
 The total number of lines for this metric will be the cardinality of `id` times the cardinality of `status`.
 

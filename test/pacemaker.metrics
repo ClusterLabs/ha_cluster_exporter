@@ -36,14 +36,14 @@ ha_cluster_pacemaker_nodes{node="hana02",status="expected_up",type="member"} 1
 ha_cluster_pacemaker_nodes{node="hana02",status="online",type="member"} 1
 # HELP ha_cluster_pacemaker_resources The resources in the cluster; one line per id, per status
 # TYPE ha_cluster_pacemaker_resources gauge
-ha_cluster_pacemaker_resources{managed="true",node="hana01",resource="rsc_ip_PRD_HDB00",role="started",status="active"} 1
-ha_cluster_pacemaker_resources{managed="true",node="hana01",resource="rsc_SAPHana_PRD_HDB00",role="master",status="active"} 1
-ha_cluster_pacemaker_resources{managed="true",node="hana01",resource="rsc_SAPHanaTopology_PRD_HDB00",role="started",status="active"} 1
-ha_cluster_pacemaker_resources{managed="true",node="hana01",resource="stonith-sbd",role="started",status="active"} 1
-ha_cluster_pacemaker_resources{managed="true",node="hana02",resource="rsc_SAPHana_PRD_HDB00",role="slave",status="active"} 1
-ha_cluster_pacemaker_resources{managed="true",node="hana02",resource="rsc_SAPHanaTopology_PRD_HDB00",role="started",status="active"} 1
-ha_cluster_pacemaker_resources{managed="true",node="hana02",resource="test",role="started",status="active"} 1
-ha_cluster_pacemaker_resources{managed="true",node="",resource="test-stop",role="stopped",status=""} 1
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Dummy",managed="true",node="",resource="test-stop",role="stopped",status=""} 1
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Dummy",managed="true",node="hana02",resource="test",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:IPaddr2",managed="true",node="hana01",resource="rsc_ip_PRD_HDB00",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::suse:SAPHana",managed="true",node="hana01",resource="rsc_SAPHana_PRD_HDB00",role="master",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::suse:SAPHana",managed="true",node="hana02",resource="rsc_SAPHana_PRD_HDB00",role="slave",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::suse:SAPHanaTopology",managed="true",node="hana01",resource="rsc_SAPHanaTopology_PRD_HDB00",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::suse:SAPHanaTopology",managed="true",node="hana02",resource="rsc_SAPHanaTopology_PRD_HDB00",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{agent="stonith:external/sbd",managed="true",node="hana01",resource="stonith-sbd",role="started",status="active"} 1
 # HELP ha_cluster_pacemaker_stonith_enabled Whether or not stonith is enabled
 # TYPE ha_cluster_pacemaker_stonith_enabled gauge
 ha_cluster_pacemaker_stonith_enabled 1

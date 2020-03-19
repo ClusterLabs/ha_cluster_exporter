@@ -27,7 +27,7 @@ func NewCollector(crmMonPath string, cibAdminPath string) (*pacemakerCollector, 
 		cib.NewCibAdminParser(cibAdminPath),
 	}
 	c.SetDescriptor("nodes", "The nodes in the cluster; one line per name, per status", []string{"node", "type", "status"})
-	c.SetDescriptor("resources", "The resources in the cluster; one line per id, per status", []string{"node", "resource", "role", "managed", "status"})
+	c.SetDescriptor("resources", "The resources in the cluster; one line per id, per status", []string{"node", "resource", "role", "managed", "status", "agent"})
 	c.SetDescriptor("stonith_enabled", "Whether or not stonith is enabled", nil)
 	c.SetDescriptor("fail_count", "The Fail count number per node and resource id", []string{"node", "resource"})
 	c.SetDescriptor("migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"})
@@ -142,7 +142,8 @@ func (c *pacemakerCollector) recordResource(resource crmmon.Resource, nodeName s
 			resource.Id,
 			strings.ToLower(resource.Role),
 			strconv.FormatBool(resource.Managed),
-			resourceStatus)
+			resourceStatus,
+			resource.Agent)
 	}
 }
 
