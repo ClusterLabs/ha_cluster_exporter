@@ -99,6 +99,7 @@ func main() {
 		log.Info("DRBD collector registered")
 	}
 
+	// if we're not in debug log level, we unregister the Go runtime metrics collector that gets registered by default
 	if !log.IsLevelEnabled(log.DebugLevel) {
 		prometheus.Unregister(prometheus.NewGoCollector())
 	}
