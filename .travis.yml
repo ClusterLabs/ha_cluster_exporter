@@ -14,7 +14,8 @@ jobs:
     - stage: Test
       name: Unit tests
       script: make test
-    - stage: Build & release
+    - stage: Release
+      name: Build and upload binaries on GitHub
       if: tag IS present
       services:
         - docker
@@ -24,16 +25,38 @@ jobs:
         - make -j4 build-all
       deploy:
         provider: releases
-        api_key: $GITHUB_OAUTH_TOKEN
-        file_glob: yes
+        token: $GITHUB_OAUTH_TOKEN
+        file_glob: true
         file: build/bin/*
         name: $TRAVIS_TAG
         skip_cleanup: true
+        overwrite: true
         on:
           tags: true
-      after_deploy:
+    - stage: OBS delivery
+      name: Commit to OBS dev project
+      if: branch = master AND type != pull_request
+      services:
+        - docker
+      env:
+        - VERSION=$TRAVIS_COMMIT
+      script:
         - |
-          docker run --rm -t -v "$(pwd):/package" -v "$GOPATH/pkg/mod:/root/go/pkg/mod" -w /package \
-          -e OBS_USER -e OBS_PASS -e OBS_PROJECT -e OBS_PACKAGE -e VERSION -e REPOSITORY=$TRAVIS_REPO_SLUG \
+          docker run --rm -t -v "$(pwd):/package" -w /package \
+          -e OBS_USER -e OBS_PASS -e OBS_PROJECT -e OBS_PACKAGE -e VERSION -e REPOSITORY=$TRAVIS_REPO_SLUG -e GITHUB_OAUTH_TOKEN \
           shap/continuous_deliver \
-          bash -c "/scripts/init_osc_creds.sh && make obs-commit" || travis_terminate 1
+          bash -c "/scripts/init_osc_creds.sh && make obs-commit"
+    - stage: OBS delivery
+      name: Submit Request to OBS stable project
+      if: tag IS present
+      services:
+        - docker
+      env:
+        - VERSION=$TRAVIS_TAG
+      script:
+        - |
+          docker run --rm -t -v "$(pwd):/package" -w /package \
+          -e OBS_USER -e OBS_PASS -e OBS_PROJECT -e OBS_PACKAGE -e VERSION -e REPOSITORY=$TRAVIS_REPO_SLUG -e GITHUB_OAUTH_TOKEN \
+          -e PACKAGE_NAME=$OBS_PACKAGE -e TARGET_PROJECT=$OBS_DOWNSTREAM_PROJECT \
+          shap/continuous_deliver \
+          bash -c "/scripts/init_osc_creds.sh && make obs-commit && /scripts/submit.sh"
