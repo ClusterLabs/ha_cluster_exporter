@@ -1,15 +1,14 @@
 <services>
     <service name="tar_scm" mode="disabled">
-        <param name="url">git://github.com/ClusterLabs/ha_cluster_exporter.git</param>
+        <param name="url">git://github.com/%%REPOSITORY%%.git</param>
         <param name="scm">git</param>
         <param name="revision">%%VERSION%%</param>
         <param name="exclude">.git</param>
-        <param name="versionformat">@PARENT_TAG@</param>
-        <param name="filename">prometheus-ha_cluster_exporter</param>
+        <param name="versionformat">@PARENT_TAG@+git.%ct.%h</param>
+        <param name="filename">prometheus-sap_host_exporter</param>
     </service>
     <service name="set_version" mode="disabled">
-        <param name="version">%%VERSION%%</param>
-        <param name="file">prometheus-ha_cluster_exporter.spec</param>
+        <param name="file">prometheus-sap_host_exporter.spec</param>
     </service>
     <service name="recompress" mode="disabled">
         <param name="file">*.tar</param>

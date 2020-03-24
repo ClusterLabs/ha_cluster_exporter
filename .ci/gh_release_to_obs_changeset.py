@@ -2,9 +2,10 @@
 
 import argparse
 import json
+import os
 import sys
 import textwrap
-from urllib import request
+import urllib.request
 import urllib.error
 from datetime import datetime
 from datetime import timezone
@@ -25,9 +26,18 @@ args = parser.parse_args()
 releaseSegment = f"/tags/{args.tag}" if args.tag else "/latest"
 url = f'https://api.github.com/repos/{args.repo}/releases{releaseSegment}'
 
+request = urllib.request.Request(url)
+
+githubToken = os.getenv("GITHUB_OAUTH_TOKEN")
+if githubToken:
+    request.add_header("Authorization", "token " + githubToken)
+
 try:
-    response = request.urlopen(url)
+    response = urllib.request.urlopen(request)
 except urllib.error.HTTPError as error:
+    if error.code == 404:
+        print(f"Release {args.tag} not found in {args.repo}. Skipping changelog generation.")
+        sys.exit(0)
     print(f"GitHub API responded with a {error.code} error!", file=sys.stderr)
     print("Url:", url, file=sys.stderr)
     print("Response:", json.dumps(json.load(error), indent=4), file=sys.stderr, sep="\n")
