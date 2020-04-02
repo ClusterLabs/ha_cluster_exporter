@@ -66,7 +66,7 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 	ch <- c.MakeGaugeMetric("stonith_enabled", stonithEnabled)
 
 	c.recordNodes(crmMon, ch)
-	c.recordUngroupedResources(crmMon, ch)
+	c.recordResources(crmMon, ch)
 	c.recordFailCounts(crmMon, ch)
 	c.recordMigrationThresholds(crmMon, ch)
 	c.recordResourceAgentsChanges(crmMon, ch)
@@ -104,19 +104,26 @@ func (c *pacemakerCollector) recordNodes(crmMon crmmon.Root, ch chan<- prometheu
 				ch <- c.MakeGaugeMetric("nodes", float64(1), node.Name, nodeType, nodeStatus)
 			}
 		}
-
-		c.recordNodeResources(node, ch)
 	}
 }
 
-func (c *pacemakerCollector) recordNodeResources(node crmmon.Node, ch chan<- prometheus.Metric) {
-	nodeName := node.Name
-	for _, resource := range node.Resources {
-		c.recordResource(resource, nodeName, ch)
+func (c *pacemakerCollector) recordResources(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
+	for _, resource := range crmMon.Resources {
+		c.recordResource(resource, ch)
+	}
+	for _, clone := range crmMon.Clones {
+		for _, resource := range clone.Resources {
+			c.recordResource(resource, ch)
+		}
+	}
+	for _, group := range crmMon.Groups {
+		for _, resource := range group.Resources {
+			c.recordResource(resource, ch)
+		}
 	}
 }
 
-func (c *pacemakerCollector) recordResource(resource crmmon.Resource, nodeName string, ch chan<- prometheus.Metric) {
+func (c *pacemakerCollector) recordResource(resource crmmon.Resource, ch chan<- prometheus.Metric) {
 
 	// this is a map of boolean flags for each possible status of the resource
 	resourceStatuses := map[string]bool{
@@ -135,6 +142,10 @@ func (c *pacemakerCollector) recordResource(resource crmmon.Resource, nodeName s
 		if !flag {
 			continue
 		}
+		var nodeName string
+		if resource.Node != nil {
+			nodeName = resource.Node.Name
+		}
 		ch <- c.MakeGaugeMetric(
 			"resources",
 			float64(1),
@@ -144,12 +155,6 @@ func (c *pacemakerCollector) recordResource(resource crmmon.Resource, nodeName s
 			strconv.FormatBool(resource.Managed),
 			resourceStatus,
 			resource.Agent)
-	}
-}
-
-func (c *pacemakerCollector) recordUngroupedResources(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
-	for _, resource := range crmMon.Resources {
-		c.recordResource(resource, "", ch)
 	}
 }
 

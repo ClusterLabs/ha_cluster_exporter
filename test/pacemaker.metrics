@@ -3,47 +3,53 @@
 ha_cluster_pacemaker_config_last_change 1.571399302e+09
 # HELP ha_cluster_pacemaker_fail_count The Fail count number per node and resource id
 # TYPE ha_cluster_pacemaker_fail_count gauge
-ha_cluster_pacemaker_fail_count{node="hana01",resource="rsc_SAPHanaTopology_PRD_HDB00"} 0
-ha_cluster_pacemaker_fail_count{node="hana01",resource="rsc_SAPHana_PRD_HDB00"} +Inf
-ha_cluster_pacemaker_fail_count{node="hana01",resource="rsc_ip_PRD_HDB00"} 2
-ha_cluster_pacemaker_fail_count{node="hana01",resource="stonith-sbd"} 0
-ha_cluster_pacemaker_fail_count{node="hana02",resource="rsc_SAPHanaTopology_PRD_HDB00"} 0
-ha_cluster_pacemaker_fail_count{node="hana02",resource="rsc_SAPHana_PRD_HDB00"} 300
-ha_cluster_pacemaker_fail_count{node="hana02",resource="test"} 0
-ha_cluster_pacemaker_fail_count{node="hana02",resource="test-stop"} 0
+ha_cluster_pacemaker_fail_count{node="node01",resource="rsc_SAPHanaTopology_PRD_HDB00"} 0
+ha_cluster_pacemaker_fail_count{node="node01",resource="rsc_SAPHana_PRD_HDB00"} +Inf
+ha_cluster_pacemaker_fail_count{node="node01",resource="rsc_ip_PRD_HDB00"} 2
+ha_cluster_pacemaker_fail_count{node="node01",resource="stonith-sbd"} 0
+ha_cluster_pacemaker_fail_count{node="node02",resource="rsc_SAPHanaTopology_PRD_HDB00"} 0
+ha_cluster_pacemaker_fail_count{node="node02",resource="rsc_SAPHana_PRD_HDB00"} 300
+ha_cluster_pacemaker_fail_count{node="node02",resource="test"} 0
+ha_cluster_pacemaker_fail_count{node="node02",resource="test-stop"} 0
 # HELP ha_cluster_pacemaker_location_constraints Resource location constraints. The value indicates the score.
 # TYPE ha_cluster_pacemaker_location_constraints gauge
-ha_cluster_pacemaker_location_constraints{constraint="cli-ban-msl_SAPHana_PRD_HDB00-on-hana01",node="hana01",resource="msl_SAPHana_PRD_HDB00",role="started"} -Inf
-ha_cluster_pacemaker_location_constraints{constraint="cli-prefer-cln_SAPHanaTopology_PRD_HDB00",node="hana01",resource="cln_SAPHanaTopology_PRD_HDB00",role="started"} +Inf
-ha_cluster_pacemaker_location_constraints{constraint="cli-prefer-msl_SAPHana_PRD_HDB00",node="hana01",resource="msl_SAPHana_PRD_HDB00",role="started"} +Inf
-ha_cluster_pacemaker_location_constraints{constraint="test",node="hana02",resource="test",role="started"} 666
+ha_cluster_pacemaker_location_constraints{constraint="cli-ban-msl_SAPHana_PRD_HDB00-on-node01",node="node01",resource="msl_SAPHana_PRD_HDB00",role="started"} -Inf
+ha_cluster_pacemaker_location_constraints{constraint="cli-prefer-cln_SAPHanaTopology_PRD_HDB00",node="node01",resource="cln_SAPHanaTopology_PRD_HDB00",role="started"} +Inf
+ha_cluster_pacemaker_location_constraints{constraint="cli-prefer-msl_SAPHana_PRD_HDB00",node="node01",resource="msl_SAPHana_PRD_HDB00",role="started"} +Inf
+ha_cluster_pacemaker_location_constraints{constraint="test",node="node02",resource="test",role="started"} 666
 # HELP ha_cluster_pacemaker_migration_threshold The migration_threshold number per node and resource id
 # TYPE ha_cluster_pacemaker_migration_threshold gauge
-ha_cluster_pacemaker_migration_threshold{node="hana01",resource="rsc_SAPHanaTopology_PRD_HDB00"} 1
-ha_cluster_pacemaker_migration_threshold{node="hana01",resource="rsc_SAPHana_PRD_HDB00"} 5000
-ha_cluster_pacemaker_migration_threshold{node="hana01",resource="rsc_ip_PRD_HDB00"} 5000
-ha_cluster_pacemaker_migration_threshold{node="hana01",resource="stonith-sbd"} 5000
-ha_cluster_pacemaker_migration_threshold{node="hana02",resource="rsc_SAPHanaTopology_PRD_HDB00"} 3
-ha_cluster_pacemaker_migration_threshold{node="hana02",resource="rsc_SAPHana_PRD_HDB00"} 50
-ha_cluster_pacemaker_migration_threshold{node="hana02",resource="test"} 5000
-ha_cluster_pacemaker_migration_threshold{node="hana02",resource="test-stop"} 5000
+ha_cluster_pacemaker_migration_threshold{node="node01",resource="rsc_SAPHanaTopology_PRD_HDB00"} 1
+ha_cluster_pacemaker_migration_threshold{node="node01",resource="rsc_SAPHana_PRD_HDB00"} 5000
+ha_cluster_pacemaker_migration_threshold{node="node01",resource="rsc_ip_PRD_HDB00"} 5000
+ha_cluster_pacemaker_migration_threshold{node="node01",resource="stonith-sbd"} 5000
+ha_cluster_pacemaker_migration_threshold{node="node02",resource="rsc_SAPHanaTopology_PRD_HDB00"} 3
+ha_cluster_pacemaker_migration_threshold{node="node02",resource="rsc_SAPHana_PRD_HDB00"} 50
+ha_cluster_pacemaker_migration_threshold{node="node02",resource="test"} 5000
+ha_cluster_pacemaker_migration_threshold{node="node02",resource="test-stop"} 5000
 # HELP ha_cluster_pacemaker_nodes The nodes in the cluster; one line per name, per status
 # TYPE ha_cluster_pacemaker_nodes gauge
-ha_cluster_pacemaker_nodes{node="hana01",status="dc",type="member"} 1
-ha_cluster_pacemaker_nodes{node="hana01",status="expected_up",type="member"} 1
-ha_cluster_pacemaker_nodes{node="hana01",status="online",type="member"} 1
-ha_cluster_pacemaker_nodes{node="hana02",status="expected_up",type="member"} 1
-ha_cluster_pacemaker_nodes{node="hana02",status="online",type="member"} 1
+ha_cluster_pacemaker_nodes{node="node01",status="dc",type="member"} 1
+ha_cluster_pacemaker_nodes{node="node01",status="expected_up",type="member"} 1
+ha_cluster_pacemaker_nodes{node="node01",status="online",type="member"} 1
+ha_cluster_pacemaker_nodes{node="node02",status="expected_up",type="member"} 1
+ha_cluster_pacemaker_nodes{node="node02",status="online",type="member"} 1
 # HELP ha_cluster_pacemaker_resources The resources in the cluster; one line per id, per status
 # TYPE ha_cluster_pacemaker_resources gauge
 ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Dummy",managed="true",node="",resource="test-stop",role="stopped",status=""} 1
-ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Dummy",managed="true",node="hana02",resource="test",role="started",status="active"} 1
-ha_cluster_pacemaker_resources{agent="ocf::heartbeat:IPaddr2",managed="true",node="hana01",resource="rsc_ip_PRD_HDB00",role="started",status="active"} 1
-ha_cluster_pacemaker_resources{agent="ocf::suse:SAPHana",managed="true",node="hana01",resource="rsc_SAPHana_PRD_HDB00",role="master",status="active"} 1
-ha_cluster_pacemaker_resources{agent="ocf::suse:SAPHana",managed="true",node="hana02",resource="rsc_SAPHana_PRD_HDB00",role="slave",status="active"} 1
-ha_cluster_pacemaker_resources{agent="ocf::suse:SAPHanaTopology",managed="true",node="hana01",resource="rsc_SAPHanaTopology_PRD_HDB00",role="started",status="active"} 1
-ha_cluster_pacemaker_resources{agent="ocf::suse:SAPHanaTopology",managed="true",node="hana02",resource="rsc_SAPHanaTopology_PRD_HDB00",role="started",status="active"} 1
-ha_cluster_pacemaker_resources{agent="stonith:external/sbd",managed="true",node="hana01",resource="stonith-sbd",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Dummy",managed="true",node="node02",resource="test",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Filesystem",managed="true",node="node01",resource="rsc_fs_HA1_ASCS00",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Filesystem",managed="true",node="node02",resource="rsc_fs_HA1_ERS10",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:IPaddr2",managed="true",node="node01",resource="rsc_ip_HA1_ASCS00",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:IPaddr2",managed="true",node="node01",resource="rsc_ip_PRD_HDB00",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:IPaddr2",managed="true",node="node02",resource="rsc_ip_HA1_ERS10",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:SAPInstance",managed="true",node="node01",resource="rsc_sap_HA1_ASCS00",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:SAPInstance",managed="true",node="node02",resource="rsc_sap_HA1_ERS10",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::suse:SAPHana",managed="true",node="node01",resource="rsc_SAPHana_PRD_HDB00",role="master",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::suse:SAPHana",managed="true",node="node02",resource="rsc_SAPHana_PRD_HDB00",role="slave",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::suse:SAPHanaTopology",managed="true",node="node01",resource="rsc_SAPHanaTopology_PRD_HDB00",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::suse:SAPHanaTopology",managed="true",node="node02",resource="rsc_SAPHanaTopology_PRD_HDB00",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{agent="stonith:external/sbd",managed="true",node="node01",resource="stonith-sbd",role="started",status="active"} 1
 # HELP ha_cluster_pacemaker_stonith_enabled Whether or not stonith is enabled
 # TYPE ha_cluster_pacemaker_stonith_enabled gauge
 ha_cluster_pacemaker_stonith_enabled 1

@@ -32,23 +32,24 @@ type Root struct {
 		} `xml:"node"`
 	} `xml:"node_history"`
 	Resources []Resource `xml:"resources>resource"`
+	Clones    []Clone    `xml:"resources>clone"`
+	Groups    []Group    `xml:"resources>group"`
 }
 
 type Node struct {
-	Name             string     `xml:"name,attr"`
-	Id               string     `xml:"id,attr"`
-	Online           bool       `xml:"online,attr"`
-	Standby          bool       `xml:"standby,attr"`
-	StandbyOnFail    bool       `xml:"standby_onfail,attr"`
-	Maintenance      bool       `xml:"maintenance,attr"`
-	Pending          bool       `xml:"pending,attr"`
-	Unclean          bool       `xml:"unclean,attr"`
-	Shutdown         bool       `xml:"shutdown,attr"`
-	ExpectedUp       bool       `xml:"expected_up,attr"`
-	DC               bool       `xml:"is_dc,attr"`
-	ResourcesRunning int        `xml:"resources_running,attr"`
-	Type             string     `xml:"type,attr"`
-	Resources        []Resource `xml:"resource"`
+	Name             string `xml:"name,attr"`
+	Id               string `xml:"id,attr"`
+	Online           bool   `xml:"online,attr"`
+	Standby          bool   `xml:"standby,attr"`
+	StandbyOnFail    bool   `xml:"standby_onfail,attr"`
+	Maintenance      bool   `xml:"maintenance,attr"`
+	Pending          bool   `xml:"pending,attr"`
+	Unclean          bool   `xml:"unclean,attr"`
+	Shutdown         bool   `xml:"shutdown,attr"`
+	ExpectedUp       bool   `xml:"expected_up,attr"`
+	DC               bool   `xml:"is_dc,attr"`
+	ResourcesRunning int    `xml:"resources_running,attr"`
+	Type             string `xml:"type,attr"`
 }
 
 type Resource struct {
@@ -62,4 +63,24 @@ type Resource struct {
 	Failed         bool   `xml:"failed,attr"`
 	FailureIgnored bool   `xml:"failure_ignored,attr"`
 	NodesRunningOn int    `xml:"nodes_running_on,attr"`
+	Node           *struct {
+		Name   string `xml:"name,attr"`
+		Id     string `xml:"id,attr"`
+		Cached bool   `xml:"cached,attr"`
+	} `xml:"node,omitempty"`
+}
+
+type Clone struct {
+	Id             string     `xml:"id,attr"`
+	MultiState     bool       `xml:"multi_state,attr"`
+	Managed        bool       `xml:"managed,attr"`
+	Failed         bool       `xml:"failed,attr"`
+	FailureIgnored bool       `xml:"failure_ignored,attr"`
+	Unique         bool       `xml:"unique,attr"`
+	Resources      []Resource `xml:"resource"`
+}
+
+type Group struct {
+	Id        string     `xml:"id,attr"`
+	Resources []Resource `xml:"resource"`
 }
