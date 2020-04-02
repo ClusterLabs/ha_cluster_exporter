@@ -27,7 +27,7 @@ func NewCollector(crmMonPath string, cibAdminPath string) (*pacemakerCollector, 
 		cib.NewCibAdminParser(cibAdminPath),
 	}
 	c.SetDescriptor("nodes", "The nodes in the cluster; one line per name, per status", []string{"node", "type", "status"})
-	c.SetDescriptor("resources", "The resources in the cluster; one line per id, per status", []string{"node", "resource", "role", "managed", "status", "agent"})
+	c.SetDescriptor("resources", "The resources in the cluster; one line per id, per status", []string{"node", "resource", "role", "managed", "status", "agent", "group", "clone"})
 	c.SetDescriptor("stonith_enabled", "Whether or not stonith is enabled", nil)
 	c.SetDescriptor("fail_count", "The Fail count number per node and resource id", []string{"node", "resource"})
 	c.SetDescriptor("migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"})
@@ -109,21 +109,21 @@ func (c *pacemakerCollector) recordNodes(crmMon crmmon.Root, ch chan<- prometheu
 
 func (c *pacemakerCollector) recordResources(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
 	for _, resource := range crmMon.Resources {
-		c.recordResource(resource, ch)
+		c.recordResource(resource, "", "", ch)
 	}
 	for _, clone := range crmMon.Clones {
 		for _, resource := range clone.Resources {
-			c.recordResource(resource, ch)
+			c.recordResource(resource, "", clone.Id, ch)
 		}
 	}
 	for _, group := range crmMon.Groups {
 		for _, resource := range group.Resources {
-			c.recordResource(resource, ch)
+			c.recordResource(resource, group.Id, "", ch)
 		}
 	}
 }
 
-func (c *pacemakerCollector) recordResource(resource crmmon.Resource, ch chan<- prometheus.Metric) {
+func (c *pacemakerCollector) recordResource(resource crmmon.Resource, group string, clone string, ch chan<- prometheus.Metric) {
 
 	// this is a map of boolean flags for each possible status of the resource
 	resourceStatuses := map[string]bool{
@@ -154,7 +154,9 @@ func (c *pacemakerCollector) recordResource(resource crmmon.Resource, ch chan<- 
 			strings.ToLower(resource.Role),
 			strconv.FormatBool(resource.Managed),
 			resourceStatus,
-			resource.Agent)
+			resource.Agent,
+			group,
+			clone)
 	}
 }
 
