@@ -16,7 +16,7 @@ type crmMonParser struct {
 }
 
 func (c *crmMonParser) Parse() (crmMon Root, err error) {
-	crmMonXML, err := exec.Command(c.crmMonPath, "-X", "--group-by-node", "--inactive").Output()
+	crmMonXML, err := exec.Command(c.crmMonPath, "-X", "--inactive").Output()
 	if err != nil {
 		return crmMon, errors.Wrap(err, "error while executing crm_mon")
 	}
