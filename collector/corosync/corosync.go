@@ -43,13 +43,13 @@ func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {
 
 	err := c.collectRingErrorsTotal(ch)
 	if err != nil {
-		log.Warnln(err)
+		log.Warnf("Corosync Collector scrape failed: %s", err)
 	}
 
 	quorumStatusRaw := c.getQuoromStatus()
 	quorumStatus, quorate, err := parseQuoromStatus(quorumStatusRaw)
 	if err != nil {
-		log.Warnln(err)
+		log.Warnf("Corosync Collector scrape failed: %s", err)
 		return
 	}
 
@@ -104,7 +104,7 @@ func parseQuoromStatus(quoromStatusRaw []byte) (quorumVotes map[string]int, quor
 	// check the case there is an sbd_config but the SBD_DEVICE is not set
 
 	if quorateWordPresent == "" {
-		return nil, quorate, fmt.Errorf("cannot parse quorum status")
+		return nil, quorate, errors.New("cannot parse quorum status")
 	}
 
 	quorateRaw := wordOnly.FindString(strings.SplitAfterN(quoromRaw, "Quorate:", 2)[1])
