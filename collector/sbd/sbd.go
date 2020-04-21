@@ -50,7 +50,7 @@ func (c *sbdCollector) Collect(ch chan<- prometheus.Metric) {
 
 	sbdConfiguration, err := readSdbFile(c.sbdConfigPath)
 	if err != nil {
-		log.Warnln(err)
+		log.Warnf("SBD Collector scrape failed: %s", err)
 		return
 	}
 
