@@ -48,29 +48,36 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 
 	crmMon, err := c.crmMonParser.Parse()
 	if err != nil {
-		log.Warnln(err)
+		log.Warnf("Pacemaker Collector scrape failed: %s", err)
 		return
 	}
 
 	CIB, err := c.cibParser.Parse()
 	if err != nil {
-		log.Warnln(err)
+		log.Warnf("Pacemaker Collector scrape failed: %s", err)
 		return
 	}
 
+	c.recordStonithStatus(crmMon, ch)
+	c.recordNodes(crmMon, ch)
+	c.recordResources(crmMon, ch)
+	c.recordFailCounts(crmMon, ch)
+	c.recordMigrationThresholds(crmMon, ch)
+	c.recordConstraints(CIB, ch)
+
+	err = c.recordCibLastChange(crmMon, ch)
+	if err != nil {
+		log.Warnf("Pacemaker Collector scrape failed: %s", err)
+	}
+}
+
+func (c *pacemakerCollector) recordStonithStatus(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
 	var stonithEnabled float64
 	if crmMon.Summary.ClusterOptions.StonithEnabled {
 		stonithEnabled = 1
 	}
 
 	ch <- c.MakeGaugeMetric("stonith_enabled", stonithEnabled)
-
-	c.recordNodes(crmMon, ch)
-	c.recordResources(crmMon, ch)
-	c.recordFailCounts(crmMon, ch)
-	c.recordMigrationThresholds(crmMon, ch)
-	c.recordResourceAgentsChanges(crmMon, ch)
-	c.recordConstraints(CIB, ch)
 }
 
 func (c *pacemakerCollector) recordNodes(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
@@ -176,14 +183,15 @@ func (c *pacemakerCollector) recordFailCounts(crmMon crmmon.Root, ch chan<- prom
 	}
 }
 
-func (c *pacemakerCollector) recordResourceAgentsChanges(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
+func (c *pacemakerCollector) recordCibLastChange(crmMon crmmon.Root, ch chan<- prometheus.Metric) error {
 	t, err := time.Parse(time.ANSIC, crmMon.Summary.LastChange.Time)
 	if err != nil {
-		log.Warnln(err)
-		return
+		return errors.Wrap(err, "could not parse date")
 	}
 	// we record the timestamp of the last change as a float counter metric
 	ch <- c.MakeCounterMetric("config_last_change", float64(t.Unix()))
+
+	return nil
 }
 
 func (c *pacemakerCollector) recordMigrationThresholds(crmMon crmmon.Root, ch chan<- prometheus.Metric) {

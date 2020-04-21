@@ -89,13 +89,13 @@ func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
 
 	drbdStatusRaw, err := exec.Command(c.drbdsetupPath, "status", "--json").Output()
 	if err != nil {
-		log.Warnf("Error while retrieving drbd infos %s", err)
+		log.Warnf("DRBD Collector scrape failed: %s", err)
 		return
 	}
 	// populate structs and parse relevant info we will expose via metrics
 	drbdDev, err := parseDrbdStatus(drbdStatusRaw)
 	if err != nil {
-		log.Warnf("Error while parsing drbd json: %s", err)
+		log.Warnf("DRBD Collector scrape failed: %s", err)
 		return
 	}
 
@@ -103,20 +103,14 @@ func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
 		for _, device := range resource.Devices {
 			// the `resources` metric value is always 1, otherwise it's absent
 			ch <- c.MakeGaugeMetric("resources", float64(1), resource.Name, resource.Role, strconv.Itoa(device.Volume), strings.ToLower(device.DiskState))
-
 			ch <- c.MakeGaugeMetric("written", float64(device.Written), resource.Name, strconv.Itoa(device.Volume))
-
 			ch <- c.MakeGaugeMetric("read", float64(device.Read), resource.Name, strconv.Itoa(device.Volume))
-
 			ch <- c.MakeGaugeMetric("al_writes", float64(device.AlWrites), resource.Name, strconv.Itoa(device.Volume))
-
 			ch <- c.MakeGaugeMetric("bm_writes", float64(device.BmWrites), resource.Name, strconv.Itoa(device.Volume))
-
 			ch <- c.MakeGaugeMetric("upper_pending", float64(device.UpPending), resource.Name, strconv.Itoa(device.Volume))
-
 			ch <- c.MakeGaugeMetric("lower_pending", float64(device.LoPending), resource.Name, strconv.Itoa(device.Volume))
 
-			if bool(device.Quorum) == true {
+			if device.Quorum == true {
 				ch <- c.MakeGaugeMetric("quorum", float64(1), resource.Name, strconv.Itoa(device.Volume))
 			} else {
 				ch <- c.MakeGaugeMetric("quorum", float64(0), resource.Name, strconv.Itoa(device.Volume))
@@ -133,19 +127,12 @@ func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
 				continue
 			}
 			for _, peerDev := range conn.PeerDevices {
-				ch <- c.MakeGaugeMetric("connections", float64(1), resource.Name, strconv.Itoa(conn.PeerNodeID),
-					conn.PeerRole, strconv.Itoa(peerDev.Volume), strings.ToLower(peerDev.PeerDiskState))
-
+				ch <- c.MakeGaugeMetric("connections", float64(1), resource.Name, strconv.Itoa(conn.PeerNodeID), conn.PeerRole, strconv.Itoa(peerDev.Volume), strings.ToLower(peerDev.PeerDiskState))
 				ch <- c.MakeGaugeMetric("connections_sync", float64(peerDev.PercentInSync), resource.Name, strconv.Itoa(conn.PeerNodeID), strconv.Itoa(peerDev.Volume))
-
 				ch <- c.MakeGaugeMetric("connections_received", float64(peerDev.Received), resource.Name, strconv.Itoa(conn.PeerNodeID), strconv.Itoa(peerDev.Volume))
-
 				ch <- c.MakeGaugeMetric("connections_sent", float64(peerDev.Sent), resource.Name, strconv.Itoa(conn.PeerNodeID), strconv.Itoa(peerDev.Volume))
-
 				ch <- c.MakeGaugeMetric("connections_pending", float64(peerDev.Pending), resource.Name, strconv.Itoa(conn.PeerNodeID), strconv.Itoa(peerDev.Volume))
-
 				ch <- c.MakeGaugeMetric("connections_unacked", float64(peerDev.Unacked), resource.Name, strconv.Itoa(conn.PeerNodeID), strconv.Itoa(peerDev.Volume))
-
 			}
 		}
 	}
