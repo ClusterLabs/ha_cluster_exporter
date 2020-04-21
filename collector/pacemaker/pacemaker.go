@@ -190,6 +190,8 @@ func (c *pacemakerCollector) recordCibLastChange(crmMon crmmon.Root, ch chan<- p
 	}
 	// we record the timestamp of the last change as a float counter metric
 	ch <- c.MakeCounterMetric("config_last_change", float64(t.Unix()))
+
+	return nil
 }
 
 func (c *pacemakerCollector) recordMigrationThresholds(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
