@@ -186,7 +186,7 @@ func (c *pacemakerCollector) recordFailCounts(crmMon crmmon.Root, ch chan<- prom
 func (c *pacemakerCollector) recordCibLastChange(crmMon crmmon.Root, ch chan<- prometheus.Metric) error {
 	t, err := time.Parse(time.ANSIC, crmMon.Summary.LastChange.Time)
 	if err != nil {
-		return errors.Wrap(err, "Could not parse date")
+		return errors.Wrap(err, "could not parse date")
 	}
 	// we record the timestamp of the last change as a float counter metric
 	ch <- c.MakeCounterMetric("config_last_change", float64(t.Unix()))
