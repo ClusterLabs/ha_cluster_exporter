@@ -179,5 +179,5 @@ func TestDRBDSplitbrainCollector(t *testing.T) {
 
 	err := testutil.CollectAndCompare(collector, strings.NewReader(expect), "ha_cluster_drbd_split_brain")
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }

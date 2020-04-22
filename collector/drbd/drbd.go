@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -161,23 +162,20 @@ func parseDrbdStatus(statusRaw []byte) ([]drbdStatus, error) {
 }
 
 func (c *drbdCollector) recordDrbdSplitBrainMetric(ch chan<- prometheus.Metric) {
-
-	// set split brain metric
-	// by default if the custom hook is not set, the exporter will not be able to detect it
+	// look for files created by the DRBD split brain hook
 	files, _ := filepath.Glob(c.drbdSplitBrainPath + "/drbd-split-brain-detected-*")
 
-	// the split brain files exists
-	for _, f := range files {
-		// check if in directory there are file of syntax we expect (nil is when there is not any)
-		resAndVolume := strings.Split(f, "drbd-split-brain-detected-")[1]
+	// prepare some pattern matching
+	re := regexp.MustCompile(`drbd-split-brain-detected-(?P<resource>[\w-]+)-(?P<volume>[\w-]+)`)
 
-		// avoid to have index out range panic error (in case the there is not resource-volume syntax)
-		if len(strings.Split(resAndVolume, "-")) != 2 {
+	// for each of these files, we extract the name of the resource end volume from its name and record the metric
+	for _, f := range files {
+		// matches[0] will be the whole file name, matches[1] the resource, matches[2] the volume
+		matches := re.FindStringSubmatch(f)
+		if matches == nil {
 			continue
 		}
-		//Resource (0) volume (1) place in slice
-		resourceAndVolume := strings.Split(resAndVolume, "-")
 
-		ch <- c.MakeGaugeMetric("split_brain", float64(1), resourceAndVolume[0], resourceAndVolume[1])
+		ch <- c.MakeGaugeMetric("split_brain", float64(1), matches[1], matches[2])
 	}
 }
