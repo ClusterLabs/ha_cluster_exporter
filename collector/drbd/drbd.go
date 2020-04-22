@@ -2,7 +2,6 @@ package drbd
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -165,16 +164,12 @@ func (c *drbdCollector) recordDrbdSplitBrainMetric(ch chan<- prometheus.Metric) 
 
 	// set split brain metric
 	// by default if the custom hook is not set, the exporter will not be able to detect it
-	files, _ := ioutil.ReadDir(c.drbdSplitBrainPath)
+	files, _ := filepath.Glob(c.drbdSplitBrainPath + "/drbd-split-brain-detected-*")
 
 	// the split brain files exists
 	for _, f := range files {
 		// check if in directory there are file of syntax we expect (nil is when there is not any)
-		match, _ := filepath.Glob(c.drbdSplitBrainPath + "/drbd-split-brain-detected-*")
-		if match == nil {
-			continue
-		}
-		resAndVolume := strings.Split(f.Name(), "drbd-split-brain-detected-")[1]
+		resAndVolume := strings.Split(f, "drbd-split-brain-detected-")[1]
 
 		// avoid to have index out range panic error (in case the there is not resource-volume syntax)
 		if len(strings.Split(resAndVolume, "-")) != 2 {
@@ -184,6 +179,5 @@ func (c *drbdCollector) recordDrbdSplitBrainMetric(ch chan<- prometheus.Metric) 
 		resourceAndVolume := strings.Split(resAndVolume, "-")
 
 		ch <- c.MakeGaugeMetric("split_brain", float64(1), resourceAndVolume[0], resourceAndVolume[1])
-
 	}
 }
