@@ -26,6 +26,7 @@ func NewCollector(cfgToolPath string, quorumToolPath string) (*corosyncCollector
 		quorumToolPath,
 	}
 	c.SetDescriptor("quorate", "Whether or not the cluster is quorate", nil)
+	c.SetDescriptor("rings", "The corosync rings", nil)
 	c.SetDescriptor("ring_errors", "The number of corosync ring errors", nil)
 	c.SetDescriptor("quorum_votes", "Cluster quorum votes; one line per type", []string{"type"})
 
@@ -40,6 +41,12 @@ type corosyncCollector struct {
 
 func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {
 	log.Debugln("Collecting corosync metrics...")
+
+	//cfgToolOutput, err := exec.Command(c.cfgToolPath, "-s").Output()
+	//if err != nil {
+	//	log.Warnf("Corosync Collector scrape failed: %s", err)
+	//	return
+	//}
 
 	err := c.collectRingErrorsTotal(ch)
 	if err != nil {
