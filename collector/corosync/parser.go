@@ -19,6 +19,7 @@ type Status struct {
 	Rings []Ring
 	QuorumVotes QuorumVotes
 	Quorate bool
+	Members []Member
 }
 
 type QuorumVotes struct {
@@ -32,6 +33,13 @@ type Ring struct {
 	Number  string
 	Address string
 	Faulty  bool
+}
+
+type Member struct {
+	Id string
+	Name string
+	Votes uint64
+	Local bool
 }
 
 func NewParser() Parser {
@@ -62,6 +70,11 @@ func (p *defaultParser) Parse(cfgToolOutput []byte, quorumToolOutput []byte) (*S
 	status.QuorumVotes, err = parseQuoromVotes(quorumToolOutput)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not parse quorum votes in corosync-quorumtool output")
+	}
+
+	status.Members, err = parseMembers(quorumToolOutput)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not parse members in corosync-quorumtool output")
 	}
 
 	status.Rings = parseRings(cfgToolOutput)
@@ -153,6 +166,39 @@ func parseQuoromVotes(quorumToolOutput []byte) (quorumVotes QuorumVotes, err err
 	}
 
 	return quorumVotes, nil
+}
+
+func parseMembers(quorumToolOutput []byte) (members []Member, err error) {
+	sectionRE := regexp.MustCompile(`(?m)Membership information\n-+\s+Nodeid\s+Votes\s+Name\n((?:\w+\s+\d+\s[\w-]+(?:\s\(local\))?\n?)+)`)
+	sectionMatch := sectionRE.FindSubmatch(quorumToolOutput)
+	if sectionMatch == nil {
+		return nil, errors.New("could not find membership information")
+	}
+
+	linesRE := regexp.MustCompile(`(?m)(?P<node_id>\w+)\s+(?P<votes>\d+)\s(?P<name>[\w-]+)(?:\s(?P<local>\(local\)))?\n?`)
+	linesMatches := linesRE.FindAllSubmatch(sectionMatch[1], -1)
+	for _, match := range linesMatches {
+		matches := extractRENamedCaptureGroups(linesRE, match)
+
+		votes, err := strconv.ParseUint(matches["votes"], 10, 64)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not parse vote number to uint64")
+		}
+
+		var local bool
+		if matches["local"] != "" {
+			local = true
+		}
+
+		members = append(members, Member{
+			Id:    matches["node_id"],
+			Name:  matches["name"],
+			Votes: votes,
+			Local: local,
+		})
+	}
+
+	return members, nil
 }
 
 // extracts (?P<name>) RegEx capture groups from a match, to avoid numerical index lookups

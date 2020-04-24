@@ -25,7 +25,7 @@ func NewCollector(cfgToolPath string, quorumToolPath string) (*corosyncCollector
 	c.SetDescriptor("quorate", "Whether or not the cluster is quorate", nil)
 	c.SetDescriptor("rings", "The status of each Corosync ring; 1 means healthy, 0 means faulty.", []string{"ring_id", "node_id", "number", "address"})
 	c.SetDescriptor("ring_errors", "The number of faulty corosync rings", nil)
-	c.SetDescriptor("ring_nodes", "The number of faulty corosync rings", nil)
+	c.SetDescriptor("member_votes", "How many votes each member node has contributed with to the current quorum", []string{"node_id", "node", "local"})
 	c.SetDescriptor("quorum_votes", "Cluster quorum votes; one line per type", []string{"type"})
 
 	return c, nil
@@ -55,6 +55,7 @@ func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {
 	c.collectRingErrors(status, ch)
 	c.collectQuorate(status, ch)
 	c.collectQuorumVotes(status, ch)
+	c.collectMemberVotes(status, ch)
 }
 
 func (c *corosyncCollector) collectQuorumVotes(status *Status, ch chan<- prometheus.Metric) {
@@ -89,5 +90,15 @@ func (c *corosyncCollector) collectRings(status *Status, ch chan<- prometheus.Me
 			healthy = 0
 		}
 		ch <- c.MakeGaugeMetric("rings", healthy, status.RingId, status.NodeId, ring.Number, ring.Address)
+	}
+}
+
+func (c *corosyncCollector) collectMemberVotes(status *Status, ch chan<- prometheus.Metric) {
+	for _, member := range status.Members {
+		local := "false"
+		if member.Local {
+			local = "true"
+		}
+		ch <- c.MakeGaugeMetric("member_votes", float64(member.Votes), member.Id, member.Name, local)
 	}
 }
