@@ -122,9 +122,24 @@ Value is either `1` or `0`.
 The Corosync subsystem collects cluster quorum votes and ring status by parsing the output of `corosync-quorumtool` and `corosync-cfgtool`.
 
 0. [Sample](../test/corosync.metrics)
-1. [`ha_cluster_corosync_quorate`](#ha_cluster_corosync_quorate)
-2. [`ha_cluster_corosync_quorum_votes`](#ha_cluster_corosync_quorum_votes)
-3. [`ha_cluster_corosync_ring_errors`](#ha_cluster_corosync_ring_errors)
+1. [`ha_cluster_corosync_member_votes`](#ha_cluster_corosync_member_votes)
+2. [`ha_cluster_corosync_quorate`](#ha_cluster_corosync_quorate)
+3. [`ha_cluster_corosync_quorum_votes`](#ha_cluster_corosync_quorum_votes)
+4. [`ha_cluster_corosync_ring_errors`](#ha_cluster_corosync_ring_errors)
+5. [`ha_cluster_corosync_rings`](#ha_cluster_corosync_rings)
+
+
+### `ha_cluster_corosync_member_votes`
+
+#### Description
+
+How many votes each member node has contributed with to the current quorum
+
+#### Labels
+
+- `node_id`: the internal corosync identifier associated to this node.
+- `node`: the name of the node; usually the hostname.
+- `local`: whether or not this is the local node.
 
 
 ### `ha_cluster_corosync_quorate`
@@ -150,7 +165,21 @@ Cluster quorum votes; one line per type.
 
 #### Description
 
-The number of corosync ring errors.
+The total number of faulty corosync rings.
+
+
+### `ha_cluster_corosync_rings`
+
+#### Description
+
+The status of each Corosync ring; `1` means healthy, `0` means faulty.
+
+#### Labels
+
+- `ring_id`: the internal Corosync ring identifier; usually corresponds to the first member node to join.  
+- `node_id`: the internal Corosync identifier of the local node.
+- `number`: the ring number.
+- `address`: the IP address locally linked to this ring.
 
 
 ## SBD

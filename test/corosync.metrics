@@ -7,7 +7,7 @@ ha_cluster_corosync_quorum_votes{type="expected_votes"} 2
 ha_cluster_corosync_quorum_votes{type="highest_expected"} 2
 ha_cluster_corosync_quorum_votes{type="quorum"} 1
 ha_cluster_corosync_quorum_votes{type="total_votes"} 2
-# HELP ha_cluster_corosync_ring_errors The number of faulty corosync rings
+# HELP ha_cluster_corosync_ring_errors The total number of faulty corosync rings
 # TYPE ha_cluster_corosync_ring_errors gauge
 ha_cluster_corosync_ring_errors 1
 # HELP ha_cluster_corosync_rings The status of each Corosync ring; 1 means healthy, 0 means faulty.
