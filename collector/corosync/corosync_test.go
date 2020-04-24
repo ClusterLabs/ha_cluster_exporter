@@ -44,13 +44,6 @@ func TestQuoromMetricParsing(t *testing.T) {
 	assert.Equal(t, 1.0, quorate)
 }
 
-func TestRingStatusParsingError(t *testing.T) {
-	_, err := parseRingStatus([]byte("some error occurred"))
-
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "some error occurred")
-}
-
 func TestNewCorosyncCollector(t *testing.T) {
 	_, err := NewCollector("../../test/fake_corosync-cfgtool.sh", "../../test/fake_corosync-quorumtool.sh")
 	assert.Nil(t, err)
