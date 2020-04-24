@@ -35,7 +35,7 @@ type corosyncCollector struct {
 	collector.DefaultCollector
 	cfgToolPath    string
 	quorumToolPath string
-	cfgToolParser Parser
+	cfgToolParser  Parser
 }
 
 func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {

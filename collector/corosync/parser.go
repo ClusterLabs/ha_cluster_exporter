@@ -13,20 +13,20 @@ type Parser interface {
 }
 
 type Status struct {
-	NodeId string
-	RingId string
-	Seq uint64
-	Rings []Ring
+	NodeId      string
+	RingId      string
+	Seq         uint64
+	Rings       []Ring
 	QuorumVotes QuorumVotes
-	Quorate bool
-	Members []Member
+	Quorate     bool
+	Members     []Member
 }
 
 type QuorumVotes struct {
-	ExpectedVotes uint64
+	ExpectedVotes   uint64
 	HighestExpected uint64
-	TotalVotes uint64
-	Quorum uint64
+	TotalVotes      uint64
+	Quorum          uint64
 }
 
 type Ring struct {
@@ -36,8 +36,8 @@ type Ring struct {
 }
 
 type Member struct {
-	Id string
-	Name string
+	Id    string
+	Name  string
 	Votes uint64
 	Local bool
 }
