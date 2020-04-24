@@ -58,11 +58,22 @@ Membership information
 	assert.True(t, status.Quorate)
 	assert.Equal(t, "1084780051", status.NodeId)
 	assert.Equal(t, "1084780051", status.RingId)
-	assert.Exactly(t, uint64(44), status.Seq)
-	assert.Equal(t, uint64(232), status.QuorumVotes.ExpectedVotes)
-	assert.Equal(t, uint64(22), status.QuorumVotes.HighestExpected)
-	assert.Equal(t, uint64(21), status.QuorumVotes.TotalVotes)
-	assert.Equal(t, uint64(421), status.QuorumVotes.Quorum)
+	assert.EqualValues(t, 44, status.Seq)
+	assert.EqualValues(t, 232, status.QuorumVotes.ExpectedVotes)
+	assert.EqualValues(t, 22, status.QuorumVotes.HighestExpected)
+	assert.EqualValues(t, 21, status.QuorumVotes.TotalVotes)
+	assert.EqualValues(t, 421, status.QuorumVotes.Quorum)
+
+	members := status.Members
+	assert.Len(t, members, 2)
+	assert.Exactly(t, "1084780051", members[0].Id)
+	assert.Exactly(t, "dma-dog-hana01", members[0].Name)
+	assert.True(t, members[0].Local)
+	assert.EqualValues(t, 1, members[0].Votes)
+	assert.Exactly(t, "1084780052", members[1].Id)
+	assert.Exactly(t, "dma-dog-hana02", members[1].Name)
+	assert.False(t, members[1].Local)
+	assert.EqualValues(t, 1, members[1].Votes)
 }
 
 func TestParseFaultyRings(t *testing.T) {
@@ -162,4 +173,24 @@ Quorum:           10000000000000000000000000000000000000000000000
 			assert.Contains(t, err.Error(), "value out of range")
 		})
 	}
+}
+
+func TestParseMembersEmptyError(t *testing.T) {
+	quoromToolOutput := []byte(``)
+
+	_, err := parseMembers(quoromToolOutput)
+	assert.EqualError(t, err, "could not find membership information")
+}
+
+func TestParseMembersUintError(t *testing.T) {
+	quoromToolOutput := []byte(`Membership information
+----------------------
+	Nodeid      Votes Name
+1084780051 10000000000000000000000000000000000000000000000 dma-dog-hana01`)
+
+	_, err := parseMembers(quoromToolOutput)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "could not parse vote number to uint64")
+	assert.Contains(t, err.Error(), "value out of range")
 }
