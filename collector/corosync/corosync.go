@@ -23,7 +23,7 @@ func NewCollector(cfgToolPath string, quorumToolPath string) (*corosyncCollector
 		NewParser(),
 	}
 	c.SetDescriptor("quorate", "Whether or not the cluster is quorate", nil)
-	c.SetDescriptor("rings", "The status of each Corosync ring; 1 means healthy, 0 means faulty.", []string{"id", "node_id", "number", "address"})
+	c.SetDescriptor("rings", "The status of each Corosync ring; 1 means healthy, 0 means faulty.", []string{"ring_id", "node_id", "number", "address"})
 	c.SetDescriptor("ring_errors", "The number of faulty corosync rings", nil)
 	c.SetDescriptor("ring_nodes", "The number of faulty corosync rings", nil)
 	c.SetDescriptor("quorum_votes", "Cluster quorum votes; one line per type", []string{"type"})
