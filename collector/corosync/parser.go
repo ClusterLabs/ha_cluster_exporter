@@ -15,17 +15,17 @@ type Parser interface {
 type Status struct {
 	NodeId string
 	RingId string
-	Seq int64
+	Seq uint64
 	Rings []Ring
 	QuorumVotes QuorumVotes
 	Quorate bool
 }
 
 type QuorumVotes struct {
-	ExpectedVotes int64
-	HighestExpected int64
-	TotalVotes int64
-	Quorum int64
+	ExpectedVotes uint64
+	HighestExpected uint64
+	TotalVotes uint64
+	Quorum uint64
 }
 
 type Ring struct {
@@ -79,19 +79,19 @@ func parseNodeId(cfgToolOutput []byte) (string, error) {
 	return string(matches[1]), nil
 }
 
-func parseRingIdAndSeq(cfgToolOutput []byte) (string, int64, error) {
+func parseRingIdAndSeq(cfgToolOutput []byte) (string, uint64, error) {
 	nodeRe := regexp.MustCompile(`(?m)Ring ID:\s+(\w+)/(\d+)`)
 	matches := nodeRe.FindSubmatch(cfgToolOutput)
 	if matches == nil {
 		return "", 0, errors.New("could not find Ring ID line")
 	}
 
-	seq, err := strconv.ParseInt(string(matches[2]), 10, 64)
+	seq, err := strconv.Atoi(string(matches[2]))
 	if err != nil {
-		return "", 0, errors.Wrap(err, "could not parse seq number to int64")
+		return "", 0, errors.Wrap(err, "could not parse seq number to uint64")
 	}
 
-	return string(matches[1]), seq, nil
+	return string(matches[1]), uint64(seq), nil
 }
 
 func parseQuorate(quorumToolOutput []byte) (bool, error) {
@@ -125,21 +125,31 @@ func parseRings(cfgToolOutput []byte) []Ring {
 }
 
 func parseQuoromVotes(quorumToolOutput []byte) (quorumVotes QuorumVotes, err error) {
-	re := regexp.MustCompile(`Expected votes:\s+(\d+)\s+Highest Expected:\s+(\d+)\s+Total votes:\s+(\d+)\s+Quorum:\s+(\d+)`)
+	re := regexp.MustCompile(`(?m)Expected votes:\s+(\d+)\s+Highest expected:\s+(\d+)\s+Total votes:\s+(\d+)\s+Quorum:\s+(\d+)`)
 
 	matches := re.FindSubmatch(quorumToolOutput)
 	if matches == nil {
 		return quorumVotes, errors.New("could not find quorum votes numbers")
 	}
 
-	quorumVotes.ExpectedVotes, err = strconv.ParseInt(string(matches[1]), 10, 64)
-	quorumVotes.HighestExpected, err = strconv.ParseInt(string(matches[2]), 10, 64)
-	quorumVotes.TotalVotes, err = strconv.ParseInt(string(matches[3]), 10, 64)
-	quorumVotes.Quorum, err = strconv.ParseInt(string(matches[4]), 10, 64)
-
-	// i'm lazy, so I'll just report the last one
+	quorumVotes.ExpectedVotes, err = strconv.ParseUint(string(matches[1]), 10, 64)
 	if err != nil {
-		return quorumVotes, errors.Wrap(err, "could not parse vote number to int64")
+		return quorumVotes, errors.Wrap(err, "could not parse vote number to uint64")
+	}
+
+	quorumVotes.HighestExpected, err = strconv.ParseUint(string(matches[2]), 10, 64)
+	if err != nil {
+		return quorumVotes, errors.Wrap(err, "could not parse vote number to uint64")
+	}
+
+	quorumVotes.TotalVotes, err = strconv.ParseUint(string(matches[3]), 10, 64)
+	if err != nil {
+		return quorumVotes, errors.Wrap(err, "could not parse vote number to uint64")
+	}
+
+	quorumVotes.Quorum, err = strconv.ParseUint(string(matches[4]), 10, 64)
+	if err != nil {
+		return quorumVotes, errors.Wrap(err, "could not parse vote number to uint64")
 	}
 
 	return quorumVotes, nil
