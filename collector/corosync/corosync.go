@@ -23,8 +23,9 @@ func NewCollector(cfgToolPath string, quorumToolPath string) (*corosyncCollector
 		NewParser(),
 	}
 	c.SetDescriptor("quorate", "Whether or not the cluster is quorate", nil)
-	c.SetDescriptor("rings", "The status of each Corosync ring; 1 means healthy, 0 means faulty.", []string{"id", "number", "address"})
+	c.SetDescriptor("rings", "The status of each Corosync ring; 1 means healthy, 0 means faulty.", []string{"id", "node_id", "number", "address"})
 	c.SetDescriptor("ring_errors", "The number of faulty corosync rings", nil)
+	c.SetDescriptor("ring_nodes", "The number of faulty corosync rings", nil)
 	c.SetDescriptor("quorum_votes", "Cluster quorum votes; one line per type", []string{"type"})
 
 	return c, nil
@@ -87,6 +88,6 @@ func (c *corosyncCollector) collectRings(status *Status, ch chan<- prometheus.Me
 		if ring.Faulty {
 			healthy = 0
 		}
-		ch <- c.MakeGaugeMetric("rings", healthy, status.RingId, ring.Number, ring.Address)
+		ch <- c.MakeGaugeMetric("rings", healthy, status.RingId, status.NodeId, ring.Number, ring.Address)
 	}
 }
