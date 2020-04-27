@@ -47,7 +47,7 @@ ha_cluster_pacemaker_nodes{node="node02",status="shutdown",type="member"} 0
 ha_cluster_pacemaker_nodes{node="node02",status="standby",type="member"} 0
 ha_cluster_pacemaker_nodes{node="node02",status="standby_onfail",type="member"} 0
 ha_cluster_pacemaker_nodes{node="node02",status="unclean",type="member"} 0
-# HELP ha_cluster_pacemaker_resources The status of each resource in the cluster; one line per id, per status; 1 means the resource is in that status, 0 otherwise
+# HELP ha_cluster_pacemaker_resources The status of each resource in the cluster; 1 means the resource is in that status, 0 otherwise
 # TYPE ha_cluster_pacemaker_resources gauge
 ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Dummy",clone="",group="",managed="true",node="",resource="test-stop",role="stopped",status="active"} 0
 ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Dummy",clone="",group="",managed="true",node="",resource="test-stop",role="stopped",status="blocked"} 0
