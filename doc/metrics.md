@@ -5,9 +5,6 @@ This document describes the metrics exposed by `ha_cluster_exporter`.
 General notes:
 - All the metrics are _namespaced_ with the prefix `ha_cluster`, which is followed by a _subsystem_, and both are in turn composed into a _Fully Qualified Name_ (FQN) of each metrics.
 - All the metrics and labels _names_ are in snake_case, as conventional with Prometheus. That said, as much as we'll try to keep this consistent throughout the project, the label _values_ may not actually follow this convention, though (e.g. value is a hostname).
-- Some metrics, like `ha_cluster_pacemaker_nodes`, `ha_cluster_pacemaker_resources`, share a common trait:
-  - their labels contain the relevant data you may want to track or use for aggregation and filtering;
-  - 
 
 - If the `enable-timestamps` option is on, all the metrics will be timestamped with the Unix epoch time in milliseconds.
 
