@@ -26,8 +26,8 @@ func NewCollector(crmMonPath string, cibAdminPath string) (*pacemakerCollector, 
 		crmmon.NewCrmMonParser(crmMonPath),
 		cib.NewCibAdminParser(cibAdminPath),
 	}
-	c.SetDescriptor("nodes", "The nodes in the cluster; one line per name, per status", []string{"node", "type", "status"})
-	c.SetDescriptor("resources", "The resources in the cluster; one line per id, per status", []string{"node", "resource", "role", "managed", "status", "agent", "group", "clone"})
+	c.SetDescriptor("nodes", "The status of each node in the cluster; 1 means the node is in that status, 0 otherwise", []string{"node", "type", "status"})
+	c.SetDescriptor("resources", "The status of each resource in the cluster; 1 means the resource is in that status, 0 otherwise", []string{"node", "resource", "role", "managed", "status", "agent", "group", "clone"})
 	c.SetDescriptor("stonith_enabled", "Whether or not stonith is enabled", nil)
 	c.SetDescriptor("fail_count", "The Fail count number per node and resource id", []string{"node", "resource"})
 	c.SetDescriptor("migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"})
@@ -82,14 +82,6 @@ func (c *pacemakerCollector) recordStonithStatus(crmMon crmmon.Root, ch chan<- p
 
 func (c *pacemakerCollector) recordNodes(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
 	for _, node := range crmMon.Nodes {
-		var nodeType string
-		switch node.Type {
-		case "member", "ping", "remote":
-			nodeType = node.Type
-			break
-		default:
-			nodeType = "unknown"
-		}
 
 		// this is a map of boolean flags for each possible status of the node
 		nodeStatuses := map[string]bool{
@@ -105,11 +97,13 @@ func (c *pacemakerCollector) recordNodes(crmMon crmmon.Root, ch chan<- prometheu
 		}
 
 		// since we have a combined cardinality of node * status, we cycle through all the possible statuses
-		// and we record a new metric if the flag for that status is on
+		// and we record a metric for each one
 		for nodeStatus, flag := range nodeStatuses {
+			var statusValue float64
 			if flag {
-				ch <- c.MakeGaugeMetric("nodes", float64(1), node.Name, nodeType, nodeStatus)
+				statusValue = 1
 			}
+			ch <- c.MakeGaugeMetric("nodes", statusValue, node.Name, node.Type, nodeStatus)
 		}
 	}
 }
@@ -139,15 +133,14 @@ func (c *pacemakerCollector) recordResource(resource crmmon.Resource, group stri
 		"blocked":         resource.Blocked,
 		"failed":          resource.Failed,
 		"failure_ignored": resource.FailureIgnored,
-		// if no status flag is active we record an empty status; probably a stopped resource, which is tracked in the "role" label instead
-		"": !(resource.Active || resource.Orphaned || resource.Blocked || resource.Failed || resource.FailureIgnored),
 	}
 
 	// since we have a combined cardinality of resource * status, we cycle through all the possible statuses
 	// and we record a new metric if the flag for that status is on
 	for resourceStatus, flag := range resourceStatuses {
-		if !flag {
-			continue
+		var statusValue float64
+		if flag {
+			statusValue = 1
 		}
 		var nodeName string
 		if resource.Node != nil {
@@ -155,7 +148,7 @@ func (c *pacemakerCollector) recordResource(resource crmmon.Resource, group stri
 		}
 		ch <- c.MakeGaugeMetric(
 			"resources",
-			float64(1),
+			statusValue,
 			nodeName,
 			resource.Id,
 			strings.ToLower(resource.Role),
