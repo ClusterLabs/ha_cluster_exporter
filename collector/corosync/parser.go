@@ -122,14 +122,20 @@ func parseQuorate(quorumToolOutput []byte) (bool, error) {
 }
 
 func parseRings(cfgToolOutput []byte) []Ring {
-	re := regexp.MustCompile(`(?m)RING ID (?P<id>\d+)\s+id \s*= (?P<address>.+)\s+status \s*= (?P<status>.+)`)
+	// the following regex matches and capture all the relevant elements of this kind of output from corosync-cfgtool
+	/*
+	   RING ID 0
+	   	id	= 192.168.125.15
+	   	status	= ring 0 active with no faults
+	*/
+	re := regexp.MustCompile(`(?m)RING ID (?P<number>\d+)\s+id \s*= (?P<address>.+)\s+status \s*= (?P<status>.+)`)
 	matches := re.FindAllSubmatch(cfgToolOutput, -1)
 	rings := make([]Ring, len(matches))
 	for i, match := range matches {
 		namedMatches := extractRENamedCaptureGroups(re, match)
 
 		rings[i] = Ring{
-			Number:  namedMatches["id"],
+			Number:  namedMatches["number"],
 			Address: namedMatches["address"],
 			Faulty:  strings.Contains(namedMatches["status"], "FAULTY"),
 		}
@@ -138,6 +144,16 @@ func parseRings(cfgToolOutput []byte) []Ring {
 }
 
 func parseQuoromVotes(quorumToolOutput []byte) (quorumVotes QuorumVotes, err error) {
+	// the following regex matches and capture all the relevant elements of this kind of output from corosync-quorumtool
+	/*
+	   Votequorum information
+	   ----------------------
+	   Expected votes:   2
+	   Highest expected: 2
+	   Total votes:      1
+	   Quorum:           1
+	   Flags:            2Node Quorate
+	*/
 	re := regexp.MustCompile(`(?m)Expected votes:\s+(\d+)\s+Highest expected:\s+(\d+)\s+Total votes:\s+(\d+)\s+Quorum:\s+(\d+)`)
 
 	matches := re.FindSubmatch(quorumToolOutput)
@@ -169,12 +185,24 @@ func parseQuoromVotes(quorumToolOutput []byte) (quorumVotes QuorumVotes, err err
 }
 
 func parseMembers(quorumToolOutput []byte) (members []Member, err error) {
+	// the following regex matches and capture all the relevant elements of this kind of output from corosync-quorumtool
+	/*
+	   Membership information
+	   ----------------------
+	      Nodeid      Votes Name
+	   		1          1 192.168.125.24
+	   		2          1 192.168.125.25 (local)
+	*/
 	sectionRE := regexp.MustCompile(`(?m)Membership information\n-+\s+Nodeid\s+Votes\s+Name\n((?:\w+\s+\d+\s[\w-]+(?:\s\(local\))?\n?)+)`)
 	sectionMatch := sectionRE.FindSubmatch(quorumToolOutput)
 	if sectionMatch == nil {
 		return nil, errors.New("could not find membership information")
 	}
 
+	// we also need a second regex to capture the single elements of each node line, e.g.:
+	/*
+		1          1 192.168.125.24 (local)
+	*/
 	linesRE := regexp.MustCompile(`(?m)(?P<node_id>\w+)\s+(?P<votes>\d+)\s(?P<name>[\w-]+)(?:\s(?P<local>\(local\)))?\n?`)
 	linesMatches := linesRE.FindAllSubmatch(sectionMatch[1], -1)
 	for _, match := range linesMatches {
