@@ -48,7 +48,7 @@ test: download
 	go test -v ./...
 
 coverage:
-	@mkdir build
+	@mkdir -p build
 	go test -cover -coverprofile=build/coverage ./...
 	go tool cover -html=build/coverage
 

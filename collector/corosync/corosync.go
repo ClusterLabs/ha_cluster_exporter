@@ -1,11 +1,7 @@
 package corosync
 
 import (
-	"fmt"
 	"os/exec"
-	"regexp"
-	"strconv"
-	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -24,9 +20,12 @@ func NewCollector(cfgToolPath string, quorumToolPath string) (*corosyncCollector
 		collector.NewDefaultCollector("corosync"),
 		cfgToolPath,
 		quorumToolPath,
+		NewParser(),
 	}
 	c.SetDescriptor("quorate", "Whether or not the cluster is quorate", nil)
-	c.SetDescriptor("ring_errors", "The number of corosync ring errors", nil)
+	c.SetDescriptor("rings", "The status of each Corosync ring; 1 means healthy, 0 means faulty.", []string{"ring_id", "node_id", "number", "address"})
+	c.SetDescriptor("ring_errors", "The total number of faulty corosync rings", nil)
+	c.SetDescriptor("member_votes", "How many votes each member node has contributed with to the current quorum", []string{"node_id", "node", "local"})
 	c.SetDescriptor("quorum_votes", "Cluster quorum votes; one line per type", []string{"type"})
 
 	return c, nil
@@ -36,129 +35,70 @@ type corosyncCollector struct {
 	collector.DefaultCollector
 	cfgToolPath    string
 	quorumToolPath string
+	cfgToolParser  Parser
 }
 
 func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {
 	log.Debugln("Collecting corosync metrics...")
 
-	err := c.collectRingErrorsTotal(ch)
-	if err != nil {
-		log.Warnf("Corosync Collector scrape failed: %s", err)
-	}
+	// We suppress the exec errors because if any interface is faulty the tools will exit with code 1, but we still want to parse the output.
+	cfgToolOutput, _ := exec.Command(c.cfgToolPath, "-s").Output()
+	quorumToolOutput, _ := exec.Command(c.quorumToolPath).Output()
 
-	quorumStatusRaw := c.getQuoromStatus()
-	quorumStatus, quorate, err := parseQuoromStatus(quorumStatusRaw)
+	status, err := c.cfgToolParser.Parse(cfgToolOutput, quorumToolOutput)
 	if err != nil {
 		log.Warnf("Corosync Collector scrape failed: %s", err)
 		return
 	}
 
-	ch <- c.MakeGaugeMetric("quorate", quorate)
-
-	for voteType, value := range quorumStatus {
-		ch <- c.MakeGaugeMetric("quorum_votes", float64(value), voteType)
-	}
+	c.collectRings(status, ch)
+	c.collectRingErrors(status, ch)
+	c.collectQuorate(status, ch)
+	c.collectQuorumVotes(status, ch)
+	c.collectMemberVotes(status, ch)
 }
 
-func (c *corosyncCollector) collectRingErrorsTotal(ch chan<- prometheus.Metric) error {
-	ringStatus := c.getCorosyncRingStatus()
-	ringErrorsTotal, err := parseRingStatus(ringStatus)
-	if err != nil {
-		return errors.Wrap(err, "cannot parse ring status")
-	}
-
-	ch <- c.MakeGaugeMetric("ring_errors", float64(ringErrorsTotal))
-
-	return nil
+func (c *corosyncCollector) collectQuorumVotes(status *Status, ch chan<- prometheus.Metric) {
+	ch <- c.MakeGaugeMetric("quorum_votes", float64(status.QuorumVotes.ExpectedVotes), "expected_votes")
+	ch <- c.MakeGaugeMetric("quorum_votes", float64(status.QuorumVotes.HighestExpected), "highest_expected")
+	ch <- c.MakeGaugeMetric("quorum_votes", float64(status.QuorumVotes.TotalVotes), "total_votes")
+	ch <- c.MakeGaugeMetric("quorum_votes", float64(status.QuorumVotes.Quorum), "quorum")
 }
 
-func (c *corosyncCollector) getQuoromStatus() []byte {
-	// We suppress the exec error because if any interface is faulty, the tool will exit with code 1.
-	// If all interfaces are active, exit code will be 0.
-	quorumInfoRaw, _ := exec.Command(c.quorumToolPath).Output()
-	return quorumInfoRaw
-}
-
-func parseQuoromStatus(quoromStatusRaw []byte) (quorumVotes map[string]int, quorate float64, err error) {
-	quoromRaw := string(quoromStatusRaw)
-	// Quorate:          Yes
-
-	// Votequorum information
-	// ----------------------
-	// Expected votes:   2
-	// Highest expected: 2
-	// Total votes:      2
-	// Quorum:           1
-
-	// We apply the same method for all the metrics/data:
-	// first split the string for finding the word , e.g "Expected votes:", and get it via regex
-	// only the number   2,
-	// and convert it to integer type
-	numberOnly := regexp.MustCompile("[0-9]+")
-	wordOnly := regexp.MustCompile("[a-zA-Z]+")
-	quoratePresent := regexp.MustCompile("Quorate:")
-
-	// In case of error, the binary is there but execution was erroring out, check output for quorate string.
-	quorateWordPresent := quoratePresent.FindString(string(quoromRaw))
-
-	// check the case there is an sbd_config but the SBD_DEVICE is not set
-
-	if quorateWordPresent == "" {
-		return nil, quorate, errors.New("cannot parse quorum status")
-	}
-
-	quorateRaw := wordOnly.FindString(strings.SplitAfterN(quoromRaw, "Quorate:", 2)[1])
-	quorateString := strings.ToLower(quorateRaw)
-
-	if quorateString == "yes" {
+func (c *corosyncCollector) collectQuorate(status *Status, ch chan<- prometheus.Metric) {
+	var quorate float64
+	if status.Quorate {
 		quorate = 1
 	}
-
-	expVotes, _ := strconv.Atoi(numberOnly.FindString(strings.SplitAfterN(quoromRaw, "Expected votes:", 2)[1]))
-	highVotes, _ := strconv.Atoi(numberOnly.FindString(strings.SplitAfterN(quoromRaw, "Highest expected:", 2)[1]))
-	totalVotes, _ := strconv.Atoi(numberOnly.FindString(strings.SplitAfterN(quoromRaw, "Total votes:", 2)[1]))
-	quorum, _ := strconv.Atoi(numberOnly.FindString(strings.SplitAfterN(quoromRaw, "Quorum:", 2)[1]))
-
-	quorumVotes = map[string]int{
-		"expected_votes":   expVotes,
-		"highest_expected": highVotes,
-		"total_votes":      totalVotes,
-		"quorum":           quorum,
-	}
-
-	if len(quorumVotes) == 0 {
-		return quorumVotes, quorate, fmt.Errorf("could not retrieve any quorum information")
-	}
-
-	return quorumVotes, quorate, nil
+	ch <- c.MakeGaugeMetric("quorate", quorate)
 }
 
-// get status ring and return it as bytes
-// this function can return also just an malformed output in case of error, we don't check.
-// It is the parser that will check the status
-func (c *corosyncCollector) getCorosyncRingStatus() []byte {
-	// We suppress the exec error because if any interface is faulty, the tool will exit with code 1.
-	// If all interfaces are active/without error, exit code will be 0.
-	ringStatusRaw, _ := exec.Command(c.cfgToolPath, "-s").Output()
-	return ringStatusRaw
-}
-
-// return the number of RingError that we will use as gauge, and error if somethings unexpected happens
-func parseRingStatus(ringStatus []byte) (int, error) {
-	statusRaw := string(ringStatus)
-	// check if there is a ring ERROR first
-	ringErrorsTotal := strings.Count(statusRaw, "FAULTY")
-
-	// in case there is no error we need to check that the output is not
-	if ringErrorsTotal == 0 {
-		// if there is no RING ID word, the command corosync-cfgtool went wrong/error out
-		if strings.Count(statusRaw, "RING ID") == 0 {
-			return 0, fmt.Errorf("corosync-cfgtool returned unexpected output: %s", statusRaw)
+func (c *corosyncCollector) collectRingErrors(status *Status, ch chan<- prometheus.Metric) {
+	var numErrors float64
+	for _, ring := range status.Rings {
+		if ring.Faulty {
+			numErrors += 1
 		}
-
-		return 0, nil
 	}
+	ch <- c.MakeGaugeMetric("ring_errors", numErrors)
+}
 
-	// there is a ringError
-	return ringErrorsTotal, nil
+func (c *corosyncCollector) collectRings(status *Status, ch chan<- prometheus.Metric) {
+	for _, ring := range status.Rings {
+		var healthy float64 = 1
+		if ring.Faulty {
+			healthy = 0
+		}
+		ch <- c.MakeGaugeMetric("rings", healthy, status.RingId, status.NodeId, ring.Number, ring.Address)
+	}
+}
+
+func (c *corosyncCollector) collectMemberVotes(status *Status, ch chan<- prometheus.Metric) {
+	for _, member := range status.Members {
+		local := "false"
+		if member.Local {
+			local = "true"
+		}
+		ch <- c.MakeGaugeMetric("member_votes", float64(member.Votes), member.Id, member.Name, local)
+	}
 }

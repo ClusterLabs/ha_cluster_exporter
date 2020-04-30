@@ -7,6 +7,14 @@ ha_cluster_corosync_quorum_votes{type="expected_votes"} 2
 ha_cluster_corosync_quorum_votes{type="highest_expected"} 2
 ha_cluster_corosync_quorum_votes{type="quorum"} 1
 ha_cluster_corosync_quorum_votes{type="total_votes"} 2
-# HELP ha_cluster_corosync_ring_errors The number of corosync ring errors
+# HELP ha_cluster_corosync_ring_errors The total number of faulty corosync rings
 # TYPE ha_cluster_corosync_ring_errors gauge
 ha_cluster_corosync_ring_errors 1
+# HELP ha_cluster_corosync_rings The status of each Corosync ring; 1 means healthy, 0 means faulty.
+# TYPE ha_cluster_corosync_rings gauge
+ha_cluster_corosync_rings{address="10.0.0.1",node_id="1084783375",number="0",ring_id="1084783375"} 0
+ha_cluster_corosync_rings{address="172.16.0.1",node_id="1084783375",number="1",ring_id="1084783375"} 1
+# HELP ha_cluster_corosync_member_votes How many votes each member node has contributed with to the current quorum
+# TYPE ha_cluster_corosync_member_votes gauge
+ha_cluster_corosync_member_votes{local="true",node="stefanotorresi-hana01",node_id="1084783375"} 1
+ha_cluster_corosync_member_votes{local="false",node="stefanotorresi-hana02",node_id="1084783376"} 1
