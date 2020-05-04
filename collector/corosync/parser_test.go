@@ -194,3 +194,42 @@ func TestParseMembersUintError(t *testing.T) {
 	assert.Contains(t, err.Error(), "could not parse vote number to uint64")
 	assert.Contains(t, err.Error(), "value out of range")
 }
+
+func TestParseMembersWithAnotherExample(t *testing.T) {
+	quorumToolOutput := []byte(`Quorum information
+------------------
+Date:             Mon May  4 16:50:13 2020
+Quorum provider:  corosync_votequorum
+Nodes:            2
+Node ID:          2
+Ring ID:          1/8
+Quorate:          Yes
+
+Votequorum information
+----------------------
+Expected votes:   2
+Highest expected: 2
+Total votes:      2
+Quorum:           1  
+Flags:            2Node Quorate WaitForAll 
+
+Membership information
+----------------------
+    Nodeid      Votes Name
+         1          1 192.168.127.20
+         2          1 192.168.127.21 (local)`)
+
+	members, err := parseMembers(quorumToolOutput)
+
+	assert.NoError(t, err)
+
+	assert.Len(t, members, 2)
+	assert.Exactly(t, "1", members[0].Id)
+	assert.Exactly(t, "192.168.127.20", members[0].Name)
+	assert.False(t, members[0].Local)
+	assert.EqualValues(t, 1, members[0].Votes)
+	assert.Exactly(t, "2", members[1].Id)
+	assert.Exactly(t, "192.168.127.21", members[1].Name)
+	assert.True(t, members[1].Local)
+	assert.EqualValues(t, 1, members[1].Votes)
+}

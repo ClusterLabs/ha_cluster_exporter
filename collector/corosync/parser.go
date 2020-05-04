@@ -193,7 +193,7 @@ func parseMembers(quorumToolOutput []byte) (members []Member, err error) {
 	   		1          1 192.168.125.24
 	   		2          1 192.168.125.25 (local)
 	*/
-	sectionRE := regexp.MustCompile(`(?m)Membership information\n-+\s+Nodeid\s+Votes\s+Name\n((?:\w+\s+\d+\s[\w-]+(?:\s\(local\))?\n?)+)`)
+	sectionRE := regexp.MustCompile(`(?m)Membership information\n-+\s+Nodeid\s+Votes\s+Name\n+((?:.*\n?)+)`)
 	sectionMatch := sectionRE.FindSubmatch(quorumToolOutput)
 	if sectionMatch == nil {
 		return nil, errors.New("could not find membership information")
@@ -203,7 +203,7 @@ func parseMembers(quorumToolOutput []byte) (members []Member, err error) {
 	/*
 		1          1 192.168.125.24 (local)
 	*/
-	linesRE := regexp.MustCompile(`(?m)(?P<node_id>\w+)\s+(?P<votes>\d+)\s(?P<name>[\w-]+)(?:\s(?P<local>\(local\)))?\n?`)
+	linesRE := regexp.MustCompile(`(?m)(?P<node_id>\w+)\s+(?P<votes>\d+)\s(?P<name>[\w-\.]+)(?:\s(?P<local>\(local\)))?\n?`)
 	linesMatches := linesRE.FindAllSubmatch(sectionMatch[1], -1)
 	for _, match := range linesMatches {
 		matches := extractRENamedCaptureGroups(linesRE, match)
