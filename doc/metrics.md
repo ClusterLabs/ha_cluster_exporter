@@ -95,6 +95,8 @@ A value of `1` means the resource is in the status specified by the `status` lab
 #### Labels
 
 - `agent`: the name of the resource agent for this resource.
+- `clone`: the name of the clone this resource belongs to, if any.
+- `group`: the name of the group this resource belongs to, if any.
 - `managed`: either `true` or `false`.
 - `node`: the name of the node hosting the resource.
 - `resource`: the unique resource name.
