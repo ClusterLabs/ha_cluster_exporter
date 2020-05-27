@@ -93,14 +93,10 @@ func parseNodeId(cfgToolOutput []byte) (string, error) {
 }
 
 func parseRingIdAndSeq(cfgToolOutput []byte) (string, uint64, error) {
-	nodeRe := regexp.MustCompile(`(?m)Ring ID:\s+(\w+)/(\d+)`)
+	nodeRe := regexp.MustCompile(`(?m)Ring ID:\s+(\w+)[\.|/](\d+)`)
 	matches := nodeRe.FindSubmatch(cfgToolOutput)
 	if matches == nil {
-		nodeRe = regexp.MustCompile(`(?m)Ring ID:\s+(\w+).(\d+)`)
-		matches = nodeRe.FindSubmatch(cfgToolOutput)
-		if matches == nil {
-			return "", 0, errors.New("could not find Ring ID line")
-		}
+		return "", 0, errors.New("could not find Ring ID line")
 	}
 
 	seq, err := strconv.Atoi(string(matches[2]))
@@ -138,12 +134,8 @@ func parseRings(cfgToolOutput []byte) []Ring {
 	   	addr	= 192.168.125.15
 	   	status	= ring 0 active with no faults
 	*/
-	re := regexp.MustCompile(`(?m)RING ID (?P<number>\d+)\s+id \s*= (?P<address>.+)\s+status \s*= (?P<status>.+)`)
+	re := regexp.MustCompile(`(?m)(?P<prefix>RING|Link) ID (?P<number>\d+)\s+(?P<id>id|addr) \s*= (?P<address>.+)\s+status \s*= (?P<status>.+)`)
 	matches := re.FindAllSubmatch(cfgToolOutput, -1)
-	if matches == nil {
-		re = regexp.MustCompile(`(?m)Link ID (?P<number>\d+)\s+addr \s*= (?P<address>.+)\s+status \s*= (?P<status>.+)`)
-		matches = re.FindAllSubmatch(cfgToolOutput, -1)
-	}
 	rings := make([]Ring, len(matches))
 	for i, match := range matches {
 		namedMatches := extractRENamedCaptureGroups(re, match)
