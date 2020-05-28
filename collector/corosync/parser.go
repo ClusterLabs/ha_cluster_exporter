@@ -93,7 +93,7 @@ func parseNodeId(cfgToolOutput []byte) (string, error) {
 }
 
 func parseRingIdAndSeq(cfgToolOutput []byte) (string, uint64, error) {
-	nodeRe := regexp.MustCompile(`(?m)Ring ID:\s+(\w+)/(\d+)`)
+	nodeRe := regexp.MustCompile(`(?m)Ring ID:\s+(\w+)[\.|/](\d+)`)
 	matches := nodeRe.FindSubmatch(cfgToolOutput)
 	if matches == nil {
 		return "", 0, errors.New("could not find Ring ID line")
@@ -128,7 +128,13 @@ func parseRings(cfgToolOutput []byte) []Ring {
 	   	id	= 192.168.125.15
 	   	status	= ring 0 active with no faults
 	*/
-	re := regexp.MustCompile(`(?m)RING ID (?P<number>\d+)\s+id \s*= (?P<address>.+)\s+status \s*= (?P<status>.+)`)
+	// in corosync v2.99.0+ this has changed to
+	/*
+	   Link ID 0
+	   	addr	= 192.168.125.15
+	   	status	= ring 0 active with no faults
+	*/
+	re := regexp.MustCompile(`(?m)(?P<prefix>RING|Link) ID (?P<number>\d+)\s+(?P<id>id|addr) \s*= (?P<address>.+)\s+status \s*= (?P<status>.+)`)
 	matches := re.FindAllSubmatch(cfgToolOutput, -1)
 	rings := make([]Ring, len(matches))
 	for i, match := range matches {
