@@ -15,7 +15,6 @@ type Parser interface {
 type Status struct {
 	NodeId      string
 	RingId      string
-	Seq         uint64
 	Rings       []Ring
 	QuorumVotes QuorumVotes
 	Quorate     bool
@@ -57,7 +56,7 @@ func (p *defaultParser) Parse(cfgToolOutput []byte, quorumToolOutput []byte) (*S
 		return nil, errors.Wrap(err, "could not parse node id in corosync-quorumtool output")
 	}
 
-	status.RingId, status.Seq, err = parseRingIdAndSeq(quorumToolOutput)
+	status.RingId, err = parseRingId(quorumToolOutput)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not parse ring id and seq number in corosync-quorumtool output")
 	}
@@ -82,9 +81,9 @@ func (p *defaultParser) Parse(cfgToolOutput []byte, quorumToolOutput []byte) (*S
 	return status, nil
 }
 
-func parseNodeId(cfgToolOutput []byte) (string, error) {
+func parseNodeId(quorumToolOutput []byte) (string, error) {
 	nodeRe := regexp.MustCompile(`(?m)Node ID:\s+(\w+)`)
-	matches := nodeRe.FindSubmatch(cfgToolOutput)
+	matches := nodeRe.FindSubmatch(quorumToolOutput)
 	if matches == nil {
 		return "", errors.New("could not find Node ID line")
 	}
@@ -92,19 +91,36 @@ func parseNodeId(cfgToolOutput []byte) (string, error) {
 	return string(matches[1]), nil
 }
 
-func parseRingIdAndSeq(cfgToolOutput []byte) (string, uint64, error) {
-	nodeRe := regexp.MustCompile(`(?m)Ring ID:\s+(\w+)[\.|/](\d+)`)
-	matches := nodeRe.FindSubmatch(cfgToolOutput)
+func parseRingId(quorumToolOutput []byte) (string, error) {
+	// the following regex matches and capture the ring id from this kind of output from corosync-quorumtool
+	// the ring id is composed by the representative node id (not to be confused with the local node id) and the sequence number
+	/*
+		Quorum information
+		------------------
+		Date:             Sun Sep 29 16:10:37 2019
+		Quorum provider:  corosync_votequorum
+		Nodes:            2
+		Node ID:          1084780051
+		Ring ID:          1084780051.44
+		Quorate:          Yes
+	 */
+	// in corosync < v2.99 the line is slightly different:
+	/*
+		Ring ID:          1084780051/44
+	 */
+	// in corosync < v2.4 there is no representative node id:
+	/*
+		Ring ID:          1084780051
+	*/
+
+	// given the differences in format between corosync versions, we just parse it as a whole string
+	re := regexp.MustCompile(`(?m)Ring ID:\s+\b(.+)\b`)
+	matches := re.FindSubmatch(quorumToolOutput)
 	if matches == nil {
-		return "", 0, errors.New("could not find Ring ID line")
+		return "", errors.New("could not find Ring ID line")
 	}
 
-	seq, err := strconv.Atoi(string(matches[2]))
-	if err != nil {
-		return "", 0, errors.Wrap(err, "could not parse seq number to uint64")
-	}
-
-	return string(matches[1]), uint64(seq), nil
+	return string(matches[1]), nil
 }
 
 func parseQuorate(quorumToolOutput []byte) (bool, error) {
