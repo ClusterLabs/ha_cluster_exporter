@@ -57,8 +57,7 @@ Membership information
 
 	assert.True(t, status.Quorate)
 	assert.Equal(t, "1084780051", status.NodeId)
-	assert.Equal(t, "1084780051", status.RingId)
-	assert.EqualValues(t, 44, status.Seq)
+	assert.Equal(t, "1084780051.44", status.RingId)
 	assert.EqualValues(t, 232, status.QuorumVotes.ExpectedVotes)
 	assert.EqualValues(t, 22, status.QuorumVotes.HighestExpected)
 	assert.EqualValues(t, 21, status.QuorumVotes.TotalVotes)
@@ -76,18 +75,7 @@ Membership information
 	assert.EqualValues(t, 1, members[1].Votes)
 }
 
-func TestLegacyParse(t *testing.T) {
-	p := NewParser()
-
-	cfgToolOutput := []byte(`Printing ring status.
-Local node ID 1084780051
-RING ID 0
-		id      = 10.0.0.1
-		status  = ring 0 active with no faults
-RING ID 1
-		id      = 172.16.0.1
-		status  = ring 1 active with no faults`)
-
+func TestParseRingIdInCorosyncV2_4(t *testing.T) {
 	quoromToolOutput := []byte(`Quorum information
 ------------------
 Date:             Sun Sep 29 16:10:37 2019
@@ -111,38 +99,38 @@ Membership information
 1084780051          1 dma-dog-hana01 (local)
 1084780052          1 dma-dog-hana02`)
 
-	status, err := p.Parse(cfgToolOutput, quoromToolOutput)
+	ringId, err := parseRingId(quoromToolOutput)
 	assert.NoError(t, err)
 
-	rings := status.Rings
+	assert.Equal(t, "1084780051/44", ringId)
+}
 
-	assert.Len(t, rings, 2)
-	assert.Equal(t, "0", rings[0].Number)
-	assert.Equal(t, "10.0.0.1", rings[0].Address)
-	assert.False(t, rings[0].Faulty)
-	assert.Equal(t, "1", rings[1].Number)
-	assert.Equal(t, "172.16.0.1", rings[1].Address)
-	assert.False(t, rings[1].Faulty)
+func TestParseRingIdInCorosyncV2_3(t *testing.T) {
+	quoromToolOutput := []byte(`Quorum information
+------------------
+Date:             Wed May 27 14:16:10 2020
+Quorum provider:  corosync_votequorum
+Nodes:            2
+Node ID:          1
+Ring ID:          100
+Quorate:          Yes
+Votequorum information
+----------------------
+Expected votes:   2
+Highest expected: 2
+Total votes:      2
+Quorum:           1
+Flags:            2Node Quorate WaitForAll
+Membership information
+----------------------
+    Nodeid      Votes Name
+         1          1 10.1.2.4 (local)
+         2          1 10.1.2.5`)
 
-	assert.True(t, status.Quorate)
-	assert.Equal(t, "1084780051", status.NodeId)
-	assert.Equal(t, "1084780051", status.RingId)
-	assert.EqualValues(t, 44, status.Seq)
-	assert.EqualValues(t, 232, status.QuorumVotes.ExpectedVotes)
-	assert.EqualValues(t, 22, status.QuorumVotes.HighestExpected)
-	assert.EqualValues(t, 21, status.QuorumVotes.TotalVotes)
-	assert.EqualValues(t, 421, status.QuorumVotes.Quorum)
+	ringId, err := parseRingId(quoromToolOutput)
+	assert.NoError(t, err)
 
-	members := status.Members
-	assert.Len(t, members, 2)
-	assert.Exactly(t, "1084780051", members[0].Id)
-	assert.Exactly(t, "dma-dog-hana01", members[0].Name)
-	assert.True(t, members[0].Local)
-	assert.EqualValues(t, 1, members[0].Votes)
-	assert.Exactly(t, "1084780052", members[1].Id)
-	assert.Exactly(t, "dma-dog-hana02", members[1].Name)
-	assert.False(t, members[1].Local)
-	assert.EqualValues(t, 1, members[1].Votes)
+	assert.Equal(t, "100", ringId)
 }
 
 func TestParseFaultyRings(t *testing.T) {
@@ -162,7 +150,7 @@ func TestParseFaultyRings(t *testing.T) {
 	assert.False(t, rings[1].Faulty)
 }
 
-func TestLegacyParseFaultyRings(t *testing.T) {
+func TestParseFaultyRingsInCorosyncV2(t *testing.T) {
 	cfgToolOutput := []byte(`Printing ring status.
 	Local node ID 16777226
 	RING ID 0
@@ -211,26 +199,8 @@ func TestParseQuorumVotesEmptyError(t *testing.T) {
 func TestParseRingIdEmptyError(t *testing.T) {
 	quoromToolOutput := []byte(``)
 
-	_, _, err := parseRingIdAndSeq(quoromToolOutput)
+	_, err := parseRingId(quoromToolOutput)
 	assert.EqualError(t, err, "could not find Ring ID line")
-}
-
-func TestParseSeqUintError(t *testing.T) {
-	quoromToolOutput := []byte(`Ring ID:          1084780051.10000000000000000000000000000000000000000000000`)
-
-	_, _, err := parseRingIdAndSeq(quoromToolOutput)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "could not parse seq number to uint64")
-	assert.Contains(t, err.Error(), "value out of range")
-}
-
-func TestParseLegacySeqUintError(t *testing.T) {
-	quoromToolOutput := []byte(`Ring ID:          1084780051/10000000000000000000000000000000000000000000000`)
-
-	_, _, err := parseRingIdAndSeq(quoromToolOutput)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "could not parse seq number to uint64")
-	assert.Contains(t, err.Error(), "value out of range")
 }
 
 func TestParseQuorumVotesUintErrors(t *testing.T) {
