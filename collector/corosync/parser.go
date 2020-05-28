@@ -103,11 +103,11 @@ func parseRingId(quorumToolOutput []byte) (string, error) {
 		Node ID:          1084780051
 		Ring ID:          1084780051.44
 		Quorate:          Yes
-	 */
+	*/
 	// in corosync < v2.99 the line is slightly different:
 	/*
 		Ring ID:          1084780051/44
-	 */
+	*/
 	// in corosync < v2.4 there is no representative node id:
 	/*
 		Ring ID:          1084780051
