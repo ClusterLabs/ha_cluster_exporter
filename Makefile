@@ -1,6 +1,7 @@
 # this is the what ends up in the RPM "Version" field and it is also used as suffix for the built binaries
 # if you want to commit to OBS it must be a remotely available Git reference
-VERSION ?= $(shell git rev-parse --short HEAD)
+VERSION ?= $(shell git describe --tags --abbrev=0)dev+git.$(shell git show -s --format=%ct.%h HEAD)
+DATE = $(shell date --iso-8601=seconds)
 
 # we only use this to comply with RPM changelog conventions at SUSE
 AUTHOR ?= shap-staff@suse.de
@@ -25,7 +26,7 @@ build-all: clean-bin $(ARCHS)
 
 $(ARCHS):
 	@mkdir -p build/bin
-	CGO_ENABLED=0 GOOS=linux GOARCH=$@ go build -trimpath -ldflags "-s -w -X main.version=$(VERSION)" -o build/bin/ha_cluster_exporter-$(VERSION)-$@
+	CGO_ENABLED=0 GOOS=linux GOARCH=$@ go build -trimpath -ldflags "-s -w -X main.version=$(VERSION) -X main.buildDate=$(DATE)" -o build/bin/ha_cluster_exporter-$(VERSION)-$@
 
 install:
 	go install
