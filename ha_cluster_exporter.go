@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
+	"runtime"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -15,6 +17,13 @@ import (
 	"github.com/ClusterLabs/ha_cluster_exporter/collector/pacemaker"
 	"github.com/ClusterLabs/ha_cluster_exporter/collector/sbd"
 	"github.com/ClusterLabs/ha_cluster_exporter/internal"
+)
+
+var (
+	// The released version
+	version string
+	// The time the binary was built
+	buildDate string
 )
 
 func init() {
@@ -45,6 +54,10 @@ func init() {
 
 func main() {
 	var err error
+
+	if len(os.Args) > 1 && os.Args[1] == "version" {
+		handleVersionCommand()
+	}
 
 	flag.Parse()
 
@@ -111,4 +124,12 @@ func main() {
 
 	log.Infof("Serving metrics on %s", fullListenAddress)
 	log.Fatal(http.ListenAndServe(fullListenAddress, nil))
+}
+
+func handleVersionCommand() {
+	if buildDate == "" {
+		buildDate = "at unknown time"
+	}
+	fmt.Printf("ha_cluster_exporter %s\nbuilt with %s %s/%s %s\n", version, runtime.Version(), runtime.GOOS, runtime.GOARCH, buildDate)
+	os.Exit(0)
 }
