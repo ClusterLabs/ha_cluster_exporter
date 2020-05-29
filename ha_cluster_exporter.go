@@ -49,6 +49,7 @@ func init() {
 	flag.String("drbdsetup-path", "/sbin/drbdsetup", "path to drbdsetup executable")
 	flag.String("drbdsplitbrain-path", "/var/run/drbd/splitbrain", "path to drbd splitbrain hooks temporary files")
 	flag.Bool("enable-timestamps", false, "Add the timestamp to every metric line")
+	flag.CommandLine.MarkDeprecated("enable-timestamps", "server-side metric timestamping is discouraged by Prometheus best-practices and should be avoided")
 	flag.CommandLine.SortFlags = false
 
 	err := config.BindPFlags(flag.CommandLine)
