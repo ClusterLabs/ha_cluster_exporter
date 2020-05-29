@@ -20,10 +20,14 @@ import (
 )
 
 var (
-	// The released version
+	// the released version
 	version string
-	// The time the binary was built
+	// the time the binary was built
 	buildDate string
+	// global --help flag
+	helpFlag *bool
+	// global --version flag
+	versionFlag *bool
 )
 
 func init() {
@@ -44,22 +48,33 @@ func init() {
 	flag.String("sbd-config-path", "/etc/sysconfig/sbd", "path to sbd configuration")
 	flag.String("drbdsetup-path", "/sbin/drbdsetup", "path to drbdsetup executable")
 	flag.String("drbdsplitbrain-path", "/var/run/drbd/splitbrain", "path to drbd splitbrain hooks temporary files")
-	flag.Bool("enable-timestamps", false, "Add the timestamp to every metric line (hint: don't do this unless you really know what you are doing)")
+	flag.Bool("enable-timestamps", false, "Add the timestamp to every metric line")
+	flag.CommandLine.SortFlags = false
 
 	err := config.BindPFlags(flag.CommandLine)
 	if err != nil {
-		log.Errorf("Could not bind config to CLI flags: %v", err)
+		log.Fatalf("Could not bind config to CLI flags: %v", err)
 	}
+
+	helpFlag = flag.BoolP("help", "h", false, "show this help message")
+	versionFlag = flag.Bool("version", false, "show version and build information")
 }
 
 func main() {
-	var err error
-
-	if len(os.Args) > 1 && os.Args[1] == "version" {
-		handleVersionCommand()
-	}
-
 	flag.Parse()
+
+	switch {
+	case *helpFlag:
+		showHelp()
+	case *versionFlag:
+		showVersion()
+	default:
+		run()
+	}
+}
+
+func run() {
+	var err error
 
 	err = config.ReadInConfig()
 	if err != nil {
@@ -126,10 +141,15 @@ func main() {
 	log.Fatal(http.ListenAndServe(fullListenAddress, nil))
 }
 
-func handleVersionCommand() {
+func showHelp() {
+	flag.Usage()
+	os.Exit(0)
+}
+
+func showVersion() {
 	if buildDate == "" {
 		buildDate = "at unknown time"
 	}
-	fmt.Printf("ha_cluster_exporter %s\nbuilt with %s %s/%s %s\n", version, runtime.Version(), runtime.GOOS, runtime.GOARCH, buildDate)
+	fmt.Printf("version %s\nbuilt with %s %s/%s %s\n", version, runtime.Version(), runtime.GOOS, runtime.GOARCH, buildDate)
 	os.Exit(0)
 }
