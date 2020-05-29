@@ -44,12 +44,13 @@ Prometheus exporter for Pacemaker HA clusters metrics
 %setup -q -T -D -a 1 # unpack go dependencies in vendor.tar.gz, which was prepared by the source services
 
 %define shortname ha_cluster_exporter
+%define build_date %(date --iso-8601=seconds)
 
 %build
 
 export CGO_ENABLED=0
 go build -mod=vendor \
-         -ldflags="-s -w -X main.version=%{version}" \
+         -ldflags="-s -w -X main.version=%{version} -X main.buildDate=%{build_date}" \
          -o %{shortname}
 
 %install
