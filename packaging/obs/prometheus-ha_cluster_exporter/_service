@@ -3,7 +3,7 @@
         <param name="url">git://github.com/%%REPOSITORY%%.git</param>
         <param name="scm">git</param>
         <param name="revision">%%VERSION%%</param>
-        <param name="exclude">.git</param>
+        <param name="exclude">.git,dashboards</param>
         <param name="versionformat">@PARENT_TAG@+git.%ct.%h</param>
         <param name="filename">prometheus-ha_cluster_exporter</param>
     </service>

@@ -1,0 +1,18 @@
+<services>
+    <service name="tar_scm" mode="disabled">
+        <param name="url">git://github.com/%%REPOSITORY%%.git</param>
+        <param name="scm">git</param>
+        <param name="revision">%%VERSION%%</param>
+        <param name="include">dashboards</param>
+        <param name="versionformat">@PARENT_TAG@+git.%ct.%h</param>
+        <param name="filename">grafana-ha-cluster-dashboards</param>
+        <param name="changesgenerate">enable</param>
+    </service>
+    <service name="set_version" mode="disabled">
+        <param name="file">grafana-ha-cluster-dashboards.spec</param>
+    </service>
+    <service name="recompress" mode="disabled">
+        <param name="file">*.tar</param>
+        <param name="compression">gz</param>
+    </service>
+</services>
