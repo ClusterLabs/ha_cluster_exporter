@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: SUSE Linux Enterprise High Availability Extension
+    folder: SUSE Linux Enterprise
+    folderUid: 3b1e0b26-fc28-4254-88a1-2d3516b5e404
+    type: file
+    allowUiUpdates: true
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards/sleha
