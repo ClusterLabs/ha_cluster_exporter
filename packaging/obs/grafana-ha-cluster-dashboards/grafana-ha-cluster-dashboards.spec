@@ -34,18 +34,16 @@ Grafana Dashboards displaying metrics about a Pacemaker/Corosync High Availabili
 %build
 
 %install
-%define install_dir %{_sharedstatedir}/grafana/dashboards/sleha
-install -d -m0755 %{buildroot}%{install_dir}
-install -m644 dashboards/grafana-ha-cluster-details.json %{buildroot}%{install_dir}/
-install -m644 dashboards/grafana-multi-cluster-overview.json %{buildroot}%{install_dir}/
-install -m644 dashboards/provider-sleha.yaml %{buildroot}%{_sysconfdir}/grafana/provisioning/dashboards/
+install -d -m0755 %{buildroot}%{_sharedstatedir}/grafana/dashboards/sleha
+install -m644 dashboards/*.json %{buildroot}%{_sharedstatedir}/grafana/dashboards/sleha
+install -Dm644 dashboards/provider-sleha.yaml %{buildroot}%{_sysconfdir}/grafana/provisioning/dashboards/
 
 %files
 %defattr(-,root,root)
 %doc dashboard/README.md
 %license LICENSE
-%attr(0755,grafana,grafana) %dir %{install_dir}
-%attr(0644,grafana,grafana) %config %{install_dir}/*
+%attr(0755,grafana,grafana) %dir %{_sharedstatedir}/grafana/dashboards/sleha
+%attr(0644,grafana,grafana) %config %{_sharedstatedir}/grafana/dashboards/sleha/*
 %attr(0644,root,root) %config %{_sysconfdir}/grafana/provisioning/dashboards/provider-sleha.yaml
 
 %changelog
