@@ -89,4 +89,4 @@ dashboards-obs-commit: dashboards-obs-workdir
 	cd build/obs/grafana-ha-cluster-dashboards; osc addremove
 	cd build/obs/grafana-ha-cluster-dashboards; osc commit -m "Update to version $(VERSION)"
 
-.PHONY: default download install static-checks vet-check fmt fmt-check mod-tidy test coverage clean build build-all obs-commit obs-workdir $(ARCHS)
+.PHONY: default download install static-checks vet-check fmt fmt-check mod-tidy test coverage clean build build-all exporter-obs-commit exporter-obs-workdir exporter-obs-changelog dashboards-obs-workdir dashboards-obs-commit $(ARCHS)
