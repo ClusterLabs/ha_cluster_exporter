@@ -83,7 +83,7 @@ dashboards-obs-workdir:
 # we interpolate environment variables in OBS _service file so that we control what is downloaded by the tar_scm source service
 	sed -i 's~%%VERSION%%~$(VERSION)~' build/obs/grafana-ha-cluster-dashboards/_service
 	sed -i 's~%%REPOSITORY%%~$(REPOSITORY)~' build/obs/grafana-ha-cluster-dashboards/_service
-	cd build/obs/prometheus-ha_cluster_exporter; osc service runall
+	cd build/obs/grafana-ha-cluster-dashboards; osc service runall
 
 dashboards-obs-commit: dashboards-obs-workdir
 	cd build/obs/grafana-ha-cluster-dashboards; osc addremove

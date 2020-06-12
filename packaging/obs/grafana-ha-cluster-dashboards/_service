@@ -4,7 +4,7 @@
         <param name="scm">git</param>
         <param name="revision">%%VERSION%%</param>
         <param name="include">dashboards</param>
-        <param name="versionformat">@PARENT_TAG@+git.%ct.%h</param>
+        <param name="versionformat">1.0.0+git.%ct.%h</param>
         <param name="filename">grafana-ha-cluster-dashboards</param>
         <param name="changesgenerate">enable</param>
     </service>
