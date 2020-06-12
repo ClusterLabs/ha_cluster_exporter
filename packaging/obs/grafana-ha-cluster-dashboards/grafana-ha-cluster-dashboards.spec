@@ -24,6 +24,7 @@ Url:            https://github.com/ClusterLabs/ha_cluster_exporter
 Source:         %{name}-%{version}.tar.gz
 BuildArch:      noarch
 Requires:       grafana
+BuildRequires:  grafana
 
 %description
 Grafana Dashboards displaying metrics about a Pacemaker/Corosync High Availability Cluster.
@@ -34,16 +35,16 @@ Grafana Dashboards displaying metrics about a Pacemaker/Corosync High Availabili
 %build
 
 %install
-install -d -m0755 %{buildroot}%{_sharedstatedir}/grafana/dashboards/sleha
-install -m644 dashboards/*.json %{buildroot}%{_sharedstatedir}/grafana/dashboards/sleha
+install -d -m0755 %{buildroot}%{_localstatedir}/lib/grafana/dashboards/sleha
+install -m644 dashboards/*.json %{buildroot}%{_localstatedir}/lib/grafana/dashboards/sleha
 install -Dm644 dashboards/provider-sleha.yaml %{buildroot}%{_sysconfdir}/grafana/provisioning/dashboards/provider-sleha.yaml
 
 %files
 %defattr(-,root,root)
 %doc dashboards/README.md
 %license LICENSE
-%attr(0755,grafana,grafana) %dir %{_sharedstatedir}/grafana/dashboards/sleha
-%attr(0644,grafana,grafana) %config %{_sharedstatedir}/grafana/dashboards/sleha/*
+%attr(0755,grafana,grafana) %dir %{_localstatedir}/lib/grafana/dashboards/sleha
+%attr(0644,grafana,grafana) %config %{_localstatedir}/lib/grafana/dashboards/sleha/*
 %attr(0644,root,root) %config %{_sysconfdir}/grafana/provisioning/dashboards/provider-sleha.yaml
 
 %changelog
