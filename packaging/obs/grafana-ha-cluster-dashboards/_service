@@ -6,7 +6,6 @@
         <param name="include">dashboards,LICENSE</param>
         <param name="versionformat">1.0.0+git.%ct.%h</param>
         <param name="filename">grafana-ha-cluster-dashboards</param>
-        <param name="changesgenerate">enable</param>
     </service>
     <service name="set_version" mode="disabled">
         <param name="file">grafana-ha-cluster-dashboards.spec</param>
