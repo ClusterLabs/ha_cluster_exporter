@@ -8,7 +8,6 @@ AUTHOR ?= shap-staff@suse.de
 
 # you can customize any of the following to build forks
 OBS_PROJECT ?= server:monitoring
-OBS_PACKAGE ?= prometheus-ha_cluster_exporter
 REPOSITORY ?= clusterlabs/ha_cluster_exporter
 
 # the Go archs we crosscompile to
@@ -57,20 +56,37 @@ clean:
 	go clean
 	rm -rf build
 
-prepare-exporter-release:
-	rm -rf build/obs/exporter
-	@mkdir -p build/obs/exporter
-	osc checkout $(OBS_PROJECT) $(OBS_PACKAGE) -o build/obs/exporter
-	rm -f build/obs/exporter/*.tar.gz
-	cp -rv packaging/obs/prometheus-ha_cluster_exporter/* build/obs/exporter/
+exporter-obs-workdir:
+	rm -rf build/obs/prometheus-ha_cluster_exporter
+	@mkdir -p build/obs/prometheus-ha_cluster_exporter
+	osc checkout $(OBS_PROJECT) prometheus-ha_cluster_exporter -o build/obs/prometheus-ha_cluster_exporter
+	rm -f build/obs/prometheus-ha_cluster_exporter/*.tar.gz
+	cp -rv packaging/obs/prometheus-ha_cluster_exporter/* build/obs/prometheus-ha_cluster_exporter/
 # we interpolate environment variables in OBS _service file so that we control what is downloaded by the tar_scm source service
-	sed -i 's~%%VERSION%%~$(VERSION)~' build/obs/exporter/_service
-	sed -i 's~%%REPOSITORY%%~$(REPOSITORY)~' build/obs/exporter/_service
+	sed -i 's~%%VERSION%%~$(VERSION)~' build/obs/prometheus-ha_cluster_exporter/_service
+	sed -i 's~%%REPOSITORY%%~$(REPOSITORY)~' build/obs/prometheus-ha_cluster_exporter/_service
 	cd build/obs; osc service runall
-	.ci/gh_release_to_obs_changeset.py $(REPOSITORY) -a $(AUTHOR) -t $(VERSION) -f build/obs/exporter/$(OBS_PACKAGE).changes || true
 
-exporter-release: prepare-exporter-release
-	cd build/obs/exporter; osc addremove
-	cd build/obs/exporter; osc commit -m "Update to version $(VERSION)"
+exporter-obs-changelog: exporter-obs-workdir
+	.ci/gh_release_to_obs_changeset.py $(REPOSITORY) -a $(AUTHOR) -t $(VERSION) -f build/obs/exporter/prometheus-ha_cluster_exporter.changes || true
 
-.PHONY: default download install static-checks vet-check fmt fmt-check mod-tidy test coverage clean clean-bin clean-obs build build-all obs-commit obs-workdir $(ARCHS)
+exporter-obs-commit: exporter-obs-workdir exporter-obs-changelog
+	cd build/obs/prometheus-ha_cluster_exporter; osc addremove
+	cd build/obs/prometheus-ha_cluster_exporter; osc commit -m "Update to version $(VERSION)"
+
+dashboards-obs-workdir:
+	rm -rf build/obs/grafana-ha-cluster-dashboards
+	@mkdir -p build/obs/grafana-ha-cluster-dashboards
+	osc checkout $(OBS_PROJECT) grafana-ha-cluster-dashboards -o build/obs/grafana-ha-cluster-dashboards
+	rm -f build/obs/grafana-ha-cluster-dashboards/*.tar.gz
+	cp -rv packaging/obs/grafana-ha-cluster-dashboards/* build/obs/grafana-ha-cluster-dashboards/
+# we interpolate environment variables in OBS _service file so that we control what is downloaded by the tar_scm source service
+	sed -i 's~%%VERSION%%~$(VERSION)~' build/obs/grafana-ha-cluster-dashboards/_service
+	sed -i 's~%%REPOSITORY%%~$(REPOSITORY)~' build/obs/grafana-ha-cluster-dashboards/_service
+	cd build/obs; osc service runall
+
+dashboards-obs-commit: dashboards-obs-workdir
+	cd build/obs/grafana-ha-cluster-dashboards; osc addremove
+	cd build/obs/grafana-ha-cluster-dashboards; osc commit -m "Update to version $(VERSION)"
+
+.PHONY: default download install static-checks vet-check fmt fmt-check mod-tidy test coverage clean build build-all obs-commit obs-workdir $(ARCHS)
