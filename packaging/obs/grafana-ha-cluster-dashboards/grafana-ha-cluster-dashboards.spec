@@ -40,7 +40,7 @@ install -Dm644 dashboards/provider-sleha.yaml %{buildroot}%{_sysconfdir}/grafana
 
 %files
 %defattr(-,root,root)
-%doc dashboard/README.md
+%doc dashboards/README.md
 %license LICENSE
 %attr(0755,grafana,grafana) %dir %{_sharedstatedir}/grafana/dashboards/sleha
 %attr(0644,grafana,grafana) %config %{_sharedstatedir}/grafana/dashboards/sleha/*
