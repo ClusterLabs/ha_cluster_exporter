@@ -45,7 +45,7 @@ jobs:
           docker run --rm -t -v "$(pwd):/package" -w /package \
           -e OBS_USER -e OBS_PASS -e OBS_PROJECT -e OBS_PACKAGE -e VERSION -e REPOSITORY=$TRAVIS_REPO_SLUG -e GITHUB_OAUTH_TOKEN \
           shap/continuous_deliver \
-          bash -c "/scripts/init_osc_creds.sh && make obs-commit"
+          bash -c "/scripts/init_osc_creds.sh && make exporter-obs-commit"
     - stage: OBS delivery
       name: Submit Request to OBS stable project
       if: tag IS present
@@ -59,4 +59,4 @@ jobs:
           -e OBS_USER -e OBS_PASS -e OBS_PROJECT -e OBS_PACKAGE -e VERSION -e REPOSITORY=$TRAVIS_REPO_SLUG -e GITHUB_OAUTH_TOKEN \
           -e PACKAGE_NAME=$OBS_PACKAGE -e TARGET_PROJECT=$OBS_DOWNSTREAM_PROJECT \
           shap/continuous_deliver \
-          bash -c "/scripts/init_osc_creds.sh && make obs-commit && /scripts/submit.sh"
+          bash -c "/scripts/init_osc_creds.sh && make exporter-obs-commit && /scripts/submit.sh"
