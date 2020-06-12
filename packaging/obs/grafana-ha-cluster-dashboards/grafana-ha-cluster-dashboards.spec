@@ -35,16 +35,18 @@ Grafana Dashboards displaying metrics about a Pacemaker/Corosync High Availabili
 %build
 
 %install
-install -d -m0755 %{buildroot}%{_localstatedir}/lib/grafana/dashboards/sleha
-install -m644 dashboards/*.json %{buildroot}%{_localstatedir}/lib/grafana/dashboards/sleha
-install -Dm644 dashboards/provider-sleha.yaml %{buildroot}%{_sysconfdir}/grafana/provisioning/dashboards/provider-sleha.yaml
+%define dasboards_dir %{_localstatedir}/lib/grafana/dashboards
+%define provisioning_dir %{_sysconfdir}/grafana/provisioning/dashboards
+install -d -m0755 %{buildroot}%{dasboards_dir}/sleha
+install -m644 dashboards/*.json %{buildroot}%{dasboards_dir}/sleha
+install -Dm644 dashboards/provider-sleha.yaml %{buildroot}%{provisioning_dir}/provider-sleha.yaml
 
 %files
 %defattr(-,root,root)
 %doc dashboards/README.md
 %license LICENSE
-%attr(0755,grafana,grafana) %dir %{_localstatedir}/lib/grafana/dashboards/sleha
-%attr(0644,grafana,grafana) %config %{_localstatedir}/lib/grafana/dashboards/sleha/*
-%attr(0644,root,root) %config %{_sysconfdir}/grafana/provisioning/dashboards/provider-sleha.yaml
+%attr(0755,grafana,grafana) %dir %{dasboards_dir}/sleha
+%attr(0644,grafana,grafana) %config %{dasboards_dir}/sleha/*
+%attr(0644,root,root) %config %{provisioning_dir}/provider-sleha.yaml
 
 %changelog
