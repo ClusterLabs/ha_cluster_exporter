@@ -9,6 +9,7 @@ This is a bespoke Prometheus exporter used to enable the monitoring of Pacemaker
 2. [Installation](#installation)
 3. [Usage](#usage)
    1. [Metrics](doc/metrics.md)
+   2. [Dashboards](dashboards/README.md)
 5. [Contributing](#contributing)
    1. [Design](doc/design.md)
    2. [Development](doc/development.md)
@@ -77,6 +78,8 @@ While the exporter can run outside a HA cluster node, it won't export any metric
 A warning message will inform the user of such cases.
 
 Please, refer to [doc/metrics.md](doc/metrics.md) for extensive details about all the exported metrics.
+
+To see a practical example of how to consume the metrics, we also provide a couple of [Grafana dashboards](dashboards). 
 
 **Hint:**
 You can deploy a full HA Cluster via Terraform with [SUSE/ha-sap-terraform-deployments](https://github.com/SUSE/ha-sap-terraform-deployments).
