@@ -3,16 +3,16 @@
         <param name="url">git://github.com/%%REPOSITORY%%.git</param>
         <param name="scm">git</param>
         <param name="revision">%%VERSION%%</param>
-        <param name="exclude">.git</param>
-        <param name="versionformat">@PARENT_TAG@+git.%ct.%h</param>
-        <param name="filename">prometheus-ha_cluster_exporter</param>
+        <param name="include">dashboards</param>
+        <param name="include">LICENSE</param>
+        <param name="versionformat">1.0.0+git.%ct.%h</param>
+        <param name="filename">grafana-ha-cluster-dashboards</param>
     </service>
     <service name="set_version" mode="disabled">
-        <param name="file">prometheus-ha_cluster_exporter.spec</param>
+        <param name="file">grafana-ha-cluster-dashboards.spec</param>
     </service>
     <service name="recompress" mode="disabled">
         <param name="file">*.tar</param>
         <param name="compression">gz</param>
     </service>
-    <service name="go_modules" mode="disabled" />
 </services>
