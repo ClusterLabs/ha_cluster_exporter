@@ -1,4 +1,4 @@
-name: Exporter
+name: Exporter CI
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
         - 'dashboards/**'
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
 
@@ -29,6 +29,6 @@ jobs:
 
     - name: Test
       run: make test
-    
+
     - name: Build
       run: make build
