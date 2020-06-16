@@ -49,7 +49,7 @@ jobs:
       VERSION: ${{ github.sha }}
       REPOSITORY: ${{ github.repository }}
       GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      OSCRC_FILE: ${{ env.HOME }}/.config/osc/oscrc
+      OSCRC_FILE: $HOME/.config/osc/oscrc
     steps:
     - uses: actions/checkout@v2
     - run: /scripts/init_osc_creds.sh
@@ -81,7 +81,7 @@ jobs:
       VERSION: ${{ github.event.release.tag_name }}
       REPOSITORY: ${{ github.repository }}
       GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      OSCRC_FILE: ${{ env.HOME }}/.config/osc/oscrc
+      OSCRC_FILE: $HOME/.config/osc/oscrc
     steps:
       - uses: actions/checkout@v2
       - run: /scripts/init_osc_creds.sh
