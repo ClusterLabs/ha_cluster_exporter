@@ -46,5 +46,5 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: binaries
+        name: ha_cluster_exporter
         path: build/bin
