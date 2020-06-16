@@ -30,7 +30,6 @@ jobs:
   build:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
     steps:
     - uses: actions/setup-go@v2
       with:
