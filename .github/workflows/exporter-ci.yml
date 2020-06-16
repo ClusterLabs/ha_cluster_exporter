@@ -3,10 +3,10 @@ name: Exporter CI
 on:
   push:
     branches: [ master ]
-    paths-ignore: [ 'dashboards/**' ]
+    paths-ignore: [ 'dashboards/**', 'packaging/obs/grafana-ha-cluster-dashboards/**' ]
   pull_request:
     branches: [ master ]
-    paths-ignore: [ 'dashboards/**' ]
+    paths-ignore: [ 'dashboards/**', 'packaging/obs/grafana-ha-cluster-dashboards/**' ]
   release:
     types: [ published ]
 
