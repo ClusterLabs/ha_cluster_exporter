@@ -68,7 +68,7 @@ exporter-obs-workdir:
 	cd build/obs/prometheus-ha_cluster_exporter; osc service runall
 
 exporter-obs-changelog: exporter-obs-workdir
-	.ci/gh_release_to_obs_changeset.py $(REPOSITORY) -a $(AUTHOR) -t $(VERSION) -f build/obs/exporter/prometheus-ha_cluster_exporter.changes || true
+	.ci/gh_release_to_obs_changeset.py $(REPOSITORY) -a $(AUTHOR) -t $(VERSION) -f build/obs/prometheus-ha_cluster_exporter/prometheus-ha_cluster_exporter.changes || true
 
 exporter-obs-commit: exporter-obs-workdir exporter-obs-changelog
 	cd build/obs/prometheus-ha_cluster_exporter; osc addremove
