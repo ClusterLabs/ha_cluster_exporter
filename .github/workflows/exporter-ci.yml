@@ -14,14 +14,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - name: Set up Go
-      uses: actions/setup-go@v2
+    - uses: actions/setup-go@v2
       with:
         go-version: ^1.12
       id: go
 
-    - name: Check out
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
     - name: Static analysis
       run: make static-checks
@@ -32,18 +30,23 @@ jobs:
   build:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'ref/head/master'
+    if: github.ref == 'refs/heads/master'
+    strategy:
+      matrix:
+        goarch: [ amd64, arm64, ppc64le, s390x ]
     steps:
-    - name: Set up Go
-      uses: actions/setup-go@v2
+    - uses: actions/setup-go@v2
       with:
         go-version: ^1.12
       id: go
 
-    - name: Check out
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
       with:
         fetch-depth: 0
 
     - name: Build
-      run: make -j4 build-all
+      run: make ${{ matrix.goarch }}
+
+    - uses: actions/upload-artifact@v2
+      with:
+        path: build/bin
