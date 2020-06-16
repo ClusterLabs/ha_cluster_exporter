@@ -21,7 +21,7 @@ download:
 
 build: amd64
 
-build-all: clean-bin $(ARCHS)
+build-all: clean $(ARCHS)
 
 $(ARCHS):
 	@mkdir -p build/bin
