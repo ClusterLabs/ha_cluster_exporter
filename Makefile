@@ -60,8 +60,8 @@ clean:
 	go clean
 	rm -rf build
 
-exporter-obs-workdir:
-	rm -rf build/obs/prometheus-ha_cluster_exporter
+exporter-obs-workdir: build/obs/prometheus-ha_cluster_exporter
+build/obs/prometheus-ha_cluster_exporter:
 	@mkdir -p build/obs/prometheus-ha_cluster_exporter
 	osc checkout $(OBS_PROJECT) prometheus-ha_cluster_exporter -o build/obs/prometheus-ha_cluster_exporter
 	rm -f build/obs/prometheus-ha_cluster_exporter/*.tar.gz
@@ -73,14 +73,14 @@ exporter-obs-workdir:
 	cd build/obs/prometheus-ha_cluster_exporter; osc service runall
 
 exporter-obs-changelog: exporter-obs-workdir
-	.ci/gh_release_to_obs_changeset.py $(REPOSITORY) -a $(AUTHOR) -t $(REVISION) -f build/obs/prometheus-ha_cluster_exporter/prometheus-ha_cluster_exporter.changes || true
+	.ci/gh_release_to_obs_changeset.py $(REPOSITORY) -a $(AUTHOR) -t $(REVISION) -f build/obs/prometheus-ha_cluster_exporter/prometheus-ha_cluster_exporter.changes
 
-exporter-obs-commit: exporter-obs-workdir exporter-obs-changelog
+exporter-obs-commit: exporter-obs-workdir
 	cd build/obs/prometheus-ha_cluster_exporter; osc addremove
 	cd build/obs/prometheus-ha_cluster_exporter; osc commit -m "Update to version $(VERSION)"
 
-dashboards-obs-workdir:
-	rm -rf build/obs/grafana-ha-cluster-dashboards
+dashboards-obs-workdir: build/obs/grafana-ha-cluster-dashboards
+build/obs/grafana-ha-cluster-dashboards:
 	@mkdir -p build/obs/grafana-ha-cluster-dashboards
 	osc checkout $(OBS_PROJECT) grafana-ha-cluster-dashboards -o build/obs/grafana-ha-cluster-dashboards
 	rm -f build/obs/grafana-ha-cluster-dashboards/*.tar.gz
