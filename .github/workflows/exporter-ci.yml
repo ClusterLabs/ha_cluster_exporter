@@ -51,11 +51,12 @@ jobs:
       GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
     - uses: actions/checkout@v2
-    - run: |
+    - name: configure OSC
+      run: |
         /scripts/init_osc_creds.sh
         mkdir -p $HOME/.config/osc
         cp /root/.config/osc/oscrc $HOME/.config/osc
-        make exporter-obs-commit
+    - run: make exporter-obs-commit
 
   obs-submit-request:
     needs: build
@@ -73,13 +74,13 @@ jobs:
       GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v2
-      - name: initialize OBS credentials
+      - name: configure OSC
         run: |
           /scripts/init_osc_creds.sh
           mkdir -p $HOME/.config/osc
           cp /root/.config/osc/oscrc $HOME/.config/osc
-          make exporter-obs-commit
-          /scripts/upload.sh
+      - run: make exporter-obs-commit
+      - run: /scripts/submit.sh
 
   github-release-assets:
     if: github.event.release
