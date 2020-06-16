@@ -49,11 +49,38 @@ jobs:
       VERSION: ${{ github.sha }}
       REPOSITORY: ${{ github.repository }}
       GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      OSCRC_FILE: $HOME/.config/osc/oscrc
     steps:
     - uses: actions/checkout@v2
-    - run: /scripts/init_osc_creds.sh
+    - name: initialize OBS credentials
+      run: |
+        mkdir -p $HOME/.config/osc
+        cp /root/.config/osc/oscrc $HOME/.config/osc
+        /scripts/init_osc_creds.sh
     - run: make exporter-obs-commit
+
+  obs-submit-request:
+    needs: build
+    if: github.event.release
+    runs-on: ubuntu-latest
+    container: shap/continuous_deliver
+    env:
+      OBS_USER: ${{ secrets.OBS_USER }}
+      OBS_PASS: ${{ secrets.OBS_PASS }}
+      OBS_PROJECT: ${{ secrets.OBS_PROJECT }}
+      PACKAGE_NAME: prometheus-ha_cluster_exporter
+      TARGET_PROJECT: ${{ secrets.OBS_DOWNSTREAM_PROJECT }}
+      VERSION: ${{ github.event.release.tag_name }}
+      REPOSITORY: ${{ github.repository }}
+      GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: initialize OBS credentials
+        run: |
+          mkdir -p $HOME/.config/osc
+          cp /root/.config/osc/oscrc $HOME/.config/osc
+          /scripts/init_osc_creds.sh
+      - run: make exporter-obs-commit
+      - run: /scripts/upload.sh
 
   github-release-assets:
     if: github.event.release
@@ -67,23 +94,3 @@ jobs:
         with:
           files: 'ha_cluster_exporter-*'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-  obs-submit-request:
-    if: github.event.release
-    runs-on: ubuntu-latest
-    container: shap/continuous_deliver
-    env:
-      OBS_USER: ${{ secrets.OBS_USER }}
-      OBS_PASS: ${{ secrets.OBS_PASS }}
-      OBS_PROJECT: ${{ secrets.OBS_PROJECT }}
-      PACKAGE_NAME: prometheus-ha_cluster_exporter
-      TARGET_PROJECT: ${{ secrets.OBS_DOWNSTREAM_PROJECT }}
-      VERSION: ${{ github.event.release.tag_name }}
-      REPOSITORY: ${{ github.repository }}
-      GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      OSCRC_FILE: $HOME/.config/osc/oscrc
-    steps:
-      - uses: actions/checkout@v2
-      - run: /scripts/init_osc_creds.sh
-      - run: make exporter-obs-commit
-      - run: /scripts/upload.sh
