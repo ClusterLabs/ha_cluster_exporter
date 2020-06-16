@@ -2,9 +2,9 @@
     <service name="tar_scm" mode="disabled">
         <param name="url">git://github.com/%%REPOSITORY%%.git</param>
         <param name="scm">git</param>
-        <param name="revision">%%VERSION%%</param>
+        <param name="revision">%%REVISION%%</param>
         <param name="exclude">.git,dashboards</param>
-        <param name="versionformat">@PARENT_TAG@+git.%ct.%h</param>
+        <param name="version">%%VERSION%%</param>
         <param name="filename">prometheus-ha_cluster_exporter</param>
     </service>
     <service name="set_version" mode="disabled">
