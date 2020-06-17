@@ -44,4 +44,5 @@ Dashboards will be soon available on [grafana.com/dashboards](https://grafana.co
 ## Development notes
 
 - Please make sure the `version` field in the JSON is incremented just once per PR.
-- Unlike the exporter, OBS Submit Requests are not automated for the dashboard package. Once PRs are merged, you will have to manually perform a Submit Request, after updating the `version` field in the `_service` file and adding an entry to the `grafana-ha-cluster-dashboards.changes` file.    
+- Unlike the exporter, OBS Submit Requests are not automated for the dashboard package.  
+  Once PRs are merged, you will have to manually perform a Submit Request, after updating the `version` field in the `_service` file and adding an entry to the `grafana-ha-cluster-dashboards.changes` file.    
