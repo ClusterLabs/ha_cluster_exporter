@@ -29,7 +29,7 @@ zypper in grafana-ha-cluster-dashboards
 systemctl restart grafana-server
 ```
 
-For the latest development version, please refer to the [development upstream project in OBS](https://build.opensuse.org/project/show/network:ha-clustering:sap-deployments:devel). 
+For the latest development version, please refer to the [development upstream project in OBS](https://build.opensuse.org/project/show/network:ha-clustering:sap-deployments:devel), which is automatically updated everytime we merge changes in this repository. 
 
 ### Manual
 
@@ -41,3 +41,7 @@ Once done, restart the Grafana server.
 
 Dashboards will be soon available on [grafana.com/dashboards](https://grafana.com/dashboards)
 
+## Development notes
+
+- Please make sure the `version` field in the JSON is incremented just once per PR.
+- Unlike the exporter, OBS Submit Requests are not automated for the dashboard package. Once PRs are merged, you will have to manually perform a Submit Request, after updating the `version` field in the `_service` file and adding an entry to the `grafana-ha-cluster-dashboards.changes` file.    
