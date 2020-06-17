@@ -13,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+    - run: npm -g install jsonlint
     - name: validate JSON
-      uses: docker://cytopia/jsonlint:1.6.0
-      with:
-        args: "dashboards/*.json"
+      run: find dashboards -name "*.json" -type f -exec jsonlint -c {}
 
   obs-commit:
     needs: build
