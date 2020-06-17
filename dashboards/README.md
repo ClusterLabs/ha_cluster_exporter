@@ -39,5 +39,5 @@ Once done, restart the Grafana server.
 
 ### Grafana.com
 
-TO-DO
+Dashboards will be soon available on [grafana.com/dashboards](https://grafana.com/dashboards)
 
