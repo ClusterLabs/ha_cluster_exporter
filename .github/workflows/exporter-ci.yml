@@ -2,13 +2,11 @@ name: Exporter CI
 
 on:
   push:
-    branches: [ master ]
     paths-ignore:
     - 'dashboards/**'
     - 'packaging/obs/grafana-ha-cluster-dashboards/**'
     - '.github/workflows/dashboards*'
   pull_request:
-    branches: [ master ]
     paths-ignore:
     - 'dashboards/**'
     - 'packaging/obs/grafana-ha-cluster-dashboards/**'
