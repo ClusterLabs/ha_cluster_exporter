@@ -3,10 +3,16 @@ name: Dashboards CI
 on:
   push:
     branches: [ master ]
-    paths: [ 'dashboards/**', 'packaging/obs/grafana-ha-cluster-dashboards/**' ]
+    paths:
+    - 'dashboards/**'
+    - 'packaging/obs/grafana-ha-cluster-dashboards/**'
+    - '.github/workflows/dashboards*'
   pull_request:
     branches: [ master ]
-    paths: [ 'dashboards/**', 'packaging/obs/grafana-ha-cluster-dashboards/**' ]
+    paths:
+    - 'dashboards/**'
+    - 'packaging/obs/grafana-ha-cluster-dashboards/**'
+    - '.github/workflows/dashboards*'
 
 jobs:
   build:
