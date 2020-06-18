@@ -77,7 +77,7 @@ exporter-obs-changelog: exporter-obs-workdir
 
 exporter-obs-commit: exporter-obs-workdir
 	cd build/obs/prometheus-ha_cluster_exporter; osc addremove
-	cd build/obs/prometheus-ha_cluster_exporter; osc commit -m "Update to version $(VERSION)"
+	cd build/obs/prometheus-ha_cluster_exporter; osc commit -m "Update from git rev $(REVISION)"
 
 dashboards-obs-workdir: build/obs/grafana-ha-cluster-dashboards
 build/obs/grafana-ha-cluster-dashboards:
@@ -92,6 +92,6 @@ build/obs/grafana-ha-cluster-dashboards:
 
 dashboards-obs-commit: dashboards-obs-workdir
 	cd build/obs/grafana-ha-cluster-dashboards; osc addremove
-	cd build/obs/grafana-ha-cluster-dashboards; osc commit -m "Update to version $(VERSION)"
+	cd build/obs/grafana-ha-cluster-dashboards; osc commit -m "Update from git rev $(REVISION)"
 
 .PHONY: default download install static-checks vet-check fmt fmt-check mod-tidy test coverage clean build build-all exporter-obs-commit exporter-obs-workdir exporter-obs-changelog dashboards-obs-workdir dashboards-obs-commit $(ARCHS)
