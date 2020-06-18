@@ -1,6 +1,7 @@
 # ha_cluster_exporter
 
-[![Build Status](https://travis-ci.org/ClusterLabs/ha_cluster_exporter.svg?branch=master)](https://travis-ci.org/ClusterLabs/ha_cluster_exporter)
+![Exporter CI](https://github.com/ClusterLabs/ha_cluster_exporter/workflows/Exporter%20CI/badge.svg)
+![Dashboards CI](https://github.com/ClusterLabs/ha_cluster_exporter/workflows/Dashboards%20CI/badge.svg)
 
 This is a bespoke Prometheus exporter used to enable the monitoring of Pacemaker based HA clusters.  
 
