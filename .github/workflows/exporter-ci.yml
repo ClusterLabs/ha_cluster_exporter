@@ -1,0 +1,107 @@
+name: Exporter CI
+
+# this workflow will
+# - check build and test the go codebase on every pull request
+# - commit to the OBS development upstream whenever master the master branch is updated
+# - perform an OBS Submit Request to downstream whenever a GitHub release is published
+# - attach build artifacts to GitHub releases
+
+on:
+  push:
+    paths-ignore:
+    - 'dashboards/**'
+    - 'packaging/obs/grafana-ha-cluster-dashboards/**'
+    - '.github/workflows/dashboards*'
+  pull_request:
+    paths-ignore:
+    - 'dashboards/**'
+    - 'packaging/obs/grafana-ha-cluster-dashboards/**'
+    - '.github/workflows/dashboards*'
+  release:
+    types: [ published ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ^1.12
+      id: go
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: static analysis
+      run: make static-checks
+    - name: test
+      run: make test
+    - name: build
+      run: make -j4 build-all
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ha_cluster_exporter
+        path: build/bin
+
+  obs-commit:
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    container: shap/continuous_deliver
+    env:
+      OBS_USER: ${{ secrets.OBS_USER }}
+      OBS_PASS: ${{ secrets.OBS_PASS }}
+      OBS_PROJECT: ${{ secrets.OBS_PROJECT }}
+      REVISION: ${{ github.sha }}
+      REPOSITORY: ${{ github.repository }}
+      GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: configure OSC
+      run: |
+        /scripts/init_osc_creds.sh
+        mkdir -p $HOME/.config/osc
+        cp /root/.config/osc/oscrc $HOME/.config/osc
+    - run: make exporter-obs-commit
+
+  obs-submit-request:
+    needs: build
+    if: github.event.release
+    runs-on: ubuntu-latest
+    container: shap/continuous_deliver
+    env:
+      OBS_USER: ${{ secrets.OBS_USER }}
+      OBS_PASS: ${{ secrets.OBS_PASS }}
+      OBS_PROJECT: ${{ secrets.OBS_PROJECT }}
+      PACKAGE_NAME: prometheus-ha_cluster_exporter
+      TARGET_PROJECT: ${{ secrets.OBS_DOWNSTREAM_PROJECT }}
+      REVISION: ${{ github.event.release.tag_name }}
+      REPOSITORY: ${{ github.repository }}
+      GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: configure OSC
+      run: |
+        /scripts/init_osc_creds.sh
+        mkdir -p $HOME/.config/osc
+        cp /root/.config/osc/oscrc $HOME/.config/osc
+    - run: make exporter-obs-workdir
+    - run: make exporter-obs-changelog
+    - run: make exporter-obs-commit
+    - run: /scripts/submit.sh
+
+  github-release-assets:
+    needs: build
+    if: github.event.release
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        name: ha_cluster_exporter
+    - uses: AButler/upload-release-assets@v2.0
+      with:
+        files: 'ha_cluster_exporter-*'
+        repo-token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,51 @@
+name: Dashboards CI
+
+# this workflow will
+# - check for JSON syntax errors on every pull request
+# - commit to the OBS development upstream whenever master the master branch is updated
+
+on:
+  push:
+    paths:
+    - 'dashboards/**'
+    - 'packaging/obs/grafana-ha-cluster-dashboards/**'
+    - '.github/workflows/dashboards*'
+  pull_request:
+    paths:
+    - 'dashboards/**'
+    - 'packaging/obs/grafana-ha-cluster-dashboards/**'
+    - '.github/workflows/dashboards*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v1
+    - run: npm -g install jsonlint
+    - name: validate JSON
+      run: find dashboards -name "*.json" -type f -exec jsonlint -c {} \;
+
+  obs-commit:
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    container: shap/continuous_deliver
+    env:
+      OBS_USER: ${{ secrets.OBS_USER }}
+      OBS_PASS: ${{ secrets.OBS_PASS }}
+      OBS_PROJECT: ${{ secrets.OBS_PROJECT }}
+      REVISION: ${{ github.sha }}
+      REPOSITORY: ${{ github.repository }}
+      GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: configure OSC
+      run: |
+        /scripts/init_osc_creds.sh
+        mkdir -p $HOME/.config/osc
+        cp /root/.config/osc/oscrc $HOME/.config/osc
+    - run: make dashboards-obs-commit
+

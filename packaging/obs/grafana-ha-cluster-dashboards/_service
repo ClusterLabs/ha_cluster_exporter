@@ -2,7 +2,7 @@
     <service name="tar_scm" mode="disabled">
         <param name="url">git://github.com/%%REPOSITORY%%.git</param>
         <param name="scm">git</param>
-        <param name="revision">%%VERSION%%</param>
+        <param name="revision">%%REVISION%%</param>
         <param name="include">dashboards</param>
         <param name="include">LICENSE</param>
         <param name="versionformat">1.0.0+git.%ct.%h</param>
