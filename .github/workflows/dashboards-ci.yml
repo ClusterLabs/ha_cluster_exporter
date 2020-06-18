@@ -7,11 +7,13 @@ name: Dashboards CI
 on:
   push:
     paths:
+    - 'Makefile'
     - 'dashboards/**'
     - 'packaging/obs/grafana-ha-cluster-dashboards/**'
     - '.github/workflows/dashboards*'
   pull_request:
     paths:
+    - 'Makefile'
     - 'dashboards/**'
     - 'packaging/obs/grafana-ha-cluster-dashboards/**'
     - '.github/workflows/dashboards*'
