@@ -1,7 +1,7 @@
 # ha_cluster_exporter
 
-![Exporter CI](https://github.com/ClusterLabs/ha_cluster_exporter/workflows/Exporter%20CI/badge.svg)
-![Dashboards CI](https://github.com/ClusterLabs/ha_cluster_exporter/workflows/Dashboards%20CI/badge.svg)
+[![Exporter CI](https://github.com/ClusterLabs/ha_cluster_exporter/workflows/Exporter%20CI/badge.svg)](https://github.com/ClusterLabs/ha_cluster_exporter/actions?query=workflow%3A%22Exporter+CI%22)
+[![Dashboards CI](https://github.com/ClusterLabs/ha_cluster_exporter/workflows/Dashboards%20CI/badge.svg)](https://github.com/ClusterLabs/ha_cluster_exporter/actions?query=workflow%3A%22Dashboards+CI%22)
 
 This is a bespoke Prometheus exporter used to enable the monitoring of Pacemaker based HA clusters.  
 
