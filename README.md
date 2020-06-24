@@ -54,13 +54,13 @@ go get github.com/ClusterLabs/ha_cluster_exporter
 ```
 
 ### RPM
-You can find the repositories for RPM based distributions in [SUSE's Open Build Service](https://build.opensuse.org/package/show/server:monitoring/prometheus-ha_cluster_exporter).  
+
 On openSUSE or SUSE Linux Enterprise you can just use the `zypper` system package manager:
 ```shell
-export DISTRO=SLE_15_SP1 # change as desired
-zypper addrepo https://download.opensuse.org/repositories/server:/monitoring/$DISTRO/server:monitoring.repo
 zypper install prometheus-ha_cluster_exporter
 ```
+
+You can find the latest development repositories at [SUSE's Open Build Service](https://build.opensuse.org/package/show/network:ha-clustering:sap-deployments:devel/prometheus-ha_cluster_exporter).
 
 ## Usage
 
