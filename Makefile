@@ -51,6 +51,8 @@ fmt-check:
 test: download
 	go test -v ./...
 
+checks: static-checks test
+
 coverage:
 	@mkdir -p build
 	go test -cover -coverprofile=build/coverage ./...
@@ -62,15 +64,15 @@ clean:
 
 exporter-obs-workdir: build/obs/prometheus-ha_cluster_exporter
 build/obs/prometheus-ha_cluster_exporter:
-	@mkdir -p build/obs/prometheus-ha_cluster_exporter
-	osc checkout $(OBS_PROJECT) prometheus-ha_cluster_exporter -o build/obs/prometheus-ha_cluster_exporter
-	rm -f build/obs/prometheus-ha_cluster_exporter/*.tar.gz
-	cp -rv packaging/obs/prometheus-ha_cluster_exporter/* build/obs/prometheus-ha_cluster_exporter/
+	@mkdir -p $@
+	osc checkout $(OBS_PROJECT) prometheus-ha_cluster_exporter -o $@
+	rm -f $@/*.tar.gz
+	cp -rv packaging/obs/prometheus-ha_cluster_exporter/* $@/
 # we interpolate environment variables in OBS _service file so that we control what is downloaded by the tar_scm source service
-	sed -i 's~%%VERSION%%~$(VERSION)~' build/obs/prometheus-ha_cluster_exporter/_service
-	sed -i 's~%%REVISION%%~$(REVISION)~' build/obs/prometheus-ha_cluster_exporter/_service
-	sed -i 's~%%REPOSITORY%%~$(REPOSITORY)~' build/obs/prometheus-ha_cluster_exporter/_service
-	cd build/obs/prometheus-ha_cluster_exporter; osc service runall
+	sed -i 's~%%VERSION%%~$(VERSION)~' $@/_service
+	sed -i 's~%%REVISION%%~$(REVISION)~' $@/_service
+	sed -i 's~%%REPOSITORY%%~$(REPOSITORY)~' $@/_service
+	cd $@; osc service runall
 
 exporter-obs-changelog: exporter-obs-workdir
 	.ci/gh_release_to_obs_changeset.py $(REPOSITORY) -a $(AUTHOR) -t $(REVISION) -f build/obs/prometheus-ha_cluster_exporter/prometheus-ha_cluster_exporter.changes
@@ -81,14 +83,14 @@ exporter-obs-commit: exporter-obs-workdir
 
 dashboards-obs-workdir: build/obs/grafana-ha-cluster-dashboards
 build/obs/grafana-ha-cluster-dashboards:
-	@mkdir -p build/obs/grafana-ha-cluster-dashboards
-	osc checkout $(OBS_PROJECT) grafana-ha-cluster-dashboards -o build/obs/grafana-ha-cluster-dashboards
-	rm -f build/obs/grafana-ha-cluster-dashboards/*.tar.gz
-	cp -rv packaging/obs/grafana-ha-cluster-dashboards/* build/obs/grafana-ha-cluster-dashboards/
+	@mkdir -p $@
+	osc checkout $(OBS_PROJECT) grafana-ha-cluster-dashboards -o $@
+	rm -f $@/*.tar.gz
+	cp -rv packaging/obs/grafana-ha-cluster-dashboards/* $@/
 # we interpolate environment variables in OBS _service file so that we control what is downloaded by the tar_scm source service
-	sed -i 's~%%REVISION%%~$(REVISION)~' build/obs/grafana-ha-cluster-dashboards/_service
-	sed -i 's~%%REPOSITORY%%~$(REPOSITORY)~' build/obs/grafana-ha-cluster-dashboards/_service
-	cd build/obs/grafana-ha-cluster-dashboards; osc service runall
+	sed -i 's~%%REVISION%%~$(REVISION)~' $@/_service
+	sed -i 's~%%REPOSITORY%%~$(REPOSITORY)~' $@/_service
+	cd $@; osc service runall
 
 dashboards-obs-commit: dashboards-obs-workdir
 	cd build/obs/grafana-ha-cluster-dashboards; osc addremove
