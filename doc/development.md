@@ -25,18 +25,23 @@ make exporter-obs-workdir
 ```
 This will checkout the OBS project and prepare a new OBS commit in the `build/obs` directory.
 
-Note that, by default, the current Git working directory HEAD reference is used to download the sources from the remote, so this reference must have been pushed beforehand.
-  
-You can use the `OSB_PROJECT`, `REPOSITORY` and `REVISION` environment variables to change the behaviour of OBS-related make targets.
+You can use the `OSB_PROJECT`, `REPOSITORY`, `VERSION` and `REVISION` environment variables to change the behaviour of OBS-related make targets.
+
+By default, the current Git working directory is used to infer the values of `VERSION` and `REVISION`, which are used by OBS source services to generate a compressed archive of the sources.  
 
 For example, if you were on a feature branch of your own fork, you may want to change these variables, so:
 ```bash
-git push feature/yxz # don't forget to make changes remotely available
+git checkout feature/xyz
+git push johndoe feature/xyz # don't forget to push changes your own fork remote
 export OBS_PROJECT=home:JohnDoe
-export REPOSITORY=johndoe/my_forked_repo
-export REVISION=feature/yxz
+export REPOSITORY=johndoe/prometheus-ha_cluster_exporter
 make exporter-obs-workdir
 ``` 
-will prepare to commit on OBS into `home:JohnDoe/prometheus-ha_cluster_exporter` by checking out the branch `feature/yxz` from `github.com/johndoe/my_forked_repo`.
+will prepare to commit on OBS into `home:JohnDoe/prometheus-ha_cluster_exporter` by checking out the `feature/xyz` branch from `github.com/johndoe/my_forked_repo`.
 
-At last, to actually perform the commit into OBS, run `make exporter-obs-commit`. 
+At last, to actually perform the commit into OBS, run: 
+```bash
+make exporter-obs-commit
+```
+
+Note that that actual continuously deployed releases also involve an intermediate step that updates the changelog automatically with the markdown text of the GitHub release.

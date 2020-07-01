@@ -1,11 +1,11 @@
 # this is the what ends up in the RPM "Version" field and embedded in the --version CLI flag
 VERSION ?= $(shell .ci/get_version_from_git.sh)
 
-# this
+# this will be used as the build date by the Go compile task
 DATE = $(shell date --iso-8601=seconds)
 
 # if you want to release to OBS, this must be a remotely available Git reference
-REVISION ?= master
+REVISION ?= $(shell git rev-parse --abbrev-ref HEAD)
 
 # we only use this to comply with RPM changelog conventions at SUSE
 AUTHOR ?= shap-staff@suse.de
@@ -96,4 +96,6 @@ dashboards-obs-commit: dashboards-obs-workdir
 	cd build/obs/grafana-ha-cluster-dashboards; osc addremove
 	cd build/obs/grafana-ha-cluster-dashboards; osc commit -m "Update from git rev $(REVISION)"
 
-.PHONY: default download install static-checks vet-check fmt fmt-check mod-tidy test coverage clean build build-all exporter-obs-commit exporter-obs-workdir exporter-obs-changelog dashboards-obs-workdir dashboards-obs-commit $(ARCHS)
+.PHONY: $(ARCHS) build build-all checks clean coverage dashboards-obs-commit dashboards-obs-workdir default download \
+		exporter-obs-changelog exporter-obs-commit exporter-obs-workdir fmt fmt-check install mod-tidy static-checks \
+		test vet-check
