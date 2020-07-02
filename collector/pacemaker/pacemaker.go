@@ -161,7 +161,7 @@ func (c *pacemakerCollector) recordResource(resource crmmon.Resource, group stri
 }
 
 func (c *pacemakerCollector) recordFailCounts(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
-	for _, node := range crmMon.NodeHistory.Node {
+	for _, node := range crmMon.NodeHistory.Nodes {
 		for _, resHistory := range node.ResourceHistory {
 			failCount := float64(resHistory.FailCount)
 
@@ -188,7 +188,7 @@ func (c *pacemakerCollector) recordCibLastChange(crmMon crmmon.Root, ch chan<- p
 }
 
 func (c *pacemakerCollector) recordMigrationThresholds(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
-	for _, node := range crmMon.NodeHistory.Node {
+	for _, node := range crmMon.NodeHistory.Nodes {
 		for _, resHistory := range node.ResourceHistory {
 			ch <- c.MakeGaugeMetric("migration_threshold", float64(resHistory.MigrationThreshold), node.Name, resHistory.Name)
 		}
