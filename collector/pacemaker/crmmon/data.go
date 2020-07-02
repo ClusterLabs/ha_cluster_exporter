@@ -20,7 +20,7 @@ type Root struct {
 			StonithEnabled bool `xml:"stonith-enabled,attr"`
 		} `xml:"cluster_options"`
 	} `xml:"summary"`
-	Nodes       []Node `xml:"nodes>node"`
+	Nodes          []Node `xml:"nodes>node"`
 	NodeAttributes struct {
 		Nodes []struct {
 			Name       string `xml:"name,attr"`
