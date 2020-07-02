@@ -71,7 +71,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1593685087422,
+  "iteration": 1593699868972,
   "links": [],
   "panels": [
     {
@@ -816,6 +816,7 @@
         {
           "expr": "sum(ha_cluster_pacemaker_nodes{instance=\"$dc_instance\"}) by (status)",
           "instant": false,
+          "interval": "",
           "legendFormat": "{{status}}",
           "refId": "B"
         }
@@ -973,123 +974,9 @@
       },
       "fontSize": "100%",
       "gridPos": {
-        "h": 10,
-        "w": 10,
+        "h": 9,
+        "w": 24,
         "x": 0,
-        "y": 11
-      },
-      "id": 157,
-      "pageSize": 10,
-      "repeat": "node",
-      "repeatDirection": "v",
-      "scroll": true,
-      "showHeader": true,
-      "sort": {
-        "col": 3,
-        "desc": false
-      },
-      "styles": [
-        {
-          "alias": "Service",
-          "align": "auto",
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "pattern": "name",
-          "preserveFormat": false,
-          "sanitize": false,
-          "type": "string"
-        },
-        {
-          "alias": "Active",
-          "align": "auto",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 0,
-          "link": false,
-          "mappingType": 1,
-          "pattern": "Value",
-          "thresholds": [
-            "1",
-            "1"
-          ],
-          "type": "string",
-          "unit": "short",
-          "valueMaps": [
-            {
-              "text": "Yes",
-              "value": "1"
-            },
-            {
-              "text": "No",
-              "value": "0"
-            }
-          ]
-        },
-        {
-          "alias": "Node",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "nodename",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        },
-        {
-          "alias": "",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "decimals": 2,
-          "pattern": "/.*/",
-          "thresholds": [],
-          "type": "hidden",
-          "unit": "short"
-        }
-      ],
-      "targets": [
-        {
-          "expr": "node_systemd_unit_state{name=~\"((corosync|pacemaker|sbd|prometheus|hawk).*)\", state=\"active\"} + on(instance) group_left(nodename) 0 * node_uname_info{job=\"$cluster\"}",
-          "format": "table",
-          "instant": true,
-          "refId": "A"
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "systemd units",
-      "transform": "table",
-      "type": "table-old"
-    },
-    {
-      "columns": [],
-      "datasource": "${DS_PROMETHEUS}",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
-      },
-      "fontSize": "100%",
-      "gridPos": {
-        "h": 10,
-        "w": 14,
-        "x": 10,
         "y": 11
       },
       "id": 108,
@@ -1248,6 +1135,7 @@
           "expr": "sum(ha_cluster_pacemaker_resources{instance=\"$dc_instance\"} == 1) by(resource, node, status, role, agent)",
           "format": "table",
           "instant": true,
+          "interval": "",
           "legendFormat": "",
           "refId": "A"
         },
@@ -1273,7 +1161,6 @@
       "type": "table-old"
     },
     {
-      "cacheTimeout": null,
       "columns": [],
       "datasource": "${DS_PROMETHEUS}",
       "fieldConfig": {
@@ -1284,23 +1171,54 @@
       },
       "fontSize": "100%",
       "gridPos": {
-        "h": 3,
-        "w": 10,
+        "h": 8,
+        "w": 12,
         "x": 0,
-        "y": 21
+        "y": 20
       },
-      "id": 142,
-      "links": [],
+      "id": 169,
       "pageSize": null,
+      "repeatDirection": "v",
       "scroll": true,
       "showHeader": true,
       "sort": {
-        "col": 0,
-        "desc": true
+        "col": 5,
+        "desc": false
       },
       "styles": [
         {
-          "alias": "Device",
+          "alias": "Name",
+          "align": "auto",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "name",
+          "preserveFormat": false,
+          "sanitize": false,
+          "type": "string"
+        },
+        {
+          "alias": "Value",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 0,
+          "link": false,
+          "mappingType": 1,
+          "pattern": "value",
+          "thresholds": [
+            "1",
+            "1"
+          ],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": []
+        },
+        {
+          "alias": "Node",
           "align": "auto",
           "colorMode": null,
           "colors": [
@@ -1311,39 +1229,27 @@
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
           "mappingType": 1,
-          "pattern": "device",
+          "pattern": "nodename",
           "thresholds": [],
-          "type": "string",
+          "type": "number",
           "unit": "short"
         },
         {
-          "alias": "Status",
+          "alias": "Node",
           "align": "auto",
-          "colorMode": "cell",
+          "colorMode": null,
           "colors": [
             "rgba(245, 54, 54, 0.9)",
             "rgba(237, 129, 40, 0.89)",
             "rgba(50, 172, 45, 0.97)"
           ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
           "mappingType": 1,
-          "pattern": "Value #B",
-          "thresholds": [
-            "1",
-            "1"
-          ],
+          "pattern": "node",
+          "thresholds": [],
           "type": "string",
-          "unit": "short",
-          "valueMaps": [
-            {
-              "text": "Healthy",
-              "value": "1"
-            },
-            {
-              "text": "Unealthy",
-              "value": "0"
-            }
-          ]
+          "unit": "short"
         },
         {
           "alias": "",
@@ -1354,9 +1260,7 @@
             "rgba(237, 129, 40, 0.89)",
             "rgba(50, 172, 45, 0.97)"
           ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
-          "mappingType": 1,
           "pattern": "/.*/",
           "thresholds": [],
           "type": "hidden",
@@ -1365,21 +1269,17 @@
       ],
       "targets": [
         {
-          "expr": "count(ha_cluster_sbd_devices{instance=\"$dc_instance\"}) by (device,status)",
+          "expr": "ha_cluster_pacemaker_node_attributes{instance=\"$dc_instance\"}",
           "format": "table",
           "instant": true,
+          "interval": "",
+          "legendFormat": "",
           "refId": "A"
-        },
-        {
-          "expr": "count(ha_cluster_sbd_devices{instance=\"$dc_instance\",status=\"healthy\"}) by (device,status)",
-          "format": "table",
-          "instant": true,
-          "refId": "B"
         }
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "SBD Devices",
+      "title": "Node Attributes",
       "transform": "table",
       "type": "table-old"
     },
@@ -1394,10 +1294,124 @@
       },
       "fontSize": "100%",
       "gridPos": {
-        "h": 3,
-        "w": 14,
-        "x": 10,
-        "y": 21
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 20
+      },
+      "id": 157,
+      "pageSize": null,
+      "repeat": "node",
+      "repeatDirection": "v",
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": 4,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Service",
+          "align": "auto",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "name",
+          "preserveFormat": false,
+          "sanitize": false,
+          "type": "string"
+        },
+        {
+          "alias": "Active",
+          "align": "auto",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 0,
+          "link": false,
+          "mappingType": 1,
+          "pattern": "Value",
+          "thresholds": [
+            "1",
+            "1"
+          ],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "Yes",
+              "value": "1"
+            },
+            {
+              "text": "No",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "alias": "Node",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "nodename",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "expr": "node_systemd_unit_state{name=~\"((corosync|pacemaker|sbd|prometheus|hawk).*)\", state=\"active\"} + on(instance) group_left(nodename) 0 * node_uname_info{job=\"$cluster\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "systemd units",
+      "transform": "table",
+      "type": "table-old"
+    },
+    {
+      "columns": [],
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 4,
+        "w": 19,
+        "x": 0,
+        "y": 28
       },
       "id": 165,
       "pageSize": null,
@@ -1532,6 +1546,117 @@
       "title": "Resource location constraints",
       "transform": "table",
       "type": "table-old"
+    },
+    {
+      "cacheTimeout": null,
+      "columns": [],
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 19,
+        "y": 28
+      },
+      "id": 142,
+      "links": [],
+      "pageSize": null,
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": 0,
+        "desc": true
+      },
+      "styles": [
+        {
+          "alias": "Device",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "device",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "alias": "Status",
+          "align": "auto",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #B",
+          "thresholds": [
+            "1",
+            "1"
+          ],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "Healthy",
+              "value": "1"
+            },
+            {
+              "text": "Unealthy",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "expr": "count(ha_cluster_sbd_devices{instance=\"$dc_instance\"}) by (device,status)",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "expr": "count(ha_cluster_sbd_devices{instance=\"$dc_instance\",status=\"healthy\"}) by (device,status)",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "SBD Devices",
+      "transform": "table",
+      "type": "table-old"
     }
   ],
   "refresh": false,
@@ -1635,5 +1760,5 @@
   "timezone": "",
   "title": "HA Cluster details",
   "uid": "Q5YJpwtZk1",
-  "version": 2
+  "version": 4
 }
