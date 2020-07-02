@@ -26,8 +26,9 @@ The Pacemaker subsystem collects an atomic snapshot of the HA cluster directly f
 3. [`ha_cluster_pacemaker_location_constraints`](#ha_cluster_pacemaker_location_constraints)
 4. [`ha_cluster_pacemaker_migration_threshold`](#ha_cluster_pacemaker_migration_threshold)
 5. [`ha_cluster_pacemaker_nodes`](#ha_cluster_pacemaker_nodes)
-6. [`ha_cluster_pacemaker_resources`](#ha_cluster_pacemaker_resources)
-7. [`ha_cluster_pacemaker_stonith_enabled`](#ha_cluster_pacemaker_stonith_enabled)
+6. [`ha_cluster_pacemaker_node_attributes`](#ha_cluster_pacemaker_node_attributes)
+7. [`ha_cluster_pacemaker_resources`](#ha_cluster_pacemaker_resources)
+8. [`ha_cluster_pacemaker_stonith_enabled`](#ha_cluster_pacemaker_stonith_enabled)
 
 
 ### `ha_cluster_pacemaker_config_last_change`
@@ -83,6 +84,20 @@ A value of `1` means the node is in the status specified by the `status` label, 
 - `node`: name of the node (usually the hostname).
 - `status`: one of `online|standby|standby_onfail|maintanance|pending|unclean|shutdown|expected_up|dc`. 
 - `type`: one of `member|ping|remote`.
+
+
+### `ha_cluster_pacemaker_node_attributes`
+
+#### Description
+
+This metric exposes in its labels raw, opaque, cluster metadata, called node attributes, which often leveraged by Resource Agents.  
+The value of each line will always be `1`.
+
+#### Labels
+
+- `node`: name of the node (usually the hostname).
+- `name`: name of the attribute.
+- `value`: value of the attribute.
 
 
 ### `ha_cluster_pacemaker_resources` 
