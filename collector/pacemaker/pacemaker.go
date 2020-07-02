@@ -27,6 +27,7 @@ func NewCollector(crmMonPath string, cibAdminPath string) (*pacemakerCollector, 
 		cib.NewCibAdminParser(cibAdminPath),
 	}
 	c.SetDescriptor("nodes", "The status of each node in the cluster; 1 means the node is in that status, 0 otherwise", []string{"node", "type", "status"})
+	c.SetDescriptor("node_attributes", "Metadata attributes of each node; value is always 1", []string{"node", "name", "value"})
 	c.SetDescriptor("resources", "The status of each resource in the cluster; 1 means the resource is in that status, 0 otherwise", []string{"node", "resource", "role", "managed", "status", "agent", "group", "clone"})
 	c.SetDescriptor("stonith_enabled", "Whether or not stonith is enabled", nil)
 	c.SetDescriptor("fail_count", "The Fail count number per node and resource id", []string{"node", "resource"})
@@ -60,6 +61,7 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 
 	c.recordStonithStatus(crmMon, ch)
 	c.recordNodes(crmMon, ch)
+	c.recordNodeAttributes(crmMon, ch)
 	c.recordResources(crmMon, ch)
 	c.recordFailCounts(crmMon, ch)
 	c.recordMigrationThresholds(crmMon, ch)
@@ -209,5 +211,13 @@ func (c *pacemakerCollector) recordConstraints(CIB cib.Root, ch chan<- prometheu
 		}
 
 		ch <- c.MakeGaugeMetric("location_constraints", constraintScore, constraint.Id, constraint.Node, constraint.Resource, strings.ToLower(constraint.Role))
+	}
+}
+
+func (c *pacemakerCollector) recordNodeAttributes(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
+	for _, node := range crmMon.NodeAttributes.Nodes {
+		for _, attr := range node.Attributes {
+			ch <- c.MakeGaugeMetric("node_attributes", 1, node.Name, attr.Name, attr.Value)
+		}
 	}
 }
