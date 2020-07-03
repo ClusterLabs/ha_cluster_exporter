@@ -25,7 +25,7 @@ Source:         %{name}-%{version}.tar.gz
 Source1:        vendor.tar.gz
 ExclusiveArch:  aarch64 x86_64 ppc64le s390x
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
-BuildRequires:  go >= 1.11
+BuildRequires:  go >= 1.12
 Provides:       ha_cluster_exporter = %{version}-%{release}
 Provides:       prometheus(ha_cluster_exporter) = %{version}-%{release}
 # Unlike C/C++ packages, Golang packages do not have header files. They are statically built so the main package is also the devel package.
@@ -44,13 +44,12 @@ Prometheus exporter for Pacemaker HA clusters metrics
 %setup -q -T -D -a 1 # unpack go dependencies in vendor.tar.gz, which was prepared by the source services
 
 %define shortname ha_cluster_exporter
-%define build_date %(date --iso-8601=seconds)
 
 %build
 
 export CGO_ENABLED=0
 go build -mod=vendor \
-         -ldflags="-s -w -X main.version=%{version} -X main.buildDate=%{build_date}" \
+         -ldflags="-s -w -X main.version=%{version}" \
          -o %{shortname}
 
 %install
