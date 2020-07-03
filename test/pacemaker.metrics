@@ -27,6 +27,30 @@ ha_cluster_pacemaker_migration_threshold{node="node02",resource="rsc_SAPHanaTopo
 ha_cluster_pacemaker_migration_threshold{node="node02",resource="rsc_SAPHana_PRD_HDB00"} 50
 ha_cluster_pacemaker_migration_threshold{node="node02",resource="test"} 5000
 ha_cluster_pacemaker_migration_threshold{node="node02",resource="test-stop"} 5000
+# HELP ha_cluster_pacemaker_node_attributes Metadata attributes of each node; value is always 1
+# TYPE ha_cluster_pacemaker_node_attributes gauge
+ha_cluster_pacemaker_node_attributes{name="hana_prd_clone_state",node="node01",value="PROMOTED"} 1
+ha_cluster_pacemaker_node_attributes{name="hana_prd_clone_state",node="node02",value="DEMOTED"} 1
+ha_cluster_pacemaker_node_attributes{name="hana_prd_op_mode",node="node01",value="logreplay"} 1
+ha_cluster_pacemaker_node_attributes{name="hana_prd_op_mode",node="node02",value="logreplay"} 1
+ha_cluster_pacemaker_node_attributes{name="hana_prd_remoteHost",node="node01",value="node02"} 1
+ha_cluster_pacemaker_node_attributes{name="hana_prd_remoteHost",node="node02",value="node01"} 1
+ha_cluster_pacemaker_node_attributes{name="hana_prd_roles",node="node01",value="4:P:master1:master:worker:master"} 1
+ha_cluster_pacemaker_node_attributes{name="hana_prd_roles",node="node02",value="4:S:master1:master:worker:master"} 1
+ha_cluster_pacemaker_node_attributes{name="hana_prd_site",node="node01",value="PRIMARY_SITE_NAME"} 1
+ha_cluster_pacemaker_node_attributes{name="hana_prd_site",node="node02",value="SECONDARY_SITE_NAME"} 1
+ha_cluster_pacemaker_node_attributes{name="hana_prd_srmode",node="node01",value="sync"} 1
+ha_cluster_pacemaker_node_attributes{name="hana_prd_srmode",node="node02",value="sync"} 1
+ha_cluster_pacemaker_node_attributes{name="hana_prd_sync_state",node="node01",value="PRIM"} 1
+ha_cluster_pacemaker_node_attributes{name="hana_prd_sync_state",node="node02",value="SOK"} 1
+ha_cluster_pacemaker_node_attributes{name="hana_prd_version",node="node01",value="2.00.040.00.1553674765"} 1
+ha_cluster_pacemaker_node_attributes{name="hana_prd_version",node="node02",value="2.00.040.00.1553674765"} 1
+ha_cluster_pacemaker_node_attributes{name="hana_prd_vhost",node="node01",value="node01"} 1
+ha_cluster_pacemaker_node_attributes{name="hana_prd_vhost",node="node02",value="node02"} 1
+ha_cluster_pacemaker_node_attributes{name="lpa_prd_lpt",node="node01",value="1571392102"} 1
+ha_cluster_pacemaker_node_attributes{name="lpa_prd_lpt",node="node02",value="30"} 1
+ha_cluster_pacemaker_node_attributes{name="master-rsc_SAPHana_PRD_HDB00",node="node01",value="150"} 1
+ha_cluster_pacemaker_node_attributes{name="master-rsc_SAPHana_PRD_HDB00",node="node02",value="100"} 1
 # HELP ha_cluster_pacemaker_nodes The status of each node in the cluster; 1 means the node is in that status, 0 otherwise
 # TYPE ha_cluster_pacemaker_nodes gauge
 ha_cluster_pacemaker_nodes{node="node01",status="dc",type="member"} 1
