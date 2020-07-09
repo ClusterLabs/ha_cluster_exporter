@@ -18,3 +18,9 @@ ha_cluster_corosync_rings{address="172.16.0.1",node_id="1084783375",number="1",r
 # TYPE ha_cluster_corosync_member_votes gauge
 ha_cluster_corosync_member_votes{local="true",node="stefanotorresi-hana01",node_id="1084783375"} 1
 ha_cluster_corosync_member_votes{local="false",node="stefanotorresi-hana02",node_id="1084783376"} 1
+# HELP ha_cluster_scrape_duration_seconds Duration of a collector scrape.
+# TYPE ha_cluster_scrape_duration_seconds gauge
+ha_cluster_scrape_duration_seconds{collector="corosync"} 1.234
+# HELP ha_cluster_scrape_success Whether a collector succeeded.
+# TYPE ha_cluster_scrape_success gauge
+ha_cluster_scrape_success{collector="corosync"} 1
