@@ -48,6 +48,10 @@ func (c *DefaultCollector) Describe(ch chan<- *prometheus.Desc) {
 	}
 }
 
+func (c *DefaultCollector) GetSubsystem() string {
+	return c.subsystem
+}
+
 func (c *DefaultCollector) MakeGaugeMetric(name string, value float64, labelValues ...string) prometheus.Metric {
 	return c.makeMetric(name, value, prometheus.GaugeValue, labelValues...)
 }
