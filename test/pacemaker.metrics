@@ -146,3 +146,9 @@ ha_cluster_pacemaker_resources{agent="stonith:external/sbd",clone="",group="",ma
 # HELP ha_cluster_pacemaker_stonith_enabled Whether or not stonith is enabled
 # TYPE ha_cluster_pacemaker_stonith_enabled gauge
 ha_cluster_pacemaker_stonith_enabled 1
+# HELP ha_cluster_scrape_collector_duration_seconds node_exporter: Duration of a collector scrape.
+# TYPE ha_cluster_scrape_collector_duration_seconds gauge
+ha_cluster_scrape_collector_duration_seconds{collector="pacemaker"} 1.234
+# HELP ha_cluster_scrape_collector_success node_exporter: Whether a collector succeeded.
+# TYPE ha_cluster_scrape_collector_success gauge
+ha_cluster_scrape_collector_success{collector="pacemaker"} 1

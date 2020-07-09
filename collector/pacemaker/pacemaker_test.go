@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	assertcustom "github.com/ClusterLabs/ha_cluster_exporter/internal/assert"
+	"github.com/ClusterLabs/ha_cluster_exporter/internal/clock"
 )
 
 func TestNewPacemakerCollector(t *testing.T) {
@@ -30,7 +31,8 @@ func TestNewPacemakerCollectorChecksCrmMonExecutableBits(t *testing.T) {
 
 func TestPacemakerCollector(t *testing.T) {
 	collector, err := NewCollector("../../test/fake_crm_mon.sh", "../../test/fake_cibadmin.sh")
+	assert.NoError(t, err)
+	collector.Clock = &clock.StoppedClock{}
 
-	assert.Nil(t, err)
 	assertcustom.Metrics(t, collector, "pacemaker.metrics")
 }
