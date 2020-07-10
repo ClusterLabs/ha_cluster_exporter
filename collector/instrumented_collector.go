@@ -6,7 +6,10 @@ import (
 	"github.com/ClusterLabs/ha_cluster_exporter/internal/clock"
 )
 
-// describes a collector that can return errors, instead of the default Prometheus one, which has void Collect returns
+//go:generate mockgen -destination ../test/mock_collector/instrumented_collector.go github.com/ClusterLabs/ha_cluster_exporter/collector FailureProneCollector
+
+// describes a collector that can return errors from collection cycles,
+// instead of the default Prometheus one, which has void Collect returns
 type FailureProneCollector interface {
 	prometheus.Collector
 	CollectWithError(ch chan<- prometheus.Metric) error
