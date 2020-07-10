@@ -78,7 +78,7 @@ func (c *pacemakerCollector) CollectWithError(ch chan<- prometheus.Metric) error
 func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 	err := c.CollectWithError(ch)
 	if err != nil {
-		log.Warn(err)
+		log.Warnf("'%s' collector scrape failed: %s", c.GetSubsystem(), err)
 	}
 }
 

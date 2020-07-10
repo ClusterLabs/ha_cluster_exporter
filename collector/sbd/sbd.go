@@ -53,13 +53,12 @@ type sbdCollector struct {
 	sbdConfigPath string
 }
 
-func (c *sbdCollector) Collect(ch chan<- prometheus.Metric) {
+func (c *sbdCollector) CollectWithError(ch chan<- prometheus.Metric) error {
 	log.Debugln("Collecting SBD metrics...")
 
 	sbdConfiguration, err := readSdbFile(c.sbdConfigPath)
 	if err != nil {
-		log.Warnf("SBD Collector scrape failed: %s", err)
-		return
+		return err
 	}
 
 	sbdDevices := getSbdDevices(sbdConfiguration)
@@ -67,6 +66,15 @@ func (c *sbdCollector) Collect(ch chan<- prometheus.Metric) {
 	sbdStatuses := c.getSbdDeviceStatuses(sbdDevices)
 	for sbdDev, sbdStatus := range sbdStatuses {
 		ch <- c.MakeGaugeMetric("devices", 1, sbdDev, sbdStatus)
+	}
+
+	return nil
+}
+
+func (c *sbdCollector) Collect(ch chan<- prometheus.Metric) {
+	err := c.CollectWithError(ch)
+	if err != nil {
+		log.Warnf("'%s' collector scrape failed: %s", c.GetSubsystem(), err)
 	}
 }
 

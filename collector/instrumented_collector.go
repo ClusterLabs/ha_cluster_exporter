@@ -2,6 +2,7 @@ package collector
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/ClusterLabs/ha_cluster_exporter/internal/clock"
 )
@@ -53,6 +54,8 @@ func (ic *InstrumentedCollector) Collect(ch chan<- prometheus.Metric) {
 	duration := ic.Clock.Since(begin)
 	if err == nil {
 		success = 1
+	} else {
+		log.Warnf("'%s' collector scrape failed: %s", ic.collector.GetSubsystem(), err)
 	}
 	ch <- prometheus.MustNewConstMetric(ic.scrapeDurationDesc, prometheus.GaugeValue, duration.Seconds())
 	ch <- prometheus.MustNewConstMetric(ic.scrapeSuccessDesc, prometheus.GaugeValue, success)
