@@ -10,7 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
-	config "github.com/spf13/viper"
+	"github.com/spf13/viper"
 
 	"github.com/ClusterLabs/ha_cluster_exporter/collector"
 	"github.com/ClusterLabs/ha_cluster_exporter/collector/corosync"
@@ -29,9 +29,12 @@ var (
 	helpFlag *bool
 	// global --version flag
 	versionFlag *bool
+
+	config *viper.Viper
 )
 
 func init() {
+	config = viper.New()
 	config.SetConfigName("ha_cluster_exporter")
 	config.AddConfigPath("./")
 	config.AddConfigPath("$HOME/.config/")
@@ -88,45 +91,17 @@ func run() {
 
 	internal.SetLogLevel(config.GetString("log-level"))
 
-	pacemakerCollector, err := pacemaker.NewCollector(
-		config.GetString("crm-mon-path"),
-		config.GetString("cibadmin-path"),
-	)
-	if err != nil {
-		log.Warn(err)
-	} else {
-		prometheus.MustRegister(collector.NewInstrumentedCollector(pacemakerCollector))
-		log.Info("Pacemaker collector registered")
+	collectors, errors := registerCollectors(config)
+	for _, err = range errors {
+		log.Warn("Registration failure: ", err)
 	}
-
-	corosyncCollector, err := corosync.NewCollector(
-		config.GetString("corosync-cfgtoolpath-path"),
-		config.GetString("corosync-quorumtool-path"),
-	)
-	if err != nil {
-		log.Warn(err)
-	} else {
-		prometheus.MustRegister(collector.NewInstrumentedCollector(corosyncCollector))
-		log.Info("Corosync collector registered")
+	if len(collectors) == 0 {
+		log.Fatal("No collector could be registered.")
 	}
-
-	sbdCollector, err := sbd.NewCollector(
-		config.GetString("sbd-path"),
-		config.GetString("sbd-config-path"),
-	)
-	if err != nil {
-		log.Warn(err)
-	} else {
-		prometheus.MustRegister(sbdCollector)
-		log.Info("SBD collector registered")
-	}
-
-	drbdCollector, err := drbd.NewCollector(config.GetString("drbdsetup-path"), config.GetString("drbdsplitbrain-path"))
-	if err != nil {
-		log.Warn(err)
-	} else {
-		prometheus.MustRegister(drbdCollector)
-		log.Info("DRBD collector registered")
+	for _, c := range collectors {
+		if c, ok := c.(collector.SubsystemCollector); ok == true {
+			log.Infof("'%s' collector registered.", c.GetSubsystem())
+		}
 	}
 
 	// if we're not in debug log level, we unregister the Go runtime metrics collector that gets registered by default
@@ -141,6 +116,58 @@ func run() {
 
 	log.Infof("Serving metrics on %s", fullListenAddress)
 	log.Fatal(http.ListenAndServe(fullListenAddress, nil))
+}
+
+func registerCollectors(config *viper.Viper) (collectors []prometheus.Collector, errors []error) {
+	pacemakerCollector, err := pacemaker.NewCollector(
+		config.GetString("crm-mon-path"),
+		config.GetString("cibadmin-path"),
+	)
+	if err != nil {
+		errors = append(errors, err)
+	} else {
+		collectors = append(collectors, pacemakerCollector)
+	}
+
+	corosyncCollector, err := corosync.NewCollector(
+		config.GetString("corosync-cfgtoolpath-path"),
+		config.GetString("corosync-quorumtool-path"),
+	)
+	if err != nil {
+		errors = append(errors, err)
+	} else {
+		collectors = append(collectors, corosyncCollector)
+	}
+
+	sbdCollector, err := sbd.NewCollector(
+		config.GetString("sbd-path"),
+		config.GetString("sbd-config-path"),
+	)
+	if err != nil {
+		errors = append(errors, err)
+	} else {
+		collectors = append(collectors, sbdCollector)
+	}
+
+	drbdCollector, err := drbd.NewCollector(
+		config.GetString("drbdsetup-path"),
+		config.GetString("drbdsplitbrain-path"),
+	)
+	if err != nil {
+		errors = append(errors, err)
+	} else {
+		collectors = append(collectors, drbdCollector)
+	}
+
+	for i, c := range collectors {
+		if c, ok := c.(collector.FailureProneCollector); ok == true {
+			collectors[i] = collector.NewInstrumentedCollector(c)
+		}
+	}
+
+	prometheus.MustRegister(collectors...)
+
+	return collectors, errors
 }
 
 func showHelp() {

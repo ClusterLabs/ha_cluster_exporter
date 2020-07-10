@@ -15,14 +15,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const subsystem = "pacemaker"
+
 func NewCollector(crmMonPath string, cibAdminPath string) (*pacemakerCollector, error) {
 	err := collector.CheckExecutables(crmMonPath, cibAdminPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not initialize Pacemaker collector")
+		return nil, errors.Wrapf(err, "could not initialize '%s' collector", subsystem)
 	}
 
 	c := &pacemakerCollector{
-		collector.NewDefaultCollector("pacemaker"),
+		collector.NewDefaultCollector(subsystem),
 		crmmon.NewCrmMonParser(crmMonPath),
 		cib.NewCibAdminParser(cibAdminPath),
 	}

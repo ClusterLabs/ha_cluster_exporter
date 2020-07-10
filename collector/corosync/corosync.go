@@ -10,14 +10,16 @@ import (
 	"github.com/ClusterLabs/ha_cluster_exporter/collector"
 )
 
+const subsystem = "corosync"
+
 func NewCollector(cfgToolPath string, quorumToolPath string) (*corosyncCollector, error) {
 	err := collector.CheckExecutables(cfgToolPath, quorumToolPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not initialize Corosync collector")
+		return nil, errors.Wrapf(err, "could not initialize '%s' collector", subsystem)
 	}
 
 	c := &corosyncCollector{
-		collector.NewDefaultCollector("corosync"),
+		collector.NewDefaultCollector(subsystem),
 		cfgToolPath,
 		quorumToolPath,
 		NewParser(),

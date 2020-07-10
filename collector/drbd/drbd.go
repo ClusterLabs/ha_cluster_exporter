@@ -15,6 +15,8 @@ import (
 	"github.com/ClusterLabs/ha_cluster_exporter/collector"
 )
 
+const subsystem = "drbd"
+
 // drbdStatus is for parsing relevant data we want to convert to metrics
 type drbdStatus struct {
 	Name    string `json:"name"`
@@ -48,11 +50,11 @@ type drbdStatus struct {
 func NewCollector(drbdSetupPath string, drbdSplitBrainPath string) (*drbdCollector, error) {
 	err := collector.CheckExecutables(drbdSetupPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not initialize DRBD collector")
+		return nil, errors.Wrapf(err, "could not initialize '%s' collector", subsystem)
 	}
 
 	c := &drbdCollector{
-		collector.NewDefaultCollector("drbd"),
+		collector.NewDefaultCollector(subsystem),
 		drbdSetupPath,
 		drbdSplitBrainPath,
 	}

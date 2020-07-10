@@ -13,7 +13,6 @@ import (
 	"github.com/ClusterLabs/ha_cluster_exporter/test/mock_collector"
 )
 
-
 func TestInstrumentedCollector(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

@@ -10,6 +10,10 @@ import (
 
 const NAMESPACE = "ha_cluster"
 
+type SubsystemCollector interface {
+	GetSubsystem() string
+}
+
 type DefaultCollector struct {
 	subsystem   string
 	descriptors map[string]*prometheus.Desc

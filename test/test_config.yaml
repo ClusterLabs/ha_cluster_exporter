@@ -1,0 +1,11 @@
+port: "9664"
+addres: "0.0.0.0"
+log-level: "info"
+crm-mon-path: "test/fake_crm_mon.sh"
+cibadmin-path: "test/fake_cibadmin.sh"
+corosync-cfgtoolpath-path: "test/fake_corosync-cfgtool.sh"
+corosync-quorumtool-path: "test/fake_corosync-quorumtool.sh"
+sbd-path: "test/fake_sbd.sh"
+sbd-config-path: "test/fake_sbdconfig"
+drbdsetup-path: "test/fake_drbdsetup.sh"
+enable-timestamps: false
