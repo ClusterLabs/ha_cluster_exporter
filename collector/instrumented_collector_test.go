@@ -24,12 +24,12 @@ func TestInstrumentedCollector(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	fpc := mock_collector.NewMockFailureProneCollector(ctrl)
-	fpc.EXPECT().GetSubsystem().Return("mock_collector").AnyTimes()
-	fpc.EXPECT().Describe(gomock.Any())
-	fpc.EXPECT().CollectWithError(gomock.Any())
+	mockCollector := mock_collector.NewMockInstrumentableCollector(ctrl)
+	mockCollector.EXPECT().GetSubsystem().Return("mock_collector").AnyTimes()
+	mockCollector.EXPECT().Describe(gomock.Any())
+	mockCollector.EXPECT().CollectWithError(gomock.Any())
 
-	ic := NewInstrumentedCollector(fpc)
+	ic := NewInstrumentedCollector(mockCollector)
 	ic.Clock = &clock.StoppedClock{}
 
 	metrics := `# HELP ha_cluster_scrape_duration_seconds Duration of a collector scrape.
@@ -51,12 +51,12 @@ func TestInstrumentedCollectorScrapeFailure(t *testing.T) {
 	logHook := testlog.NewGlobal()
 	defer logHook.Reset()
 
-	fpc := mock_collector.NewMockFailureProneCollector(ctrl)
-	fpc.EXPECT().GetSubsystem().Return("mock_collector").AnyTimes()
-	fpc.EXPECT().Describe(gomock.Any())
-	fpc.EXPECT().CollectWithError(gomock.Any()).Return(errors.New("test error"))
+	mockCollector := mock_collector.NewMockInstrumentableCollector(ctrl)
+	mockCollector.EXPECT().GetSubsystem().Return("mock_collector").AnyTimes()
+	mockCollector.EXPECT().Describe(gomock.Any())
+	mockCollector.EXPECT().CollectWithError(gomock.Any()).Return(errors.New("test error"))
 
-	ic := NewInstrumentedCollector(fpc)
+	ic := NewInstrumentedCollector(mockCollector)
 
 	metrics := `# HELP ha_cluster_scrape_success Whether a collector succeeded.
 # TYPE ha_cluster_scrape_success gauge

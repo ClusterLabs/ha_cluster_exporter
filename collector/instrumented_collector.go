@@ -7,24 +7,24 @@ import (
 	"github.com/ClusterLabs/ha_cluster_exporter/internal/clock"
 )
 
-//go:generate mockgen -destination ../test/mock_collector/instrumented_collector.go github.com/ClusterLabs/ha_cluster_exporter/collector FailureProneCollector
+//go:generate mockgen -destination ../test/mock_collector/instrumented_collector.go github.com/ClusterLabs/ha_cluster_exporter/collector InstrumentableCollector
 
 // describes a collector that can return errors from collection cycles,
 // instead of the default Prometheus one, which has void Collect returns
-type FailureProneCollector interface {
+type InstrumentableCollector interface {
 	prometheus.Collector
 	SubsystemCollector
 	CollectWithError(ch chan<- prometheus.Metric) error
 }
 
 type InstrumentedCollector struct {
-	collector          FailureProneCollector
+	collector          InstrumentableCollector
 	Clock              clock.Clock
 	scrapeDurationDesc *prometheus.Desc
 	scrapeSuccessDesc  *prometheus.Desc
 }
 
-func NewInstrumentedCollector(collector FailureProneCollector) *InstrumentedCollector {
+func NewInstrumentedCollector(collector InstrumentableCollector) *InstrumentedCollector {
 	return &InstrumentedCollector{
 		collector,
 		&clock.SystemClock{},

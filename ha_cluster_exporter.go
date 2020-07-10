@@ -160,7 +160,7 @@ func registerCollectors(config *viper.Viper) (collectors []prometheus.Collector,
 	}
 
 	for i, c := range collectors {
-		if c, ok := c.(collector.FailureProneCollector); ok == true {
+		if c, ok := c.(collector.InstrumentableCollector); ok == true {
 			collectors[i] = collector.NewInstrumentedCollector(c)
 		}
 	}
