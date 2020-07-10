@@ -10,7 +10,7 @@ import (
 	"github.com/ClusterLabs/ha_cluster_exporter/collector"
 )
 
-func NewCollector(cfgToolPath string, quorumToolPath string) (*collector.InstrumentedCollector, error) {
+func NewCollector(cfgToolPath string, quorumToolPath string) (*corosyncCollector, error) {
 	err := collector.CheckExecutables(cfgToolPath, quorumToolPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not initialize Corosync collector")
@@ -28,9 +28,7 @@ func NewCollector(cfgToolPath string, quorumToolPath string) (*collector.Instrum
 	c.SetDescriptor("member_votes", "How many votes each member node has contributed with to the current quorum", []string{"node_id", "node", "local"})
 	c.SetDescriptor("quorum_votes", "Cluster quorum votes; one line per type", []string{"type"})
 
-	ic := collector.NewInstrumentedCollector(c)
-
-	return ic, nil
+	return c, nil
 }
 
 type corosyncCollector struct {
@@ -40,7 +38,7 @@ type corosyncCollector struct {
 	parser         Parser
 }
 
-func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) error {
+func (c *corosyncCollector) CollectWithError(ch chan<- prometheus.Metric) error {
 	log.Debugln("Collecting corosync metrics...")
 
 	// We suppress the exec errors because if any interface is faulty the tools will exit with code 1, but we still want to parse the output.
@@ -59,6 +57,13 @@ func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) error {
 	c.collectMemberVotes(status, ch)
 
 	return nil
+}
+
+func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {
+	err := c.CollectWithError(ch)
+	if err != nil {
+		log.Warn(err)
+	}
 }
 
 func (c *corosyncCollector) collectQuorumVotes(status *Status, ch chan<- prometheus.Metric) {

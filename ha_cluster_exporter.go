@@ -12,6 +12,7 @@ import (
 	flag "github.com/spf13/pflag"
 	config "github.com/spf13/viper"
 
+	"github.com/ClusterLabs/ha_cluster_exporter/collector"
 	"github.com/ClusterLabs/ha_cluster_exporter/collector/corosync"
 	"github.com/ClusterLabs/ha_cluster_exporter/collector/drbd"
 	"github.com/ClusterLabs/ha_cluster_exporter/collector/pacemaker"
@@ -94,7 +95,7 @@ func run() {
 	if err != nil {
 		log.Warn(err)
 	} else {
-		prometheus.MustRegister(pacemakerCollector)
+		prometheus.MustRegister(collector.NewInstrumentedCollector(pacemakerCollector))
 		log.Info("Pacemaker collector registered")
 	}
 
@@ -105,7 +106,7 @@ func run() {
 	if err != nil {
 		log.Warn(err)
 	} else {
-		prometheus.MustRegister(corosyncCollector)
+		prometheus.MustRegister(collector.NewInstrumentedCollector(corosyncCollector))
 		log.Info("Corosync collector registered")
 	}
 

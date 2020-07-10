@@ -15,7 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func NewCollector(crmMonPath string, cibAdminPath string) (*collector.InstrumentedCollector, error) {
+func NewCollector(crmMonPath string, cibAdminPath string) (*pacemakerCollector, error) {
 	err := collector.CheckExecutables(crmMonPath, cibAdminPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not initialize Pacemaker collector")
@@ -35,9 +35,7 @@ func NewCollector(crmMonPath string, cibAdminPath string) (*collector.Instrument
 	c.SetDescriptor("config_last_change", "The timestamp of the last change of the cluster configuration", nil)
 	c.SetDescriptor("location_constraints", "Resource location constraints. The value indicates the score.", []string{"constraint", "node", "resource", "role"})
 
-	ic := collector.NewInstrumentedCollector(c)
-
-	return ic, nil
+	return c, nil
 }
 
 type pacemakerCollector struct {
@@ -46,7 +44,7 @@ type pacemakerCollector struct {
 	cibParser    cib.Parser
 }
 
-func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) error {
+func (c *pacemakerCollector) CollectWithError(ch chan<- prometheus.Metric) error {
 	log.Debugln("Collecting pacemaker metrics...")
 
 	crmMon, err := c.crmMonParser.Parse()
@@ -73,6 +71,13 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) error {
 	}
 
 	return nil
+}
+
+func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
+	err := c.CollectWithError(ch)
+	if err != nil {
+		log.Warn(err)
+	}
 }
 
 func (c *pacemakerCollector) recordStonithStatus(crmMon crmmon.Root, ch chan<- prometheus.Metric) {

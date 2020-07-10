@@ -8,8 +8,8 @@ import (
 
 // describes a collector that can return errors, instead of the default Prometheus one, which has void Collect returns
 type FailureProneCollector interface {
-	Collect(ch chan<- prometheus.Metric) error
-	Describe(chan<- *prometheus.Desc)
+	prometheus.Collector
+	CollectWithError(ch chan<- prometheus.Metric) error
 	GetSubsystem() string
 }
 
@@ -46,7 +46,7 @@ func NewInstrumentedCollector(collector FailureProneCollector) *InstrumentedColl
 func (ic *InstrumentedCollector) Collect(ch chan<- prometheus.Metric) {
 	var success float64
 	begin := ic.Clock.Now()
-	err := ic.collector.Collect(ch)
+	err := ic.collector.CollectWithError(ch)
 	duration := ic.Clock.Since(begin)
 	if err == nil {
 		success = 1

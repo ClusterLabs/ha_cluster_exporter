@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	assertcustom "github.com/ClusterLabs/ha_cluster_exporter/internal/assert"
-	"github.com/ClusterLabs/ha_cluster_exporter/internal/clock"
 )
 
 func TestNewCorosyncCollector(t *testing.T) {
@@ -43,8 +42,6 @@ func TestNewCorosyncCollectorChecksQuorumtoolExecutableBits(t *testing.T) {
 }
 
 func TestCorosyncCollector(t *testing.T) {
-	collector, err := NewCollector("../../test/fake_corosync-cfgtool.sh", "../../test/fake_corosync-quorumtool.sh")
-	assert.NoError(t, err)
-	collector.Clock = &clock.StoppedClock{}
+	collector, _ := NewCollector("../../test/fake_corosync-cfgtool.sh", "../../test/fake_corosync-quorumtool.sh")
 	assertcustom.Metrics(t, collector, "corosync.metrics")
 }
