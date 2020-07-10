@@ -29,8 +29,8 @@ func TestInstrumentedCollector(t *testing.T) {
 	mockCollector.EXPECT().Describe(gomock.Any())
 	mockCollector.EXPECT().CollectWithError(gomock.Any())
 
-	ic := NewInstrumentedCollector(mockCollector)
-	ic.Clock = &clock.StoppedClock{}
+	SUT := NewInstrumentedCollector(mockCollector)
+	SUT.Clock = &clock.StoppedClock{}
 
 	metrics := `# HELP ha_cluster_scrape_duration_seconds Duration of a collector scrape.
 # TYPE ha_cluster_scrape_duration_seconds gauge
@@ -40,7 +40,7 @@ ha_cluster_scrape_duration_seconds{collector="mock_collector"} 1.234
 ha_cluster_scrape_success{collector="mock_collector"} 1
 `
 
-	err := testutil.CollectAndCompare(ic, strings.NewReader(metrics))
+	err := testutil.CollectAndCompare(SUT, strings.NewReader(metrics))
 	assert.NoError(t, err)
 }
 
@@ -56,14 +56,14 @@ func TestInstrumentedCollectorScrapeFailure(t *testing.T) {
 	mockCollector.EXPECT().Describe(gomock.Any())
 	mockCollector.EXPECT().CollectWithError(gomock.Any()).Return(errors.New("test error"))
 
-	ic := NewInstrumentedCollector(mockCollector)
+	SUT := NewInstrumentedCollector(mockCollector)
 
 	metrics := `# HELP ha_cluster_scrape_success Whether a collector succeeded.
 # TYPE ha_cluster_scrape_success gauge
 ha_cluster_scrape_success{collector="mock_collector"} 0
 `
 
-	err := testutil.CollectAndCompare(ic, strings.NewReader(metrics), "ha_cluster_scrape_success")
+	err := testutil.CollectAndCompare(SUT, strings.NewReader(metrics), "ha_cluster_scrape_success")
 	assert.NoError(t, err)
 
 	assert.Len(t, logHook.Entries, 1)
