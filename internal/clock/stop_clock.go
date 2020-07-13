@@ -12,3 +12,7 @@ func (StoppedClock) Now() time.Time {
 	// 1234 millisecond after Unix epoch (1970-01-01 00:00:01.234 +0000 UTC)
 	// this will allow us to use a fixed timestamped when running assertions
 }
+
+func (StoppedClock) Since(t time.Time) time.Duration {
+	return TEST_TIMESTAMP * time.Millisecond
+}

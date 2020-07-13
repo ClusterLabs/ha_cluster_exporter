@@ -17,7 +17,7 @@ REPOSITORY ?= clusterlabs/ha_cluster_exporter
 # the Go archs we crosscompile to
 ARCHS ?= amd64 arm64 ppc64le s390x
 
-default: clean download mod-tidy fmt vet-check test build
+default: clean download mod-tidy generate fmt vet-check test build
 
 download:
 	go mod download
@@ -47,6 +47,9 @@ mod-tidy:
 
 fmt-check:
 	.ci/go_lint.sh
+
+generate:
+	go generate ./...
 
 test: download
 	go test -v ./...
@@ -97,5 +100,5 @@ dashboards-obs-commit: dashboards-obs-workdir
 	cd build/obs/grafana-ha-cluster-dashboards; osc commit -m "Update from git rev $(REVISION)"
 
 .PHONY: $(ARCHS) build build-all checks clean coverage dashboards-obs-commit dashboards-obs-workdir default download \
-		exporter-obs-changelog exporter-obs-commit exporter-obs-workdir fmt fmt-check install mod-tidy static-checks \
-		test vet-check
+		exporter-obs-changelog exporter-obs-commit exporter-obs-workdir fmt fmt-check generate install mod-tidy \
+		static-checks test vet-check

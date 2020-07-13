@@ -10,14 +10,16 @@ import (
 	"github.com/ClusterLabs/ha_cluster_exporter/collector"
 )
 
+const subsystem = "corosync"
+
 func NewCollector(cfgToolPath string, quorumToolPath string) (*corosyncCollector, error) {
 	err := collector.CheckExecutables(cfgToolPath, quorumToolPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not initialize Corosync collector")
+		return nil, errors.Wrapf(err, "could not initialize '%s' collector", subsystem)
 	}
 
 	c := &corosyncCollector{
-		collector.NewDefaultCollector("corosync"),
+		collector.NewDefaultCollector(subsystem),
 		cfgToolPath,
 		quorumToolPath,
 		NewParser(),
@@ -35,20 +37,19 @@ type corosyncCollector struct {
 	collector.DefaultCollector
 	cfgToolPath    string
 	quorumToolPath string
-	cfgToolParser  Parser
+	parser         Parser
 }
 
-func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {
+func (c *corosyncCollector) CollectWithError(ch chan<- prometheus.Metric) error {
 	log.Debugln("Collecting corosync metrics...")
 
 	// We suppress the exec errors because if any interface is faulty the tools will exit with code 1, but we still want to parse the output.
 	cfgToolOutput, _ := exec.Command(c.cfgToolPath, "-s").Output()
 	quorumToolOutput, _ := exec.Command(c.quorumToolPath).Output()
 
-	status, err := c.cfgToolParser.Parse(cfgToolOutput, quorumToolOutput)
+	status, err := c.parser.Parse(cfgToolOutput, quorumToolOutput)
 	if err != nil {
-		log.Warnf("Corosync Collector scrape failed: %s", err)
-		return
+		return errors.Wrap(err, "corosync parser error")
 	}
 
 	c.collectRings(status, ch)
@@ -56,6 +57,15 @@ func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {
 	c.collectQuorate(status, ch)
 	c.collectQuorumVotes(status, ch)
 	c.collectMemberVotes(status, ch)
+
+	return nil
+}
+
+func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {
+	err := c.CollectWithError(ch)
+	if err != nil {
+		log.Warnf("'%s' collector scrape failed: %s", c.GetSubsystem(), err)
+	}
 }
 
 func (c *corosyncCollector) collectQuorumVotes(status *Status, ch chan<- prometheus.Metric) {

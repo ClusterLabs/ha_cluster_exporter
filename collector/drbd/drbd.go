@@ -15,6 +15,8 @@ import (
 	"github.com/ClusterLabs/ha_cluster_exporter/collector"
 )
 
+const subsystem = "drbd"
+
 // drbdStatus is for parsing relevant data we want to convert to metrics
 type drbdStatus struct {
 	Name    string `json:"name"`
@@ -48,11 +50,11 @@ type drbdStatus struct {
 func NewCollector(drbdSetupPath string, drbdSplitBrainPath string) (*drbdCollector, error) {
 	err := collector.CheckExecutables(drbdSetupPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not initialize DRBD collector")
+		return nil, errors.Wrapf(err, "could not initialize '%s' collector", subsystem)
 	}
 
 	c := &drbdCollector{
-		collector.NewDefaultCollector("drbd"),
+		collector.NewDefaultCollector(subsystem),
 		drbdSetupPath,
 		drbdSplitBrainPath,
 	}
@@ -82,21 +84,19 @@ type drbdCollector struct {
 	drbdSplitBrainPath string
 }
 
-func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
+func (c *drbdCollector) CollectWithError(ch chan<- prometheus.Metric) error {
 	log.Debugln("Collecting DRBD metrics...")
 
 	c.recordDrbdSplitBrainMetric(ch)
 
 	drbdStatusRaw, err := exec.Command(c.drbdsetupPath, "status", "--json").Output()
 	if err != nil {
-		log.Warnf("DRBD Collector scrape failed: %s", err)
-		return
+		return errors.Wrap(err, "drbdsetup command failed")
 	}
 	// populate structs and parse relevant info we will expose via metrics
 	drbdDev, err := parseDrbdStatus(drbdStatusRaw)
 	if err != nil {
-		log.Warnf("DRBD Collector scrape failed: %s", err)
-		return
+		return errors.Wrap(err, "could not parse drbdsetup status output")
 	}
 
 	for _, resource := range drbdDev {
@@ -137,6 +137,14 @@ func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
 		}
 	}
 
+	return nil
+}
+
+func (c *drbdCollector) Collect(ch chan<- prometheus.Metric) {
+	err := c.CollectWithError(ch)
+	if err != nil {
+		log.Warnf("'%s' collector scrape failed: %s", c.GetSubsystem(), err)
+	}
 }
 
 func parseDrbdStatus(statusRaw []byte) ([]drbdStatus, error) {

@@ -10,6 +10,10 @@ import (
 
 const NAMESPACE = "ha_cluster"
 
+type SubsystemCollector interface {
+	GetSubsystem() string
+}
+
 type DefaultCollector struct {
 	subsystem   string
 	descriptors map[string]*prometheus.Desc
@@ -46,6 +50,10 @@ func (c *DefaultCollector) Describe(ch chan<- *prometheus.Desc) {
 	for _, descriptor := range c.descriptors {
 		ch <- descriptor
 	}
+}
+
+func (c *DefaultCollector) GetSubsystem() string {
+	return c.subsystem
 }
 
 func (c *DefaultCollector) MakeGaugeMetric(name string, value float64, labelValues ...string) prometheus.Metric {

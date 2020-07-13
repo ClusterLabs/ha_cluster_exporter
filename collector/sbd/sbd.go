@@ -15,17 +15,15 @@ import (
 	"github.com/ClusterLabs/ha_cluster_exporter/collector"
 )
 
+const subsystem = "sbd"
+
 const SBD_STATUS_UNHEALTHY = "unhealthy"
 const SBD_STATUS_HEALTHY = "healthy"
 
 func NewCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error) {
-	err := collector.CheckExecutables(sbdPath)
+	err := checkArguments(sbdPath, sbdConfigPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not initialize SBD collector")
-	}
-
-	if _, err := os.Stat(sbdConfigPath); os.IsNotExist(err) {
-		return nil, errors.Errorf("could not initialize SBD collector: '%s' does not exist", sbdConfigPath)
+		return nil, errors.Wrapf(err, "could not initialize '%s' collector", subsystem)
 	}
 
 	c := &sbdCollector{
@@ -39,19 +37,28 @@ func NewCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error) {
 	return c, nil
 }
 
+func checkArguments(sbdPath string, sbdConfigPath string) error {
+	if err := collector.CheckExecutables(sbdPath); err != nil {
+		return err
+	}
+	if _, err := os.Stat(sbdConfigPath); os.IsNotExist(err) {
+		return errors.Errorf("'%s' does not exist", sbdConfigPath)
+	}
+	return nil
+}
+
 type sbdCollector struct {
 	collector.DefaultCollector
 	sbdPath       string
 	sbdConfigPath string
 }
 
-func (c *sbdCollector) Collect(ch chan<- prometheus.Metric) {
+func (c *sbdCollector) CollectWithError(ch chan<- prometheus.Metric) error {
 	log.Debugln("Collecting SBD metrics...")
 
 	sbdConfiguration, err := readSdbFile(c.sbdConfigPath)
 	if err != nil {
-		log.Warnf("SBD Collector scrape failed: %s", err)
-		return
+		return err
 	}
 
 	sbdDevices := getSbdDevices(sbdConfiguration)
@@ -59,6 +66,15 @@ func (c *sbdCollector) Collect(ch chan<- prometheus.Metric) {
 	sbdStatuses := c.getSbdDeviceStatuses(sbdDevices)
 	for sbdDev, sbdStatus := range sbdStatuses {
 		ch <- c.MakeGaugeMetric("devices", 1, sbdDev, sbdStatus)
+	}
+
+	return nil
+}
+
+func (c *sbdCollector) Collect(ch chan<- prometheus.Metric) {
+	err := c.CollectWithError(ch)
+	if err != nil {
+		log.Warnf("'%s' collector scrape failed: %s", c.GetSubsystem(), err)
 	}
 }
 

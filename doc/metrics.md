@@ -14,6 +14,7 @@ These are the currently implemented subsystems.
 2. [Corosync](#corosync)
 3. [SBD](#sbd)
 4. [DRBD](#drbd)
+5. [Scrape](#scrape)
 
 
 ## Pacemaker 
@@ -448,3 +449,46 @@ Refer to upstream doc: https://docs.linbit.com/docs/users-guide-8.4/#s-configure
 It is important for the exporter that he hook should create the files in that location and naming. 
 
 Remember to remove the files manually after the split brain is solved
+
+
+## Scrape
+
+The `scrape` subsystem is a generic namespace dedicated to internal instrumentation of the exporter itself.
+
+1. [`ha_cluster_scrape_duration_seconds`](#ha_cluster_scrape_duration_seconds)
+2. [`ha_cluster_scrape_success`](#ha_cluster_scrape_success)
+
+### `ha_cluster_scrape_duration_seconds`
+
+The duration of a collector scrape in seconds. 
+
+#### Labels
+
+- `collector`: collector names correspond to the subsystem they collect metrics from.
+
+#### Example
+
+```
+# TYPE ha_cluster_scrape_duration_seconds gauge
+ha_cluster_scrape_duration_seconds{collector="pacemaker"} 1.234
+```
+
+### `ha_cluster_scrape_success`
+
+Whether a collector succeeded. 
+
+Collectors may gracefully fail, but this won't prevent them from continuing running. 
+
+If some metrics could not be scraped, the value of this metric will be `0`.  
+In such cases, you shall find more details in the exporter logs. 
+
+#### Labels
+
+- `collector`: collector names correspond to the subsystem they collect metrics from.
+
+#### Examaple
+
+```
+# TYPE ha_cluster_scrape_success gauge
+ha_cluster_scrape_success{collector="pacemaker"} 1
+```
