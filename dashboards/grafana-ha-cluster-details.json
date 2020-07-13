@@ -71,7 +71,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1593699868972,
+  "iteration": 1594622660000,
   "links": [],
   "panels": [
     {
@@ -542,7 +542,6 @@
         "ymax": null,
         "ymin": null
       },
-      "tableColumn": "ha_cluster_corosync_quorate{instance=\"192.168.125.10:9664\", job=\"hana\"}",
       "targets": [
         {
           "expr": "ha_cluster_corosync_quorate{instance=\"$dc_instance\"}",
@@ -641,7 +640,6 @@
         "ymax": null,
         "ymin": null
       },
-      "tableColumn": "ha_cluster_corosync_ring_errors{instance=\"192.168.125.10:9664\", job=\"hana\"}",
       "targets": [
         {
           "expr": "ha_cluster_corosync_ring_errors{instance=\"$dc_instance\"}",
@@ -731,7 +729,6 @@
         "ymax": null,
         "ymin": null
       },
-      "tableColumn": "{instance=\"192.168.125.10:9664\", job=\"hana\"}",
       "targets": [
         {
           "expr": "ha_cluster_pacemaker_config_last_change{instance=\"$dc_instance\"} * 1000",
@@ -1675,7 +1672,7 @@
         "includeAll": false,
         "label": "Data Source",
         "multi": false,
-        "name": "datasource",
+        "name": "DS_PROMETHEUS",
         "options": [],
         "query": "prometheus",
         "refresh": 1,
@@ -1686,7 +1683,7 @@
       {
         "allValue": null,
         "current": {},
-        "datasource": "$datasource",
+        "datasource": "$DS_PROMETHEUS",
         "definition": "label_values(job)",
         "hide": 0,
         "includeAll": false,
@@ -1708,7 +1705,7 @@
       {
         "allValue": null,
         "current": {},
-        "datasource": "$datasource",
+        "datasource": "$DS_PROMETHEUS",
         "definition": "query_result(label_replace((ha_cluster_pacemaker_nodes{job='$cluster',status='dc'} == 1), 'ip', '$1', 'instance', '(.*):.*') + on(node, ip) group_left label_replace(label_replace(0 * node_uname_info{job='$cluster'}, 'node', '$1', 'nodename', '(.*)'), 'ip', '$1', 'instance','(.*):.*'))",
         "hide": 2,
         "includeAll": false,
@@ -1760,5 +1757,5 @@
   "timezone": "",
   "title": "HA Cluster details",
   "uid": "Q5YJpwtZk1",
-  "version": 4
+  "version": 3
 }
