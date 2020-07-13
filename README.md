@@ -23,7 +23,6 @@ The exporter is a stateless HTTP endpoint. On each HTTP request, it locally insp
 Exported data include:
 - Pacemaker cluster summary, nodes and resources stats 
 - Corosync ring errors and quorum votes
-  (note: only Corosync version 2 is supported)
 - SBD devices health status 
 - DRBD resources and connections stats  
   (note: only DBRD v9 is supported; for v8.4, please refer to the [Prometheus Node Exporter](https://github.com/prometheus/node_exporter) project)
