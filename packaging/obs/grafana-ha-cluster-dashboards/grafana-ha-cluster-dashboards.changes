@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Jul 14 13:47:20 UTC 2020 - Stefano Torresi <stefano.torresi@suse.com>
+
+- Release 1.0.1
+  * fixed datasource variable initialization
+  * minor Grafana 7 compatibility fixes
+
+
+-------------------------------------------------------------------
 Fri Jun 12 10:39:33 UTC 2020 - Stefano Torresi <stefano.torresi@suse.com>
 
 - First release 
