@@ -48,6 +48,7 @@
       }
     ]
   },
+  "description": "Shows an overview of multiple HA clusters running Pacemaker/Corosync. Brought to you by SUSE.",
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
@@ -1366,7 +1367,7 @@
     ]
   },
   "timezone": "",
-  "title": "Multi-Cluster Overview",
+  "title": "ClusterLabs HA Multi-Cluster overview",
   "uid": "5b0v3y-Wz1",
   "version": 4
 }

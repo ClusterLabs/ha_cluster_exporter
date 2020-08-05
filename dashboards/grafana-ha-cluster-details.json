@@ -66,7 +66,7 @@
       }
     ]
   },
-  "description": "HA Cluster Status",
+  "description": "Shows the details of a HA cluster running Pacemaker/Corosync. Brought to you by SUSE.",
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
@@ -1699,7 +1699,7 @@
     ]
   },
   "timezone": "",
-  "title": "HA Cluster details",
+  "title": "ClusterLabs HA Cluster details",
   "uid": "Q5YJpwtZk1",
-  "version": 4
+  "version": 1
 }
