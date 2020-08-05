@@ -23,4 +23,5 @@ Membership information
     Nodeid      Votes  Qdevice Name
 1084783375          1      NR  stefanotorresi-hana01 (local)
 1084783376          1  A,V,NMW stefanotorresi-hana02
+         0          1            Qdevice
 EOF

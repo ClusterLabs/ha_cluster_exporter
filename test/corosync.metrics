@@ -1,5 +1,6 @@
 # HELP ha_cluster_corosync_member_votes How many votes each member node has contributed with to the current quorum
 # TYPE ha_cluster_corosync_member_votes gauge
+ha_cluster_corosync_member_votes{local="false",node="Qdevice",node_id="0",qdevice=""} 1
 ha_cluster_corosync_member_votes{local="false",node="stefanotorresi-hana02",node_id="1084783376",qdevice="A,V,NMW"} 1
 ha_cluster_corosync_member_votes{local="true",node="stefanotorresi-hana01",node_id="1084783375",qdevice="NR"} 1
 # HELP ha_cluster_corosync_quorate Whether or not the cluster is quorate
