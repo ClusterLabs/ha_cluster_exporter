@@ -20,7 +20,7 @@ Flags:            2Node Quorate
 
 Membership information
 ----------------------
-    Nodeid      Votes Name
-1084783375          1 stefanotorresi-hana01 (local)
-1084783376          1 stefanotorresi-hana02
+    Nodeid      Votes  Qdevice Name
+1084783375          1      NR  stefanotorresi-hana01 (local)
+1084783376          1  A,V,NMW stefanotorresi-hana02
 EOF

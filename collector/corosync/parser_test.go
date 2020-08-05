@@ -38,9 +38,9 @@ Flags:            2Node Quorate WaitForAll
 
 Membership information
 ----------------------
-	Nodeid      Votes Name
-1084780051          1 dma-dog-hana01 (local)
-1084780052          1 dma-dog-hana02`)
+	Nodeid      Votes Qdevice Name
+1084780051          1      NR dma-dog-hana01 (local)
+1084780052          1      A,V,NMW dma-dog-hana02`)
 
 	status, err := p.Parse(cfgToolOutput, quoromToolOutput)
 	assert.NoError(t, err)
@@ -67,10 +67,12 @@ Membership information
 	assert.Len(t, members, 2)
 	assert.Exactly(t, "1084780051", members[0].Id)
 	assert.Exactly(t, "dma-dog-hana01", members[0].Name)
+	assert.Exactly(t, "NR", members[0].Qdevice)
 	assert.True(t, members[0].Local)
 	assert.EqualValues(t, 1, members[0].Votes)
 	assert.Exactly(t, "1084780052", members[1].Id)
 	assert.Exactly(t, "dma-dog-hana02", members[1].Name)
+	assert.Exactly(t, "A,V,NMW", members[1].Qdevice)
 	assert.False(t, members[1].Local)
 	assert.EqualValues(t, 1, members[1].Votes)
 }
@@ -250,8 +252,8 @@ func TestParseMembersEmptyError(t *testing.T) {
 func TestParseMembersUintError(t *testing.T) {
 	quoromToolOutput := []byte(`Membership information
 ----------------------
-	Nodeid      Votes Name
-1084780051 10000000000000000000000000000000000000000000000 dma-dog-hana01`)
+    Nodeid      Votes Qdevice Name
+1084780051 10000000000000000000000000000000000000000000000 NW dma-dog-hana01`)
 
 	_, err := parseMembers(quoromToolOutput)
 
@@ -280,9 +282,9 @@ Flags:            2Node Quorate WaitForAll
 
 Membership information
 ----------------------
-    Nodeid      Votes Name
-         1          1 192.168.127.20
-         2          1 192.168.127.21 (local)`)
+    Nodeid      Votes Qdevice Name
+         1          1      NR  192.168.127.20
+         2          1      NR  192.168.127.21 (local)`)
 
 	members, err := parseMembers(quorumToolOutput)
 
