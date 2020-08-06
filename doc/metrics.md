@@ -150,9 +150,6 @@ How many votes each member node has contributed with to the current quorum
 
 - `node_id`: the internal corosync identifier associated to this node.
 - `node`: the name of the node; usually the hostname.
-- `qdevice`: Shows the connectivity status between QDevice and Corosync.
-             Possible statuses: 
-   A (Alive) or NA (not alive), V (Vote) or NV (non vote), MW (Master wins) or NMW(not master wins), NR  not registered.
 - `local`: whether or not this is the local node.
 
 
