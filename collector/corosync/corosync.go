@@ -45,7 +45,7 @@ func (c *corosyncCollector) CollectWithError(ch chan<- prometheus.Metric) error 
 
 	// We suppress the exec errors because if any interface is faulty the tools will exit with code 1, but we still want to parse the output.
 	cfgToolOutput, _ := exec.Command(c.cfgToolPath, "-s").Output()
-	quorumToolOutput, _ := exec.Command(c.quorumToolPath).Output()
+	quorumToolOutput, _ := exec.Command(c.quorumToolPath, "-p").Output()
 
 	status, err := c.parser.Parse(cfgToolOutput, quorumToolOutput)
 	if err != nil {

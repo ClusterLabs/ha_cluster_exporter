@@ -35,10 +35,11 @@ type Ring struct {
 }
 
 type Member struct {
-	Id    string
-	Name  string
-	Votes uint64
-	Local bool
+	Id      string
+	Name    string
+	Qdevice string
+	Votes   uint64
+	Local   bool
 }
 
 func NewParser() Parser {
@@ -211,11 +212,12 @@ func parseMembers(quorumToolOutput []byte) (members []Member, err error) {
 	/*
 	   Membership information
 	   ----------------------
-	      Nodeid      Votes Name
-	   		1          1 192.168.125.24
-	   		2          1 192.168.125.25 (local)
+	   Nodeid      Votes    Qdevice Name
+	        1          1    A,V,NMW nfs01 (local)
+	        2          1    A,V,NMW nfs02
+	        0          1            Qdevice
 	*/
-	sectionRE := regexp.MustCompile(`(?m)Membership information\n-+\s+Nodeid\s+Votes\s+Name\n+((?:.*\n?)+)`)
+	sectionRE := regexp.MustCompile(`(?m)Membership information\n-+\s+Nodeid\s+Votes\s+Qdevice\s+Name\n+((?:.*\n?)+)`)
 	sectionMatch := sectionRE.FindSubmatch(quorumToolOutput)
 	if sectionMatch == nil {
 		return nil, errors.New("could not find membership information")
@@ -223,9 +225,9 @@ func parseMembers(quorumToolOutput []byte) (members []Member, err error) {
 
 	// we also need a second regex to capture the single elements of each node line, e.g.:
 	/*
-		1          1 192.168.125.24 (local)
+		1          1  A,V,NMW 192.168.125.24 (local)
 	*/
-	linesRE := regexp.MustCompile(`(?m)(?P<node_id>\w+)\s+(?P<votes>\d+)\s(?P<name>[\w-\.]+)(?:\s(?P<local>\(local\)))?\n?`)
+	linesRE := regexp.MustCompile(`(?m)(?P<node_id>\w+)\s+(?P<votes>\d+)\s+(?P<qdevice>(\w,?)+)?\s+(?P<name>[\w-\.]+)(?:\s(?P<local>\(local\)))?\n?`)
 	linesMatches := linesRE.FindAllSubmatch(sectionMatch[1], -1)
 	for _, match := range linesMatches {
 		matches := extractRENamedCaptureGroups(linesRE, match)
@@ -241,10 +243,11 @@ func parseMembers(quorumToolOutput []byte) (members []Member, err error) {
 		}
 
 		members = append(members, Member{
-			Id:    matches["node_id"],
-			Name:  matches["name"],
-			Votes: votes,
-			Local: local,
+			Id:      matches["node_id"],
+			Name:    matches["name"],
+			Votes:   votes,
+			Local:   local,
+			Qdevice: matches["qdevice"],
 		})
 	}
 
