@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -34,7 +35,8 @@ func NewCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error) {
 	}
 
 	c.SetDescriptor("devices", "SBD devices; one line per device", []string{"device", "status"})
-	c.SetDescriptor("device_timeout", "sbd timeouts ", []string{"type"})
+	c.SetDescriptor("watchdog_timeout", "sbd watchdog timeout", []string{"device"})
+	c.SetDescriptor("msgwait_timeout", "sbd msgwait timeout", []string{"device"})
 
 	return c, nil
 }
@@ -70,7 +72,10 @@ func (c *sbdCollector) CollectWithError(ch chan<- prometheus.Metric) error {
 		ch <- c.MakeGaugeMetric("devices", 1, sbdDev, sbdStatus)
 	}
 
-	c.recordSbdTimeout(sbdDevices, ch)
+	sbdWatchdogs := c.getSbdWatchDogTimeout(sbdDevices)
+	for sbdDev, sbdWatchdog := range sbdWatchdogs {
+		ch <- c.MakeGaugeMetric("devices", sbdWatchdog, sbdDev)
+	}
 
 	return nil
 }
@@ -137,14 +142,25 @@ func (c *sbdCollector) getSbdDeviceStatuses(sbdDevices []string) map[string]stri
 	return sbdStatuses
 }
 
-func (c *sbdCollector) recordSbdTimeout(sbdDevices []string, ch chan<- prometheus.Metric) {
-
+//
+func (c *sbdCollector) getSbdWatchDogTimeout(sbdDevices []string) map[string]float64 {
+	sbdWatchdogs := make(map[string]float64)
 	for _, sbdDev := range sbdDevices {
-		output, _ := exec.Command(c.sbdPath, "-d", sbdDev, "dump").Output()
-		log.Info(output)
-	}
+		sbdDump, _ := exec.Command(c.sbdPath, "-d", sbdDev, "dump").Output()
+		// find timeout and timeout type
+		//		sbd -d /dev/vdc dump
+		//		Timeout (watchdog) : 5
 
-	timeout := 5
-	timeoutType := "inProgress"
-	ch <- c.MakeGaugeMetric("device_timeout", float64(timeout), timeoutType)
+		regex := regexp.MustCompile(`^Timeout (watchdog) : `)
+		watchdogTimeout := regex.FindStringSubmatch(string(sbdDump))
+
+		if watchdogTimeout == nil {
+			continue
+		}
+
+		if s, err := strconv.ParseFloat(watchdogTimeout[0], 64); err == nil {
+			sbdWatchdogs[sbdDev] = s
+		}
+	}
+	return sbdWatchdogs
 }
