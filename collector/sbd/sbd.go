@@ -74,7 +74,7 @@ func (c *sbdCollector) CollectWithError(ch chan<- prometheus.Metric) error {
 
 	sbdWatchdogs := c.getSbdWatchDogTimeout(sbdDevices)
 	for sbdDev, sbdWatchdog := range sbdWatchdogs {
-		ch <- c.MakeGaugeMetric("devices", sbdWatchdog, sbdDev)
+		ch <- c.MakeGaugeMetric("watchdog_timeout", sbdWatchdog, sbdDev)
 	}
 
 	return nil
@@ -149,15 +149,21 @@ func (c *sbdCollector) getSbdWatchDogTimeout(sbdDevices []string) map[string]flo
 		sbdDump, _ := exec.Command(c.sbdPath, "-d", sbdDev, "dump").Output()
 		// find timeout and timeout type
 		//		sbd -d /dev/vdc dump
-		//		Timeout (watchdog) : 5
 
-		regex := regexp.MustCompile(`^Timeout (watchdog) : `)
-		watchdogTimeout := regex.FindStringSubmatch(string(sbdDump))
+		regex := regexp.MustCompile(`Timeout \(watchdog\)  *: \d+`)
+		// we get this line:		Timeout (watchdog) : 5
+		watchdogLine := regex.FindStringSubmatch(string(sbdDump))
 
+		if watchdogLine == nil {
+			continue
+		}
+		// get the timeout from the line
+		regexNumber := regexp.MustCompile(`\d+`)
+		watchdogTimeout := regexNumber.FindStringSubmatch(string(watchdogLine[0]))
 		if watchdogTimeout == nil {
 			continue
 		}
-
+		log.Warnf("TESTTTTTT %s", watchdogTimeout[0])
 		if s, err := strconv.ParseFloat(watchdogTimeout[0], 64); err == nil {
 			sbdWatchdogs[sbdDev] = s
 		}

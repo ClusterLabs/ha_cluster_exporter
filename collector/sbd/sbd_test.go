@@ -214,6 +214,13 @@ func TestNewSbdCollectorChecksSbdExecutableBits(t *testing.T) {
 }
 
 func TestSBDCollector(t *testing.T) {
-	collector, _ := NewCollector("../../test/fake_sbd.sh", "../../test/fake_sbdconfig")
+	collector, _ := NewCollector("../../test/fake_sbd_dump.sh", "../../test/fake_sbdconfig")
+	assertcustom.Metrics(t, collector, "sbd.metrics")
+}
+
+func TestWatchdog(t *testing.T) {
+	collector, err := NewCollector("../../test/fake_sbd_dump.sh", "../../test/fake_sbdconfig")
+
+	assert.Nil(t, err)
 	assertcustom.Metrics(t, collector, "sbd.metrics")
 }
