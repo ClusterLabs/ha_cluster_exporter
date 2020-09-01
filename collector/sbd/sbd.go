@@ -77,6 +77,11 @@ func (c *sbdCollector) CollectWithError(ch chan<- prometheus.Metric) error {
 		ch <- c.MakeGaugeMetric("watchdog_timeout", sbdWatchdog, sbdDev)
 	}
 
+	sbdMsgWaits := c.getSbdMsgWaitTimeout(sbdDevices)
+	for sbdDev, sbdMsgWait := range sbdMsgWaits {
+		ch <- c.MakeGaugeMetric("msgwait_timeout", sbdMsgWait, sbdDev)
+	}
+
 	return nil
 }
 
@@ -142,13 +147,11 @@ func (c *sbdCollector) getSbdDeviceStatuses(sbdDevices []string) map[string]stri
 	return sbdStatuses
 }
 
-//
+// for each sbd device, extract the watchdog timeout via regex
 func (c *sbdCollector) getSbdWatchDogTimeout(sbdDevices []string) map[string]float64 {
 	sbdWatchdogs := make(map[string]float64)
 	for _, sbdDev := range sbdDevices {
 		sbdDump, _ := exec.Command(c.sbdPath, "-d", sbdDev, "dump").Output()
-		// find timeout and timeout type
-		//		sbd -d /dev/vdc dump
 
 		regex := regexp.MustCompile(`Timeout \(watchdog\)  *: \d+`)
 		// we get this line:		Timeout (watchdog) : 5
@@ -163,10 +166,37 @@ func (c *sbdCollector) getSbdWatchDogTimeout(sbdDevices []string) map[string]flo
 		if watchdogTimeout == nil {
 			continue
 		}
-		log.Warnf("TESTTTTTT %s", watchdogTimeout[0])
+
 		if s, err := strconv.ParseFloat(watchdogTimeout[0], 64); err == nil {
 			sbdWatchdogs[sbdDev] = s
 		}
 	}
 	return sbdWatchdogs
+}
+
+// for each sbd device, extract the msgWait timeout via regex
+func (c *sbdCollector) getSbdMsgWaitTimeout(sbdDevices []string) map[string]float64 {
+	sbdMsgWaits := make(map[string]float64)
+	for _, sbdDev := range sbdDevices {
+		sbdDump, _ := exec.Command(c.sbdPath, "-d", sbdDev, "dump").Output()
+
+		regex := regexp.MustCompile(`Timeout \(msgwait\)  *: \d+`)
+		// we get this line:		Timeout (watchdog) : 5
+		msgWaitLine := regex.FindStringSubmatch(string(sbdDump))
+
+		if msgWaitLine == nil {
+			continue
+		}
+		// get the timeout from the line
+		regexNumber := regexp.MustCompile(`\d+`)
+		msgWaitTimeout := regexNumber.FindStringSubmatch(string(msgWaitLine[0]))
+		if msgWaitTimeout == nil {
+			continue
+		}
+
+		if s, err := strconv.ParseFloat(msgWaitTimeout[0], 64); err == nil {
+			sbdMsgWaits[sbdDev] = s
+		}
+	}
+	return sbdMsgWaits
 }
