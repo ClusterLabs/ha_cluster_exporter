@@ -166,7 +166,7 @@ func (c *sbdCollector) getSbdWatchDogTimeout(sbdDevices []string) map[string]flo
 		if watchdogTimeout == nil {
 			continue
 		}
-
+		// map the timeout to the device
 		if s, err := strconv.ParseFloat(watchdogTimeout[0], 64); err == nil {
 			sbdWatchdogs[sbdDev] = s
 		}
@@ -181,7 +181,7 @@ func (c *sbdCollector) getSbdMsgWaitTimeout(sbdDevices []string) map[string]floa
 		sbdDump, _ := exec.Command(c.sbdPath, "-d", sbdDev, "dump").Output()
 
 		regex := regexp.MustCompile(`Timeout \(msgwait\)  *: \d+`)
-		// we get this line:		Timeout (watchdog) : 5
+		// we get this line:		Timeout (msgwait) : 5
 		msgWaitLine := regex.FindStringSubmatch(string(sbdDump))
 
 		if msgWaitLine == nil {
@@ -193,7 +193,7 @@ func (c *sbdCollector) getSbdMsgWaitTimeout(sbdDevices []string) map[string]floa
 		if msgWaitTimeout == nil {
 			continue
 		}
-
+		// map the timeout to the device
 		if s, err := strconv.ParseFloat(msgWaitTimeout[0], 64); err == nil {
 			sbdMsgWaits[sbdDev] = s
 		}
