@@ -20,6 +20,7 @@ const subsystem = "sbd"
 const SBD_STATUS_UNHEALTHY = "unhealthy"
 const SBD_STATUS_HEALTHY = "healthy"
 
+// NewCollector create a new sbd collector
 func NewCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error) {
 	err := checkArguments(sbdPath, sbdConfigPath)
 	if err != nil {
@@ -33,6 +34,7 @@ func NewCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error) {
 	}
 
 	c.SetDescriptor("devices", "SBD devices; one line per device", []string{"device", "status"})
+	c.SetDescriptor("device_timeout", "sbd timeouts ", []string{"type"})
 
 	return c, nil
 }
@@ -67,6 +69,8 @@ func (c *sbdCollector) CollectWithError(ch chan<- prometheus.Metric) error {
 	for sbdDev, sbdStatus := range sbdStatuses {
 		ch <- c.MakeGaugeMetric("devices", 1, sbdDev, sbdStatus)
 	}
+
+	c.recordSbdTimeout(sbdDevices, ch)
 
 	return nil
 }
@@ -131,4 +135,16 @@ func (c *sbdCollector) getSbdDeviceStatuses(sbdDevices []string) map[string]stri
 	}
 
 	return sbdStatuses
+}
+
+func (c *sbdCollector) recordSbdTimeout(sbdDevices []string, ch chan<- prometheus.Metric) {
+
+	for _, sbdDev := range sbdDevices {
+		output, _ := exec.Command(c.sbdPath, "-d", sbdDev, "dump").Output()
+		log.Info(output)
+	}
+
+	timeout := 5
+	timeoutType := "inProgress"
+	ch <- c.MakeGaugeMetric("device_timeout", float64(timeout), timeoutType)
 }
