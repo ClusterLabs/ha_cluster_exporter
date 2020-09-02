@@ -1,12 +1,10 @@
- # HELP ha_cluster_sbd_devices SBD devices; one line per device
- # TYPE ha_cluster_sbd_devices gauge
- ha_cluster_sbd_devices{device="/dev/vdc",status="healthy"} 1
- ha_cluster_sbd_devices{device="/dev/vdd",status="healthy"} 1
- # HELP ha_cluster_sbd_msgwait_timeout sbd msgwait timeout
- # TYPE ha_cluster_sbd_msgwait_timeout gauge
- ha_cluster_sbd_msgwait_timeout{device="/dev/vdc"} 10
- ha_cluster_sbd_msgwait_timeout{device="/dev/vdd"} 10
- # HELP ha_cluster_sbd_watchdog_timeout sbd watchdog timeout
- # TYPE ha_cluster_sbd_watchdog_timeout gauge
- ha_cluster_sbd_watchdog_timeout{device="/dev/vdc"} 9
- ha_cluster_sbd_watchdog_timeout{device="/dev/vdd"} 9
+# HELP ha_cluster_sbd_devices SBD devices; one line per device
+# TYPE ha_cluster_sbd_devices gauge
+ha_cluster_sbd_devices{device="/dev/vdc",status="healthy"} 1
+ha_cluster_sbd_devices{device="/dev/vdd",status="healthy"} 1
+# HELP ha_cluster_sbd_sbd_timeout sbd watchdog timeout
+# TYPE ha_cluster_sbd_sbd_timeout gauge
+ha_cluster_sbd_sbd_timeout{device="/dev/vdc",type="msgwait_timeout"} 10
+ha_cluster_sbd_sbd_timeout{device="/dev/vdc",type="watchdog_timeout"} 9
+ha_cluster_sbd_sbd_timeout{device="/dev/vdd",type="msgwait_timeout"} 10
+ha_cluster_sbd_sbd_timeout{device="/dev/vdd",type="watchdog_timeout"} 9
