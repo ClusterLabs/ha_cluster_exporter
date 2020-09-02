@@ -35,7 +35,7 @@ func NewCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error) {
 	}
 
 	c.SetDescriptor("devices", "SBD devices; one line per device", []string{"device", "status"})
-	c.SetDescriptor("sbd_timeout", "sbd watchdog timeout", []string{"device", "type"})
+	c.SetDescriptor("timeouts", "SBD timeouts for each device and type", []string{"device", "type"})
 
 	return c, nil
 }
@@ -73,11 +73,11 @@ func (c *sbdCollector) CollectWithError(ch chan<- prometheus.Metric) error {
 
 	sbdWatchdogs, sbdMsgWaits := c.getSbdTimeouts(sbdDevices)
 	for sbdDev, sbdWatchdog := range sbdWatchdogs {
-		ch <- c.MakeGaugeMetric("sbd_timeout", sbdWatchdog, sbdDev, "watchdog_timeout")
+		ch <- c.MakeGaugeMetric("timeouts", sbdWatchdog, sbdDev, "watchdog")
 	}
 
 	for sbdDev, sbdMsgWait := range sbdMsgWaits {
-		ch <- c.MakeGaugeMetric("sbd_timeout", sbdMsgWait, sbdDev, "msgwait_timeout")
+		ch <- c.MakeGaugeMetric("timeouts", sbdMsgWait, sbdDev, "msgwait")
 	}
 
 	return nil
