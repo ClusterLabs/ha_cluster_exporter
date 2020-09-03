@@ -198,7 +198,8 @@ The status of each Corosync ring; `1` means healthy, `0` means faulty.
 The SBD subsystems collect devices stats by parsing its configuration and the output of `sbd --dump`.
 
 0. [Sample](../test/sbd.metrics)
-2. [`ha_cluster_sbd_devices`](#ha_cluster_sbd_devices)
+1. [`ha_cluster_sbd_devices`](#ha_cluster_sbd_devices)
+2. [`ha_cluster_sbd_timeouts`](#ha_cluster_sbd_timeouts)
 
 ### `ha_cluster_sbd_devices`
 
@@ -213,6 +214,18 @@ Either the value is `1`, or the line is absent altogether.
 - `status`: one of `healthy|unhealthy`
 
 The total number of lines for this metric will be the cardinality of `device`.
+
+### `ha_cluster_sbd_timeouts`
+
+#### Description
+
+The SBD timeouts pro SBD device
+Value is an integer expessing the timeout
+
+#### Labels
+
+- `device`: the path of the SBD device
+- `type`:  either `watchdog` or `msgwait`
 
 
 ## DRBD

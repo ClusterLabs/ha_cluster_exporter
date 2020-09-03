@@ -1,4 +1,10 @@
 # HELP ha_cluster_sbd_devices SBD devices; one line per device
 # TYPE ha_cluster_sbd_devices gauge
 ha_cluster_sbd_devices{device="/dev/vdc",status="healthy"} 1
-ha_cluster_sbd_devices{device="/dev/vdd",status="unhealthy"} 1
+ha_cluster_sbd_devices{device="/dev/vdd",status="healthy"} 1
+# HELP ha_cluster_sbd_timeouts SBD timeouts for each device and type
+# TYPE ha_cluster_sbd_timeouts gauge
+ha_cluster_sbd_timeouts{device="/dev/vdc",type="msgwait"} 10
+ha_cluster_sbd_timeouts{device="/dev/vdc",type="watchdog"} 9
+ha_cluster_sbd_timeouts{device="/dev/vdd",type="msgwait"} 10
+ha_cluster_sbd_timeouts{device="/dev/vdd",type="watchdog"} 9

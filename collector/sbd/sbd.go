@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -20,6 +21,7 @@ const subsystem = "sbd"
 const SBD_STATUS_UNHEALTHY = "unhealthy"
 const SBD_STATUS_HEALTHY = "healthy"
 
+// NewCollector create a new sbd collector
 func NewCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error) {
 	err := checkArguments(sbdPath, sbdConfigPath)
 	if err != nil {
@@ -33,6 +35,7 @@ func NewCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error) {
 	}
 
 	c.SetDescriptor("devices", "SBD devices; one line per device", []string{"device", "status"})
+	c.SetDescriptor("timeouts", "SBD timeouts for each device and type", []string{"device", "type"})
 
 	return c, nil
 }
@@ -66,6 +69,15 @@ func (c *sbdCollector) CollectWithError(ch chan<- prometheus.Metric) error {
 	sbdStatuses := c.getSbdDeviceStatuses(sbdDevices)
 	for sbdDev, sbdStatus := range sbdStatuses {
 		ch <- c.MakeGaugeMetric("devices", 1, sbdDev, sbdStatus)
+	}
+
+	sbdWatchdogs, sbdMsgWaits := c.getSbdTimeouts(sbdDevices)
+	for sbdDev, sbdWatchdog := range sbdWatchdogs {
+		ch <- c.MakeGaugeMetric("timeouts", sbdWatchdog, sbdDev, "watchdog")
+	}
+
+	for sbdDev, sbdMsgWait := range sbdMsgWaits {
+		ch <- c.MakeGaugeMetric("timeouts", sbdMsgWait, sbdDev, "msgwait")
 	}
 
 	return nil
@@ -131,4 +143,40 @@ func (c *sbdCollector) getSbdDeviceStatuses(sbdDevices []string) map[string]stri
 	}
 
 	return sbdStatuses
+}
+
+// for each sbd device, extract the watchdog and msgwait timeout via regex
+func (c *sbdCollector) getSbdTimeouts(sbdDevices []string) (map[string]float64, map[string]float64) {
+	sbdWatchdogs := make(map[string]float64)
+	sbdMsgWaits := make(map[string]float64)
+	for _, sbdDev := range sbdDevices {
+		sbdDump, _ := exec.Command(c.sbdPath, "-d", sbdDev, "dump").Output()
+
+		regexW := regexp.MustCompile(`Timeout \(msgwait\)  *: \d+`)
+		regex := regexp.MustCompile(`Timeout \(watchdog\)  *: \d+`)
+
+		msgWaitLine := regexW.FindStringSubmatch(string(sbdDump))
+		watchdogLine := regex.FindStringSubmatch(string(sbdDump))
+
+		if watchdogLine == nil || msgWaitLine == nil {
+			continue
+		}
+
+		// get the timeout from the line
+		regexNumber := regexp.MustCompile(`\d+`)
+		watchdogTimeout := regexNumber.FindString(string(watchdogLine[0]))
+		msgWaitTimeout := regexNumber.FindString(string(msgWaitLine[0]))
+
+		// map the timeout to the device
+		if s, err := strconv.ParseFloat(watchdogTimeout, 64); err == nil {
+			sbdWatchdogs[sbdDev] = s
+		}
+
+		// map the timeout to the device
+		if s, err := strconv.ParseFloat(msgWaitTimeout, 64); err == nil {
+			sbdMsgWaits[sbdDev] = s
+		}
+
+	}
+	return sbdWatchdogs, sbdMsgWaits
 }
