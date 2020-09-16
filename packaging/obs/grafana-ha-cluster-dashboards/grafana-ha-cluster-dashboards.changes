@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
 Wed Sep 16 13:24:29 UTC 2020 - Dario Maiocchi <dmaiocchi@suse.com>
 
-- Release 1.0.3
+- Release 1.0.3 (jsc#SLE-10545)
   * fix minor typo on dashboard spec file
 
 -------------------------------------------------------------------
