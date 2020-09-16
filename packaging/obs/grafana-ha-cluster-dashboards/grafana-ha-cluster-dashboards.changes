@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Sep 16 13:24:29 UTC 2020 - Dario Maiocchi <dmaiocchi@suse.com>
+
+- Release 1.0.3 (jsc#SLE-2010)
+  * fix minor typo on rspec file
+
+-------------------------------------------------------------------
 Wed Aug  5 11:33:51 UTC 2020 - Stefano Torresi <stefano.torresi@suse.com>
 
 - Release 1.0.2
