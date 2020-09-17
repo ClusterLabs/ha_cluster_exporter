@@ -23,8 +23,7 @@ Group:          System/Monitoring
 Url:            https://github.com/ClusterLabs/ha_cluster_exporter
 Source:         %{name}-%{version}.tar.gz
 BuildArch:      noarch
-Requires:       grafana
-BuildRequires:  grafana
+Recommends:     grafana
 
 %description
 Grafana Dashboards displaying metrics about a Pacemaker/Corosync High Availability Cluster.
@@ -45,8 +44,8 @@ install -Dm644 dashboards/provider-sleha.yaml %{buildroot}%{provisioning_dir}/pr
 %defattr(-,root,root)
 %doc dashboards/README.md
 %license LICENSE
-%attr(0755,grafana,grafana) %dir %{dashboards_dir}/sleha
-%attr(0644,grafana,grafana) %config %{dashboards_dir}/sleha/*
-%attr(0644,root,root) %config %{provisioning_dir}/provider-sleha.yaml
+%attr(0755,root,root) %dir %{dashboards_dir}/sleha
+%attr(0755,root,root) %config %{dashboards_dir}/sleha/*
+%attr(0755,root,root) %config %{provisioning_dir}/provider-sleha.yaml
 
 %changelog
