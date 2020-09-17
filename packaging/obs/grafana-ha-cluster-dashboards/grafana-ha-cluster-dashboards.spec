@@ -23,9 +23,13 @@ Group:          System/Monitoring
 Url:            https://github.com/ClusterLabs/ha_cluster_exporter
 Source:         %{name}-%{version}.tar.gz
 BuildArch:      noarch
-Require(pre):   shadow
+BuildRequires:  shadow
 Recommends:     grafana
 
+# TECHNICAL NOTE:
+# Originally we were requiring grafana pkg. For Distros reasons, we use recommends
+# this impact how we do pkging here: requireing shadow, creating grafana usr/group
+# and modifiying owning the directories. ( this was done automagically when requiring grafana)
 %description
 Grafana Dashboards displaying metrics about a Pacemaker/Corosync High Availability Cluster.
 
