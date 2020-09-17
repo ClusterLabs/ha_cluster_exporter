@@ -45,7 +45,6 @@ getent passwd grafana > /dev/null || useradd -r -g grafana -d  %{_datadir}/grafa
 %build
 
 %install
-%define provisioning_dir
 install -d -m0755 %{buildroot}%{_localstatedir}/lib/grafana/dashboards/sleha
 install -m644 dashboards/*.json %{buildroot}%{_localstatedir}/lib/grafana/dashboards/sleha
 install -Dm644 dashboards/provider-sleha.yaml %{buildroot}%{_sysconfdir}/grafana/provisioning/dashboards/provider-sleha.yaml
