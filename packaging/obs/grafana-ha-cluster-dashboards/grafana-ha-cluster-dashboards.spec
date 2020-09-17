@@ -47,5 +47,10 @@ install -Dm644 dashboards/provider-sleha.yaml %{buildroot}%{provisioning_dir}/pr
 %attr(0755,root,root) %dir %{dashboards_dir}/sleha
 %attr(0755,root,root) %config %{dashboards_dir}/sleha/*
 %attr(0755,root,root) %config %{provisioning_dir}/provider-sleha.yaml
+%dir  %{_sysconfdir}/grafana
+%dir  %{_sysconfdir}/grafana/provisioning
+%dir  %{_sysconfdir}/grafana/provisioning/dashboards
+%dir  %{_localstatedir}/lib/grafana
+%dir  %{_localstatedir}/lib/grafana/dashboards
 
 %changelog
