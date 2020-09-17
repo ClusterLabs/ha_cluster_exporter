@@ -5,7 +5,7 @@
         <param name="revision">%%REVISION%%</param>
         <param name="include">dashboards</param>
         <param name="include">LICENSE</param>
-        <param name="versionformat">1.0.4+git.%ct.%h</param>
+        <param name="versionformat">1.0.3+git.%ct.%h</param>
         <param name="filename">grafana-ha-cluster-dashboards</param>
     </service>
     <service name="set_version" mode="disabled">

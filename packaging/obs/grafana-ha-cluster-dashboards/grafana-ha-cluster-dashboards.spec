@@ -27,9 +27,10 @@ Requires(pre):  shadow
 Recommends:     grafana
 
 # TECHNICAL NOTE:
-# Originally we were requiring grafana pkg. For Distros reasons, we use recommends
-# this impact how we do pkging here: requireing shadow, creating grafana usr/group
-# and modifiying owning the directories. ( this was done automagically when requiring grafana)
+# Originally we used to require grafana but, for product management reasons, we use recommends now.
+# This impacts how we do pkging here: requiring shadow, creating grafana usr/group
+# and modifiying files attributes (this was done automagically when requiring grafana).
+
 %description
 Grafana Dashboards displaying metrics about a Pacemaker/Corosync High Availability Cluster.
 
@@ -44,23 +45,22 @@ getent passwd grafana > /dev/null || useradd -r -g grafana -d  %{_datadir}/grafa
 %build
 
 %install
-%define dashboards_dir %{_localstatedir}/lib/grafana/dashboards
-%define provisioning_dir %{_sysconfdir}/grafana/provisioning/dashboards
-install -d -m0755 %{buildroot}%{dashboards_dir}/sleha
-install -m644 dashboards/*.json %{buildroot}%{dashboards_dir}/sleha
-install -Dm644 dashboards/provider-sleha.yaml %{buildroot}%{provisioning_dir}/provider-sleha.yaml
+%define provisioning_dir
+install -d -m0755 %{buildroot}%{_localstatedir}/lib/grafana/dashboards/sleha
+install -m644 dashboards/*.json %{buildroot}%{_localstatedir}/lib/grafana/dashboards/sleha
+install -Dm644 dashboards/provider-sleha.yaml %{buildroot}%{_sysconfdir}/grafana/provisioning/dashboards/provider-sleha.yaml
 
 %files
 %defattr(-,root,root)
 %doc dashboards/README.md
 %license LICENSE
-%attr(0755,grafana,grafana) %dir %{dashboards_dir}/sleha
-%attr(0644,grafana,grafana) %config %{dashboards_dir}/sleha/*
-%attr(0644,root,root) %config %{provisioning_dir}/provider-sleha.yaml
-%attr(0755,root,root) %dir  %{_sysconfdir}/grafana
-%attr(0755,root,root) %dir  %{_sysconfdir}/grafana/provisioning
-%attr(0755,root,root) %dir  %{_sysconfdir}/grafana/provisioning/dashboards
-%attr(0755,grafana,grafana) %dir  %{_localstatedir}/lib/grafana
-%attr(0755,grafana,grafana) %dir  %{_localstatedir}/lib/grafana/dashboards
+%attr(0755,grafana,grafana) %dir %{_localstatedir}/lib/grafana
+%attr(0755,grafana,grafana) %dir %{_localstatedir}/lib/grafana/dashboards
+%attr(0755,grafana,grafana) %dir %{_localstatedir}/lib/grafana/dashboards/sleha
+%attr(0644,grafana,grafana) %config %{_localstatedir}/lib/grafana/dashboards/sleha/*
+%attr(0755,root,root) %dir %{_sysconfdir}/grafana
+%attr(0755,root,root) %dir %{_sysconfdir}/grafana/provisioning
+%attr(0755,root,root) %dir %{_sysconfdir}/grafana/provisioning/dashboards
+%attr(0644,root,root) %config %{_sysconfdir}/grafana/provisioning/dashboards/provider-sleha.yaml
 
 %changelog

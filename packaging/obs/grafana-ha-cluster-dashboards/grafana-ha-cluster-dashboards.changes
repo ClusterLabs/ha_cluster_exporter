@@ -1,13 +1,9 @@
 -------------------------------------------------------------------
-Thu Sep 17 10:32:06 UTC 2020 - Dario Maiocchi <dmaiocchi@suse.com>
-
--  Release 1.0.4 (jsc#SLE-10545)
-  * don't use require grafana, use suggests
-  * fix permission accordingly
--------------------------------------------------------------------
 Wed Sep 16 13:24:29 UTC 2020 - Dario Maiocchi <dmaiocchi@suse.com>
 
 - Release 1.0.3 (jsc#SLE-10545)
+  * don't use require grafana, use recommends
+  * fix permissions accordingly
   * fix minor typo on dashboard spec file
 
 -------------------------------------------------------------------
