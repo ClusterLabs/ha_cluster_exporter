@@ -23,7 +23,7 @@ Group:          System/Monitoring
 Url:            https://github.com/ClusterLabs/ha_cluster_exporter
 Source:         %{name}-%{version}.tar.gz
 BuildArch:      noarch
-BuildRequires:  shadow
+Requires(pre):  shadow
 Recommends:     grafana
 
 # TECHNICAL NOTE:
