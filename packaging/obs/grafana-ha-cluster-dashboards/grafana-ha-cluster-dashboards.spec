@@ -64,14 +64,12 @@ install -Dm644 dashboards/provider-sleha.yaml %{buildroot}%{_sysconfdir}/grafana
 %doc dashboards/README.md
 %license LICENSE
 %attr(0644,grafana,grafana) %config %{_localstatedir}/lib/grafana/dashboards/sleha/*
-%attr(0755,root,root) %dir %{_sysconfdir}/grafana
-
-%files
 %attr(0755,grafana,grafana) %dir %{_localstatedir}/lib/grafana
 %attr(0755,grafana,grafana) %dir %{_localstatedir}/lib/grafana/dashboards
 %attr(0755,grafana,grafana) %dir %{_localstatedir}/lib/grafana/dashboards/sleha
 
 %files -n grafana-sleha-cluster-provider
+%attr(0755,root,root) %dir %{_sysconfdir}/grafana
 %attr(0755,root,root) %dir %{_sysconfdir}/grafana/provisioning
 %attr(0755,root,root) %dir %{_sysconfdir}/grafana/provisioning/dashboards
 %attr(0644,root,root) %config %{_sysconfdir}/grafana/provisioning/dashboards/provider-sleha.yaml
