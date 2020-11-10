@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Nov  9 16:41:51 UTC 2020 - Witek Bedyk <witold.bedyk@suse.com>
+
+- Release 1.1.0
+  * Split provider file to own package
+
+-------------------------------------------------------------------
 Wed Sep 16 13:24:29 UTC 2020 - Dario Maiocchi <dmaiocchi@suse.com>
 
 - Release 1.0.3 (jsc#SLE-10545)
@@ -23,4 +29,4 @@ Tue Jul 14 13:47:20 UTC 2020 - Stefano Torresi <stefano.torresi@suse.com>
 -------------------------------------------------------------------
 Fri Jun 12 10:39:33 UTC 2020 - Stefano Torresi <stefano.torresi@suse.com>
 
-- First release 
+- First release
