@@ -1,7 +1,6 @@
 [Unit]
 Description=Prometheus exporter for Pacemaker HA clusters metrics
-Wants=pacemaker.service
-After=network.target pacemaker.service
+After=network.target
 
 [Service]
 Type=simple
