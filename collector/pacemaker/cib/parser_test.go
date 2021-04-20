@@ -16,6 +16,8 @@ func TestParse(t *testing.T) {
 	data, err := p.Parse()
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(data.Configuration.Nodes))
+	assert.Equal(t, "cib-bootstrap-options-cluster-name", data.Configuration.CrmConfig.ClusterProperties[3].Id)
+	assert.Equal(t, "hana_cluster", data.Configuration.CrmConfig.ClusterProperties[3].Value)
 	assert.Equal(t, "node01", data.Configuration.Nodes[0].Uname)
 	assert.Equal(t, "node02", data.Configuration.Nodes[1].Uname)
 	assert.Equal(t, 4, len(data.Configuration.Resources.Primitives))
