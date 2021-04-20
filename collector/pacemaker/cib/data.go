@@ -10,6 +10,9 @@ https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html-single/Pacemaker_
 
 type Root struct {
 	Configuration struct {
+		CrmConfig struct {
+			ClusterProperties []Attribute `xml:"cluster_property_set>nvpair"`
+		} `xml:"crm_config"`
 		Nodes []struct {
 			Id                 string      `xml:"id,attr"`
 			Uname              string      `xml:"uname,attr"`
