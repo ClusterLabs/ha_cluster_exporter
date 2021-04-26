@@ -146,6 +146,11 @@ func (c *pacemakerCollector) recordResource(resource crmmon.Resource, group stri
 		"failure_ignored": resource.FailureIgnored,
 	}
 
+	// Don't create metric for OCFS nodes that aren't running since those would generate duplicate entries
+	if resource.Agent == "ocf::heartbeat:Filesystem" && resource.NodesRunningOn == 0 {
+		return
+	}
+
 	// since we have a combined cardinality of resource * status, we cycle through all the possible statuses
 	// and we record a new metric if the flag for that status is on
 	for resourceStatus, flag := range resourceStatuses {

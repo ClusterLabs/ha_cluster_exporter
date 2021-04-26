@@ -43,6 +43,16 @@ cat <<EOF
                 <node name="node02" id="1084783376" cached="false"/>
             </resource>
         </clone>
+        <clone id="c-clusterfs" multi_state="false" unique="false" managed="true" failed="false" failure_ignored="false">
+            <resource id="clusterfs" resource_agent="ocf::heartbeat:Filesystem" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+                <node name="node01" id="1084783225" cached="true"/>
+            </resource>
+            <resource id="clusterfs" resource_agent="ocf::heartbeat:Filesystem" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+                <node name="node02" id="1084783226" cached="true"/>
+            </resource>
+            <resource id="clusterfs" resource_agent="ocf::heartbeat:Filesystem" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+            <resource id="clusterfs" resource_agent="ocf::heartbeat:Filesystem" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        </clone>
         <group id="grp_HA1_ASCS00" number_resources="3" >
              <resource id="rsc_ip_HA1_ASCS00" resource_agent="ocf::heartbeat:IPaddr2" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1" >
                  <node name="node01" id="1084783375" cached="false"/>

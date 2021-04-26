@@ -93,6 +93,16 @@ ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Filesystem",clone="",group=
 ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Filesystem",clone="",group="grp_HA1_ERS10",managed="true",node="node02",resource="rsc_fs_HA1_ERS10",role="started",status="failed"} 0
 ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Filesystem",clone="",group="grp_HA1_ERS10",managed="true",node="node02",resource="rsc_fs_HA1_ERS10",role="started",status="failure_ignored"} 0
 ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Filesystem",clone="",group="grp_HA1_ERS10",managed="true",node="node02",resource="rsc_fs_HA1_ERS10",role="started",status="orphaned"} 0
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Filesystem",clone="c-clusterfs",group="",managed="true",node="node01",resource="clusterfs",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Filesystem",clone="c-clusterfs",group="",managed="true",node="node01",resource="clusterfs",role="started",status="blocked"} 0
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Filesystem",clone="c-clusterfs",group="",managed="true",node="node01",resource="clusterfs",role="started",status="failed"} 0
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Filesystem",clone="c-clusterfs",group="",managed="true",node="node01",resource="clusterfs",role="started",status="failure_ignored"} 0
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Filesystem",clone="c-clusterfs",group="",managed="true",node="node01",resource="clusterfs",role="started",status="orphaned"} 0
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Filesystem",clone="c-clusterfs",group="",managed="true",node="node02",resource="clusterfs",role="started",status="active"} 1
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Filesystem",clone="c-clusterfs",group="",managed="true",node="node02",resource="clusterfs",role="started",status="blocked"} 0
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Filesystem",clone="c-clusterfs",group="",managed="true",node="node02",resource="clusterfs",role="started",status="failed"} 0
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Filesystem",clone="c-clusterfs",group="",managed="true",node="node02",resource="clusterfs",role="started",status="failure_ignored"} 0
+ha_cluster_pacemaker_resources{agent="ocf::heartbeat:Filesystem",clone="c-clusterfs",group="",managed="true",node="node02",resource="clusterfs",role="started",status="orphaned"} 0
 ha_cluster_pacemaker_resources{agent="ocf::heartbeat:IPaddr2",clone="",group="",managed="true",node="node01",resource="rsc_ip_PRD_HDB00",role="started",status="active"} 1
 ha_cluster_pacemaker_resources{agent="ocf::heartbeat:IPaddr2",clone="",group="",managed="true",node="node01",resource="rsc_ip_PRD_HDB00",role="started",status="blocked"} 0
 ha_cluster_pacemaker_resources{agent="ocf::heartbeat:IPaddr2",clone="",group="",managed="true",node="node01",resource="rsc_ip_PRD_HDB00",role="started",status="failed"} 0
