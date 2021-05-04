@@ -1,5 +1,5 @@
 #
-# Copyright 2019-2020 SUSE LLC
+# Copyright 2019-2021 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,23 +13,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 Name:           prometheus-ha_cluster_exporter
 # Version will be processed via set_version source service
 Version:        0
 Release:        0
-License:        Apache-2.0
 Summary:        Prometheus exporter for Pacemaker HA clusters metrics
+License:        Apache-2.0
 Group:          System/Monitoring
-Url:            https://github.com/ClusterLabs/ha_cluster_exporter
+URL:            https://github.com/ClusterLabs/ha_cluster_exporter
 Source:         %{name}-%{version}.tar.gz
 Source1:        vendor.tar.gz
-ExclusiveArch:  aarch64 x86_64 ppc64le s390x
-BuildRoot:      %{_tmppath}/%{name}-%{version}-build
+BuildRequires:  golang(API) >= 1.14
 BuildRequires:  golang-packaging
-BuildRequires:  golang(API) >= 1.12
 Provides:       ha_cluster_exporter = %{version}-%{release}
 Provides:       prometheus(ha_cluster_exporter) = %{version}-%{release}
-
+ExclusiveArch:  aarch64 x86_64 ppc64le s390x
 %{go_nostrip}
 
 %description
@@ -74,7 +74,6 @@ ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rc%{name}
 %service_del_postun %{name}.service
 
 %files
-%defattr(-,root,root)
 %doc *.md
 %doc doc/*
 %if 0%{?suse_version} >= 1500
