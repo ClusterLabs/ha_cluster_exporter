@@ -37,6 +37,12 @@ jobs:
       run: make test
     - name: build
       run: make -j4 build-all
+    - name: compress
+      run: |
+        set -x
+        for FILE in build/bin/*; do
+          gzip $FILE
+        done
     - uses: actions/upload-artifact@v2
       with:
         name: ha_cluster_exporter
