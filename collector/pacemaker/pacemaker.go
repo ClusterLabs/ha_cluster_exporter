@@ -124,8 +124,16 @@ func (c *pacemakerCollector) recordResources(crmMon crmmon.Root, ch chan<- prome
 		c.recordResource(resource, "", "", ch)
 	}
 	for _, clone := range crmMon.Clones {
+		recorded := make(map[crmmon.Resource]bool) // we need to track cloned resources to avoid duplicates
 		for _, resource := range clone.Resources {
+			// Avoid recording stopped cloned resources multiple times
+			if recorded[resource] == true {
+				continue
+			}
+
 			c.recordResource(resource, "", clone.Id, ch)
+
+			recorded[resource] = true
 		}
 	}
 	for _, group := range crmMon.Groups {
@@ -146,9 +154,9 @@ func (c *pacemakerCollector) recordResource(resource crmmon.Resource, group stri
 		"failure_ignored": resource.FailureIgnored,
 	}
 
-	// Don't create metric for OCFS nodes that aren't running since those would generate duplicate entries
-	if resource.Agent == "ocf::heartbeat:Filesystem" && resource.NodesRunningOn == 0 {
-		return
+	var nodeName string
+	if resource.Node != nil {
+		nodeName = resource.Node.Name
 	}
 
 	// since we have a combined cardinality of resource * status, we cycle through all the possible statuses
@@ -158,13 +166,8 @@ func (c *pacemakerCollector) recordResource(resource crmmon.Resource, group stri
 		if flag {
 			statusValue = 1
 		}
-		var nodeName string
-		if resource.Node != nil {
-			nodeName = resource.Node.Name
-		}
-		ch <- c.MakeGaugeMetric(
-			"resources",
-			statusValue,
+
+		labels := []string{
 			nodeName,
 			resource.Id,
 			strings.ToLower(resource.Role),
@@ -172,7 +175,10 @@ func (c *pacemakerCollector) recordResource(resource crmmon.Resource, group stri
 			resourceStatus,
 			resource.Agent,
 			group,
-			clone)
+			clone,
+		}
+
+		ch <- c.MakeGaugeMetric("resources", statusValue, labels...)
 	}
 }
 
