@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Jun  4 10:58:51 UTC 2021 - Stefano Torresi <stefano.torresi@suse.com>
+
+- Rename grafana-sleha-cluster-provider subpackage to grafana-sleha-provider 
+
+-------------------------------------------------------------------
 Mon Nov  9 16:41:51 UTC 2020 - Witek Bedyk <witold.bedyk@suse.com>
 
 - Release 1.1.0
