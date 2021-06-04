@@ -40,6 +40,8 @@ Summary:        Grafana configuration providers for the SLES HA Extension
 Group:          System/Monitoring
 Recommends:     grafana
 BuildArch:      noarch
+Provides:       grafana-sleha-cluster-provider = %version-%release
+Obsoletes:      grafana-sleha-cluster-provider < %version-%release
 
 %description -n grafana-sleha-provider
 Automated configuration provisioners leveraged by other packages to enable a zero-config installation of Grafana dashboards.
