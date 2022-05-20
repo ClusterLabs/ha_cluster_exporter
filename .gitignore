@@ -17,3 +17,6 @@ ha_cluster_exporter
 # we don't use vendoring
 /vendor
 /build
+
+# ignore tmp promu config
+.promu.release.yml

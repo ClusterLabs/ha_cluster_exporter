@@ -1,8 +1,19 @@
+GO    := GO111MODULE=on go
+FIRST_GOPATH := $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
+GOHOSTOS     ?= $(shell $(GO) env GOHOSTOS)
+GOHOSTARCH   ?= $(shell $(GO) env GOHOSTARCH)
+ifeq (arm, $(GOHOSTARCH))
+	GOHOSTARM ?= $(shell GOARM= $(GO) env GOARM)
+	GO_BUILD_PLATFORM ?= $(GOHOSTOS)-$(GOHOSTARCH)v$(GOHOSTARM)
+else
+	GO_BUILD_PLATFORM ?= $(GOHOSTOS)-$(GOHOSTARCH)
+endif
+PROMU        := $(FIRST_GOPATH)/bin/promu
+PROMU_VERSION ?= 0.13.0
+PROMU_URL     := https://github.com/prometheus/promu/releases/download/v$(PROMU_VERSION)/promu-$(PROMU_VERSION).$(GO_BUILD_PLATFORM).tar.gz
+
 # this is the what ends up in the RPM "Version" field and embedded in the --version CLI flag
 VERSION ?= $(shell .ci/get_version_from_git.sh)
-
-# this will be used as the build date by the Go compile task
-DATE = $(shell date --iso-8601=seconds)
 
 # if you want to release to OBS, this must be a remotely available Git reference
 REVISION ?= $(shell git rev-parse --abbrev-ref HEAD)
@@ -19,47 +30,65 @@ ARCHS ?= amd64 arm64 ppc64le s390x
 
 default: clean mod-tidy generate fmt vet-check test build
 
-build: amd64
+promu-prepare: 
+	sed "s/{{.Version}}/$(VERSION)/" .promu.yml >.promu.release.yml
+	mkdir -p build/bin
 
-build-all: clean $(ARCHS)
+# from https://github.com/prometheus/prometheus/blob/main/Makefile.common
+$(PROMU):
+	$(eval PROMU_TMP := $(shell mktemp -d))
+	curl -s -L $(PROMU_URL) | tar -xvzf - -C $(PROMU_TMP)
+	mkdir -p $(FIRST_GOPATH)/bin
+	cp $(PROMU_TMP)/promu-$(PROMU_VERSION).$(GO_BUILD_PLATFORM)/promu $(FIRST_GOPATH)/bin/promu
+	rm -r $(PROMU_TMP)
+
+build:
+	$(MAKE) clean
+	$(MAKE) promu-prepare $(PROMU)
+	$(MAKE) amd64
+
+build-all:
+	$(MAKE) clean
+	$(MAKE) promu-prepare $(PROMU)
+	$(MAKE) $(ARCHS)
 
 $(ARCHS):
-	@mkdir -p build/bin
-	CGO_ENABLED=0 GOOS=linux GOARCH=$@ go build -trimpath -ldflags "-s -w -X main.version=$(VERSION) -X main.buildDate=$(DATE)" -o build/bin/ha_cluster_exporter-$@
+	GOOS=linux GOARCH=$@ $(PROMU) build --config .promu.release.yml --prefix=build/bin ha_cluster_exporter-$@
 
 install:
-	go install
+	$(GO) install
 
 static-checks: vet-check fmt-check
 
 vet-check:
-	go vet ./...
+	$(GO) vet ./...
 
 fmt:
-	go fmt ./...
+	$(GO) fmt ./...
 
 mod-tidy:
-	go mod tidy
+	$(GO) mod tidy
 
 fmt-check:
 	.ci/go_lint.sh
 
 generate:
-	go generate ./...
+	$(GO) generate ./...
 
 test:
-	go test -v ./...
+	$(GO) test -v ./...
 
 checks: static-checks test
 
 coverage:
 	@mkdir -p build
-	go test -cover -coverprofile=build/coverage ./...
-	go tool cover -html=build/coverage
+	$(GO) test -cover -coverprofile=build/coverage ./...
+	$(GO) tool cover -html=build/coverage
 
 clean:
-	go clean
+	$(GO) clean
 	rm -rf build
+	rm -f .promu.release.yml
 
 exporter-obs-workdir: build/obs/prometheus-ha_cluster_exporter
 build/obs/prometheus-ha_cluster_exporter:
