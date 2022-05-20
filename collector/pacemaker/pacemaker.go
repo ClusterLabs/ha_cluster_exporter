@@ -10,21 +10,22 @@ import (
 	"github.com/ClusterLabs/ha_cluster_exporter/collector/pacemaker/cib"
 	"github.com/ClusterLabs/ha_cluster_exporter/collector/pacemaker/crmmon"
 
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 )
 
 const subsystem = "pacemaker"
 
-func NewCollector(crmMonPath string, cibAdminPath string) (*pacemakerCollector, error) {
+func NewCollector(crmMonPath string, cibAdminPath string, timestamps bool, logger log.Logger) (*pacemakerCollector, error) {
 	err := collector.CheckExecutables(crmMonPath, cibAdminPath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not initialize '%s' collector", subsystem)
 	}
 
 	c := &pacemakerCollector{
-		collector.NewDefaultCollector(subsystem),
+		collector.NewDefaultCollector(subsystem, timestamps, logger),
 		crmmon.NewCrmMonParser(crmMonPath),
 		cib.NewCibAdminParser(cibAdminPath),
 	}
@@ -47,7 +48,7 @@ type pacemakerCollector struct {
 }
 
 func (c *pacemakerCollector) CollectWithError(ch chan<- prometheus.Metric) error {
-	log.Debugln("Collecting pacemaker metrics...")
+	level.Debug(c.Logger).Log("msg", "Collecting pacemaker metrics...")
 
 	crmMon, err := c.crmMonParser.Parse()
 	if err != nil {
@@ -76,9 +77,11 @@ func (c *pacemakerCollector) CollectWithError(ch chan<- prometheus.Metric) error
 }
 
 func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
+	level.Debug(c.Logger).Log("msg", "Collecting pacemaker metrics...")
+
 	err := c.CollectWithError(ch)
 	if err != nil {
-		log.Warnf("'%s' collector scrape failed: %s", c.GetSubsystem(), err)
+		level.Warn(c.Logger).Log("msg", c.GetSubsystem()+" collector scrape failed", "err", err)
 	}
 }
 

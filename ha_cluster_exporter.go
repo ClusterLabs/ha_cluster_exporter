@@ -4,124 +4,184 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"runtime"
+	"strings"
 
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	log "github.com/sirupsen/logrus"
-	flag "github.com/spf13/pflag"
+	"github.com/prometheus/common/promlog"
+	// cannot use as setConfigDefault function will not work here
+	// log.level and log.format flags are set in vars/init
+	// "github.com/prometheus/common/promlog/flag"
+	"github.com/prometheus/common/version"
+
 	"github.com/spf13/viper"
+	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/ClusterLabs/ha_cluster_exporter/collector"
 	"github.com/ClusterLabs/ha_cluster_exporter/collector/corosync"
 	"github.com/ClusterLabs/ha_cluster_exporter/collector/drbd"
 	"github.com/ClusterLabs/ha_cluster_exporter/collector/pacemaker"
 	"github.com/ClusterLabs/ha_cluster_exporter/collector/sbd"
-	"github.com/ClusterLabs/ha_cluster_exporter/internal"
+)
+
+const (
+	namespace = "ha_cluster_exporter"
 )
 
 var (
-	// the released version
-	version string
-	// the time the binary was built
-	buildDate string
-	// global --help flag
-	helpFlag *bool
-	// global --version flag
-	versionFlag *bool
-
 	config *viper.Viper
+
+	// general flags
+	logLevel         *string
+	logFormat        *string
+
+	// collector flags
+	haClusterCrmMonPath              *string
+	haClusterCibadminPath            *string
+	haClusterCorosyncCfgtoolpathPath *string
+	haClusterCorosyncQuorumtoolPath  *string
+	haClusterSbdPath                 *string
+	haClusterSbdConfigPath           *string
+	haClusterDrbdsetupPath           *string
+	haClusterDrbdsplitbrainPath      *string
+
+	// deprecated flags
+	enableTimestampsDeprecated *bool
+	portDeprecated             *int
+	addressDeprecated          *string
+	logLevelDeprecated         *string
+
+	promlogConfig = &promlog.Config{
+		Level:  &promlog.AllowedLevel{},
+		Format: &promlog.AllowedFormat{},
+	}
 )
 
 func init() {
+
 	config = viper.New()
 	config.SetConfigName("ha_cluster_exporter")
 	config.AddConfigPath("./")
 	config.AddConfigPath("$HOME/.config/")
 	config.AddConfigPath("/etc/")
 	config.AddConfigPath("/usr/etc/")
+	config.ReadInConfig()
 
-	flag.String("port", "9664", "The port number to listen on for HTTP requests")
-	flag.String("address", "0.0.0.0", "The address to listen on for HTTP requests")
-	flag.String("log-level", "info", "The minimum logging level; levels are, in ascending order: debug, info, warn, error")
-	flag.String("crm-mon-path", "/usr/sbin/crm_mon", "path to crm_mon executable")
-	flag.String("cibadmin-path", "/usr/sbin/cibadmin", "path to cibadmin executable")
-	flag.String("corosync-cfgtoolpath-path", "/usr/sbin/corosync-cfgtool", "path to corosync-cfgtool executable")
-	flag.String("corosync-quorumtool-path", "/usr/sbin/corosync-quorumtool", "path to corosync-quorumtool executable")
-	flag.String("sbd-path", "/usr/sbin/sbd", "path to sbd executable")
-	flag.String("sbd-config-path", "/etc/sysconfig/sbd", "path to sbd configuration")
-	flag.String("drbdsetup-path", "/sbin/drbdsetup", "path to drbdsetup executable")
-	flag.String("drbdsplitbrain-path", "/var/run/drbd/splitbrain", "path to drbd splitbrain hooks temporary files")
-	flag.Bool("enable-timestamps", false, "Add the timestamp to every metric line")
-	flag.CommandLine.MarkDeprecated("enable-timestamps", "server-side metric timestamping is discouraged by Prometheus best-practices and should be avoided")
-	flag.CommandLine.SortFlags = false
 
-	err := config.BindPFlags(flag.CommandLine)
-	if err != nil {
-		log.Fatalf("Could not bind config to CLI flags: %v", err)
+	// collector flags
+	haClusterCrmMonPath = kingpin.Flag(
+		"crm-mon-path",
+		"path to crm_mon executable",
+	).PlaceHolder("/usr/sbin/crm_mon").Default(setConfigDefault("crm-mon-path", "/usr/sbin/crm_mon")).String()
+	haClusterCibadminPath = kingpin.Flag(
+		"cibadmin-path",
+		"path to cibadmin executable",
+	).PlaceHolder("/usr/sbin/cibadmin").Default(setConfigDefault("cibadmin-path", "/usr/sbin/cibadmin")).String()
+	haClusterCorosyncCfgtoolpathPath = kingpin.Flag(
+		"corosync-cfgtoolpath-path",
+		"path to corosync-cfgtool executable",
+	).PlaceHolder("/usr/sbin/corosync-cfgtool").Default(setConfigDefault("corosync-cfgtoolpath-path", "/usr/sbin/corosync-cfgtool")).String()
+	haClusterCorosyncQuorumtoolPath = kingpin.Flag(
+		"corosync-quorumtool-path",
+		"path to corosync-quorumtool executable",
+	).PlaceHolder("/usr/sbin/corosync-quorumtool").Default(setConfigDefault("corosync-quorumtool-path", "/usr/sbin/corosync-quorumtool")).String()
+	haClusterSbdPath = kingpin.Flag(
+		"sbd-path",
+		"path to sbd executable",
+	).PlaceHolder("/usr/sbin/sbd").Default(setConfigDefault("sbd-path", "/usr/sbin/sbd")).String()
+	haClusterSbdConfigPath = kingpin.Flag(
+		"sbd-config-path",
+		"path to sbd configuration",
+	).PlaceHolder("/etc/sysconfig/sbd").Default(setConfigDefault("sbd-config-path", "/etc/sysconfig/sbd")).String()
+	haClusterDrbdsetupPath = kingpin.Flag(
+		"drbdsetup-path",
+		"path to drbdsetup executable",
+	).PlaceHolder("/sbin/drbdsetup").Default(setConfigDefault("drbdsetup-path", "/sbin/drbdsetup")).String()
+	haClusterDrbdsplitbrainPath = kingpin.Flag(
+		"drbdsplitbrain-path",
+		"path to drbd splitbrain hooks temporary files",
+	).PlaceHolder("/var/run/drbd/splitbrain").Default(setConfigDefault("drbdsplitbrain-path", "/var/run/drbd/splitbrain")).String()
+	enableTimestampsDeprecated = kingpin.Flag(
+		"enable-timestamps",
+		"[DEPRECATED] server-side metric timestamping is discouraged by Prometheus best-practices and should be avoided",
+	).PlaceHolder("false").Default(setConfigDefault("enable-timestamps", "false")).Bool()
+	addressDeprecated = kingpin.Flag(
+		"address",
+		"[DEPRECATED] please use --web.listen-address or --web.config.file to use Prometheus Exporter Toolkit",
+	).PlaceHolder("0.0.0.0").Default(setConfigDefault("address", "0.0.0.0")).String()
+	portDeprecated = kingpin.Flag(
+		"port",
+		"[DEPRECATED] please use --web.listen-address or --web.config.file to use Prometheus Exporter Toolkit",
+	).PlaceHolder("9664").Default(setConfigDefault("port", "9664")).Int()
+	logLevelDeprecated = kingpin.Flag(
+		"log-level",
+		"[DEPRECATED] please user log.level",
+	).PlaceHolder("info").Default(setConfigDefault("log-level", "info")).String()
+
+	// cannot use as setConfigDefault function will not work here
+	// log.level and log.format flags are set in vars/init
+	// flag.AddFlags(kingpin.CommandLine, promlogConfig)
+	logLevel = kingpin.Flag(
+		"log.level",
+		"Only log messages with the given severity or above. One of: [debug, info, warn, error]",
+	).PlaceHolder("info").Default(setConfigDefault("log.level", "info")).String()
+	logFormat = kingpin.Flag(
+		"log.format",
+		"Output format of log messages. One of: [logfmt, json]",
+	).PlaceHolder("logfmt").Default(setConfigDefault("log.format", "logfmt")).String()
+
+    // detect unit testing and skip kingpin.Parse() in init.
+    // see: https://github.com/alecthomas/kingpin/issues/187
+	testing := (strings.HasSuffix(os.Args[0], ".test") ||
+		strings.HasSuffix(os.Args[0], "__debug_bin"))
+	if testing {
+		return
 	}
 
-	helpFlag = flag.BoolP("help", "h", false, "show this help message")
-	versionFlag = flag.Bool("version", false, "show version and build information")
-}
+	kingpin.Version(version.Print(namespace))
+	kingpin.HelpFlag.Short('h')
 
-func main() {
-	flag.Parse()
-
-	switch {
-	case *helpFlag:
-		showHelp()
-	case *versionFlag:
-		showVersion()
-	default:
-		run()
-	}
-}
-
-func run() {
 	var err error
 
-	err = config.ReadInConfig()
+	kingpin.Parse()
+
+	// use deprecated log-level parameter if set
+	if *logLevelDeprecated != "info" {
+		*logLevel = *logLevelDeprecated
+	}
+
+	err = promlogConfig.Level.Set(*logLevel)
 	if err != nil {
-		log.Warn(err)
-		log.Info("Default config values will be used")
-	} else {
-		log.Info("Using config file: ", config.ConfigFileUsed())
+		fmt.Printf("%s: error: %s, try --help\n", namespace, err)
+		os.Exit(1)
 	}
-
-	internal.SetLogLevel(config.GetString("log-level"))
-
-	collectors, errors := registerCollectors(config)
-	for _, err = range errors {
-		log.Warn("Registration failure: ", err)
+	err = promlogConfig.Format.Set(*logFormat)
+	if err != nil {
+		fmt.Printf("%s: error: %s, try --help\n", namespace, err)
+		os.Exit(1)
 	}
-	if len(collectors) == 0 {
-		log.Fatal("No collector could be registered.")
-	}
-	for _, c := range collectors {
-		if c, ok := c.(collector.SubsystemCollector); ok == true {
-			log.Infof("'%s' collector registered.", c.GetSubsystem())
-		}
-	}
-
-	// if we're not in debug log level, we unregister the Go runtime metrics collector that gets registered by default
-	if !log.IsLevelEnabled(log.DebugLevel) {
-		prometheus.Unregister(prometheus.NewGoCollector())
-	}
-
-	fullListenAddress := fmt.Sprintf("%s:%s", config.Get("address"), config.Get("port"))
-
-	http.HandleFunc("/", internal.Landing)
-	http.Handle("/metrics", promhttp.Handler())
-
-	log.Infof("Serving metrics on %s", fullListenAddress)
-	log.Fatal(http.ListenAndServe(fullListenAddress, nil))
 }
 
-func registerCollectors(config *viper.Viper) (collectors []prometheus.Collector, errors []error) {
+// looks up if a configName is define in viper config
+// if it is not defined in the viper config, set the passed configDefault
+func setConfigDefault(configName string, configDefault string) string {
+	var result string
+	if config.IsSet(configName) {
+		result = config.GetString(configName)
+	} else {
+		result = configDefault
+	}
+	return result
+}
+
+func registerCollectors(logger log.Logger) (collectors []prometheus.Collector, errors []error) {
 	pacemakerCollector, err := pacemaker.NewCollector(
-		config.GetString("crm-mon-path"),
-		config.GetString("cibadmin-path"),
+		*haClusterCrmMonPath,
+		*haClusterCibadminPath,
+		*enableTimestampsDeprecated,
+		logger,
 	)
 	if err != nil {
 		errors = append(errors, err)
@@ -130,8 +190,10 @@ func registerCollectors(config *viper.Viper) (collectors []prometheus.Collector,
 	}
 
 	corosyncCollector, err := corosync.NewCollector(
-		config.GetString("corosync-cfgtoolpath-path"),
-		config.GetString("corosync-quorumtool-path"),
+		*haClusterCorosyncCfgtoolpathPath,
+		*haClusterCorosyncQuorumtoolPath,
+		*enableTimestampsDeprecated,
+		logger,
 	)
 	if err != nil {
 		errors = append(errors, err)
@@ -140,8 +202,10 @@ func registerCollectors(config *viper.Viper) (collectors []prometheus.Collector,
 	}
 
 	sbdCollector, err := sbd.NewCollector(
-		config.GetString("sbd-path"),
-		config.GetString("sbd-config-path"),
+		*haClusterSbdPath,
+		*haClusterSbdConfigPath,
+		*enableTimestampsDeprecated,
+		logger,
 	)
 	if err != nil {
 		errors = append(errors, err)
@@ -150,8 +214,10 @@ func registerCollectors(config *viper.Viper) (collectors []prometheus.Collector,
 	}
 
 	drbdCollector, err := drbd.NewCollector(
-		config.GetString("drbdsetup-path"),
-		config.GetString("drbdsplitbrain-path"),
+		*haClusterDrbdsetupPath,
+		*haClusterDrbdsplitbrainPath,
+		*enableTimestampsDeprecated,
+		logger,
 	)
 	if err != nil {
 		errors = append(errors, err)
@@ -161,7 +227,7 @@ func registerCollectors(config *viper.Viper) (collectors []prometheus.Collector,
 
 	for i, c := range collectors {
 		if c, ok := c.(collector.InstrumentableCollector); ok == true {
-			collectors[i] = collector.NewInstrumentedCollector(c)
+			collectors[i] = collector.NewInstrumentedCollector(c, logger)
 		}
 	}
 
@@ -170,15 +236,74 @@ func registerCollectors(config *viper.Viper) (collectors []prometheus.Collector,
 	return collectors, errors
 }
 
-func showHelp() {
-	flag.Usage()
-	os.Exit(0)
-}
+func main() {
+	var err error
 
-func showVersion() {
-	if buildDate == "" {
-		buildDate = "at unknown time"
+	logger := promlog.New(promlogConfig)
+
+	level.Info(logger).Log("msg", fmt.Sprintf("Starting %s %s", namespace, version.Info()))
+	level.Info(logger).Log("msg", fmt.Sprintf("Build context %s", version.BuildContext()))
+
+	// re-read only to display Info/Warn
+	err = config.ReadInConfig()
+	if err != nil {
+		level.Warn(logger).Log("msg", "Reading config file failed", "err", err)
+		level.Info(logger).Log("msg", "Default config values will be used")
+	} else {
+		level.Info(logger).Log("msg", "Using config file: "+config.ConfigFileUsed())
 	}
-	fmt.Printf("version %s\nbuilt with %s %s/%s %s\n", version, runtime.Version(), runtime.GOOS, runtime.GOARCH, buildDate)
-	os.Exit(0)
+
+	// register collectors
+	collectors, errors := registerCollectors(logger)
+	for _, err = range errors {
+		level.Warn(logger).Log("msg", "Registration failure", "err", err)
+	}
+	if len(collectors) == 0 {
+		level.Error(logger).Log("msg", "No collector could be registered.", "err", err)
+		os.Exit(1)
+	}
+	for _, c := range collectors {
+		if c, ok := c.(collector.SubsystemCollector); ok == true {
+			level.Info(logger).Log("msg", c.GetSubsystem()+" collector registered.")
+		}
+	}
+
+	// if we're not in debug log level, we unregister the Go runtime metrics collector that gets registered by default
+	if *logLevel != "debug" {
+		prometheus.Unregister(prometheus.NewGoCollector())
+	}
+
+	var fullListenAddress string
+	fullListenAddress = fmt.Sprintf("%s:%d", *addressDeprecated, *portDeprecated)
+	serveAddress := &http.Server{Addr: fullListenAddress}
+
+	var landingPage = []byte(`<html>
+<head>
+	<title>ClusterLabs Linux HA Cluster Exporter</title>
+</head>
+<body>
+	<h1>ClusterLabs Linux HA Cluster Exporter</h1>
+	<h2>Prometheus exporter for Pacemaker based Linux HA clusters</h2>
+	<ul>
+		<li><a href="/metrics">Metrics</a></li>
+		<li><a href="https://github.com/ClusterLabs/ha_cluster_exporter" target="_blank">GitHub</a></li>
+	</ul>
+</body>
+</html>
+`)
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write(landingPage)
+	})
+	http.Handle(servePath, promhttp.Handler())
+
+	level.Info(logger).Log("msg", "Serving metrics on "+fullListenAddress+servePath)
+
+	var listen error
+       listen = http.ListenAndServe(fullListenAddress, nil)
+
+	if err := listen; err != nil {
+		level.Error(logger).Log("msg", "Error starting HTTP server", "err", err)
+		os.Exit(1)
+	}
 }

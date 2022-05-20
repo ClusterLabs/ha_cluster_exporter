@@ -9,9 +9,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/ClusterLabs/ha_cluster_exporter/collector"
 )
@@ -22,14 +23,14 @@ const SBD_STATUS_UNHEALTHY = "unhealthy"
 const SBD_STATUS_HEALTHY = "healthy"
 
 // NewCollector create a new sbd collector
-func NewCollector(sbdPath string, sbdConfigPath string) (*sbdCollector, error) {
+func NewCollector(sbdPath string, sbdConfigPath string, timestamps bool, logger log.Logger) (*sbdCollector, error) {
 	err := checkArguments(sbdPath, sbdConfigPath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not initialize '%s' collector", subsystem)
 	}
 
 	c := &sbdCollector{
-		collector.NewDefaultCollector("sbd"),
+		collector.NewDefaultCollector(subsystem, timestamps, logger),
 		sbdPath,
 		sbdConfigPath,
 	}
@@ -57,7 +58,7 @@ type sbdCollector struct {
 }
 
 func (c *sbdCollector) CollectWithError(ch chan<- prometheus.Metric) error {
-	log.Debugln("Collecting SBD metrics...")
+	level.Debug(c.Logger).Log("msg", "Collecting pacemaker metrics...")
 
 	sbdConfiguration, err := readSdbFile(c.sbdConfigPath)
 	if err != nil {
@@ -84,9 +85,11 @@ func (c *sbdCollector) CollectWithError(ch chan<- prometheus.Metric) error {
 }
 
 func (c *sbdCollector) Collect(ch chan<- prometheus.Metric) {
+	level.Debug(c.Logger).Log("msg", "Collecting pacemaker metrics...")
+
 	err := c.CollectWithError(ch)
 	if err != nil {
-		log.Warnf("'%s' collector scrape failed: %s", c.GetSubsystem(), err)
+		level.Warn(c.Logger).Log("msg", c.GetSubsystem()+" collector scrape failed", "err", err)
 	}
 }
 

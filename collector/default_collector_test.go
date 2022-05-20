@@ -3,15 +3,15 @@ package collector
 import (
 	"testing"
 
+	"github.com/go-kit/log"
 	dto "github.com/prometheus/client_model/go"
-	config "github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ClusterLabs/ha_cluster_exporter/internal/clock"
 )
 
 func TestMetricFactory(t *testing.T) {
-	SUT := NewDefaultCollector("test")
+	SUT := NewDefaultCollector("test", false, log.NewNopLogger())
 	SUT.SetDescriptor("test_metric", "", nil)
 
 	metric := SUT.MakeGaugeMetric("test_metric", 1)
@@ -20,10 +20,8 @@ func TestMetricFactory(t *testing.T) {
 }
 
 func TestMetricFactoryWithTimestamp(t *testing.T) {
-	config.Set("enable-timestamps", true)
-	defer config.Set("enable-timestamps", false)
 
-	SUT := NewDefaultCollector("test")
+	SUT := NewDefaultCollector("test", true, log.NewNopLogger())
 	SUT.Clock = &clock.StoppedClock{}
 	SUT.SetDescriptor("test_metric", "", nil)
 

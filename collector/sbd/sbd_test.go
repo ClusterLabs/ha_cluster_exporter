@@ -3,6 +3,7 @@ package sbd
 import (
 	"testing"
 
+	"github.com/go-kit/log"
 	"github.com/stretchr/testify/assert"
 
 	assertcustom "github.com/ClusterLabs/ha_cluster_exporter/internal/assert"
@@ -187,39 +188,39 @@ SBD_DEVICE=/dev/vdc;/dev/vdd`
 }
 
 func TestNewSbdCollector(t *testing.T) {
-	_, err := NewCollector("../../test/fake_sbd.sh", "../../test/fake_sbdconfig")
+	_, err := NewCollector("../../test/fake_sbd.sh", "../../test/fake_sbdconfig", false, log.NewNopLogger())
 
 	assert.Nil(t, err)
 }
 
 func TestNewSbdCollectorChecksSbdConfigExistence(t *testing.T) {
-	_, err := NewCollector("../../test/fake_sbd.sh", "../../test/nonexistent")
+	_, err := NewCollector("../../test/fake_sbd.sh", "../../test/nonexistent", false, log.NewNopLogger())
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "'../../test/nonexistent' does not exist")
 }
 
 func TestNewSbdCollectorChecksSbdExistence(t *testing.T) {
-	_, err := NewCollector("../../test/nonexistent", "../../test/fake_sbdconfig")
+	_, err := NewCollector("../../test/nonexistent", "../../test/fake_sbdconfig", false, log.NewNopLogger())
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "'../../test/nonexistent' does not exist")
 }
 
 func TestNewSbdCollectorChecksSbdExecutableBits(t *testing.T) {
-	_, err := NewCollector("../../test/dummy", "../../test/fake_sbdconfig")
+	_, err := NewCollector("../../test/dummy", "../../test/fake_sbdconfig", false, log.NewNopLogger())
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "'../../test/dummy' is not executable")
 }
 
 func TestSBDCollector(t *testing.T) {
-	collector, _ := NewCollector("../../test/fake_sbd_dump.sh", "../../test/fake_sbdconfig")
+	collector, _ := NewCollector("../../test/fake_sbd_dump.sh", "../../test/fake_sbdconfig", false, log.NewNopLogger())
 	assertcustom.Metrics(t, collector, "sbd.metrics")
 }
 
 func TestWatchdog(t *testing.T) {
-	collector, err := NewCollector("../../test/fake_sbd_dump.sh", "../../test/fake_sbdconfig")
+	collector, err := NewCollector("../../test/fake_sbd_dump.sh", "../../test/fake_sbdconfig", false, log.NewNopLogger())
 
 	assert.Nil(t, err)
 	assertcustom.Metrics(t, collector, "sbd.metrics")
