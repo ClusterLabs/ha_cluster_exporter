@@ -153,8 +153,8 @@ func init() {
 		"Output format of log messages. One of: [logfmt, json]",
 	).PlaceHolder("logfmt").Default(setConfigDefault("log.format", "logfmt")).String()
 
-    // detect unit testing and skip kingpin.Parse() in init.
-    // see: https://github.com/alecthomas/kingpin/issues/187
+	// detect unit testing and skip kingpin.Parse() in init.
+	// see: https://github.com/alecthomas/kingpin/issues/187
 	testing := (strings.HasSuffix(os.Args[0], ".test") ||
 		strings.HasSuffix(os.Args[0], "__debug_bin"))
 	if testing {
