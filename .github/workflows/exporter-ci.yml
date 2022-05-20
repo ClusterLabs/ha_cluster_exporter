@@ -43,7 +43,7 @@ jobs:
         for FILE in build/bin/*; do
           gzip $FILE
         done
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: ha_cluster_exporter
         path: build/bin
@@ -104,10 +104,10 @@ jobs:
     if: github.event.release
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: ha_cluster_exporter
-    - uses: AButler/upload-release-assets@v2.0
+    - uses: softprops/action-gh-release@v1
       with:
         files: 'ha_cluster_exporter-*'
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.GITHUB_TOKEN }}
