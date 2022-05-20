@@ -131,6 +131,14 @@ sbd-config-path                            | Path to sbd configuration (default 
 drbdsetup-path                             | Path to drbdsetup executable (default `/sbin/drbdsetup`).
 drbdsplitbrain-path                        | Path to drbd splitbrain hooks temporary files (default `/var/run/drbd/splitbrain`).
 
+### TLS and basic authentication
+
+The ha_cluster_exporter supports TLS and basic authentication.
+
+To use TLS and/or basic authentication, you need to pass a configuration file
+using the `--web.config.file` parameter. The format of the file is described
+[in the exporter-toolkit repository](https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md).
+
 ### systemd integration
 
 A [systemd unit file](ha_cluster_exporter.service) is provided with the RPM packages. You can enable and start it as usual:  

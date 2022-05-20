@@ -15,8 +15,11 @@ import (
 	// log.level and log.format flags are set in vars/init
 	// "github.com/prometheus/common/promlog/flag"
 	"github.com/prometheus/common/version"
+	"github.com/prometheus/exporter-toolkit/web"
 
 	"github.com/spf13/viper"
+	// we could use this but want to define our own defaults
+	// webflag "github.com/prometheus/exporter-toolkit/web/kingpinflag"
 	"gopkg.in/alecthomas/kingpin.v2"
 
 	"github.com/ClusterLabs/ha_cluster_exporter/collector"
@@ -34,6 +37,9 @@ var (
 	config *viper.Viper
 
 	// general flags
+	webListenAddress *string
+	webTelemetryPath *string
+	webConfig        *string
 	logLevel         *string
 	logFormat        *string
 
@@ -69,6 +75,21 @@ func init() {
 	config.AddConfigPath("/usr/etc/")
 	config.ReadInConfig()
 
+	// general flags
+	webListenAddress = kingpin.Flag(
+		"web.listen-address",
+		"Address to listen on for web interface and telemetry.",
+	).PlaceHolder(":9664").Default(setConfigDefault("web.listen-address", ":9664")).String()
+	webTelemetryPath = kingpin.Flag(
+		"web.telemetry-path",
+		"Path under which to expose metrics.",
+	).PlaceHolder("/metrics").Default(setConfigDefault("web.telemetry-path", "/metrics")).String()
+	// we could use this but want to define our own defaults
+	// webConfig = webflag.AddFlags(kingpin.CommandLine)
+	webConfig = kingpin.Flag(
+		"web.config.file",
+		"[EXPERIMENTAL] Path to configuration file that can enable TLS or authentication.",
+	).PlaceHolder("/etc/" + namespace + ".web.yaml").Default(setConfigDefault("web.config.file", "/etc/"+namespace+".web.yaml")).String()
 
 	// collector flags
 	haClusterCrmMonPath = kingpin.Flag(
@@ -274,8 +295,15 @@ func main() {
 	}
 
 	var fullListenAddress string
-	fullListenAddress = fmt.Sprintf("%s:%d", *addressDeprecated, *portDeprecated)
+	// use deprecated parameters
+	if *addressDeprecated != "0.0.0.0" || *portDeprecated != 9664 {
+		fullListenAddress = fmt.Sprintf("%s:%d", *addressDeprecated, *portDeprecated)
+		// use new parameters
+	} else {
+		fullListenAddress = *webListenAddress
+	}
 	serveAddress := &http.Server{Addr: fullListenAddress}
+	servePath := *webTelemetryPath
 
 	var landingPage = []byte(`<html>
 <head>
@@ -285,7 +313,7 @@ func main() {
 	<h1>ClusterLabs Linux HA Cluster Exporter</h1>
 	<h2>Prometheus exporter for Pacemaker based Linux HA clusters</h2>
 	<ul>
-		<li><a href="/metrics">Metrics</a></li>
+		<li><a href="` + servePath + `">Metrics</a></li>
 		<li><a href="https://github.com/ClusterLabs/ha_cluster_exporter" target="_blank">GitHub</a></li>
 	</ul>
 </body>
@@ -300,7 +328,15 @@ func main() {
 	level.Info(logger).Log("msg", "Serving metrics on "+fullListenAddress+servePath)
 
 	var listen error
-       listen = http.ListenAndServe(fullListenAddress, nil)
+	_, err = os.Stat(*webConfig)
+	if err != nil {
+		level.Warn(logger).Log("msg", "Reading web config file failed", "err", err)
+		level.Info(logger).Log("msg", "Default web config or commandline values will be used")
+		listen = web.ListenAndServe(serveAddress, "", logger)
+	} else {
+		level.Info(logger).Log("msg", "Using web config file: "+*webConfig)
+		listen = web.ListenAndServe(serveAddress, *webConfig, logger)
+	}
 
 	if err := listen; err != nil {
 		level.Error(logger).Log("msg", "Error starting HTTP server", "err", err)
