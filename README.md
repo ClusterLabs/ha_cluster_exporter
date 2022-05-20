@@ -98,6 +98,8 @@ The first match has precedence, and the CLI flags have precedence over the confi
 
 Please refer to the example [YAML configuration](ha_cluster_exporter.yaml) for more details.
 
+Additional CLI flags can also be passed via `/etc/sysconfig/prometheus-ha_cluster_exporter`.
+
 ### systemd integration
 
 A [systemd unit file](ha_cluster_exporter.service) is provided with the RPM packages. You can enable and start it as usual:  

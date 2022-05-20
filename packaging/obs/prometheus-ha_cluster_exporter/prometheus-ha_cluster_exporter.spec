@@ -1,5 +1,5 @@
 #
-# Copyright 2019-2021 SUSE LLC
+# Copyright 2019-2022 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,10 +27,15 @@ Source:         %{name}-%{version}.tar.gz
 Source1:        vendor.tar.gz
 BuildRequires:  golang(API) >= 1.14
 BuildRequires:  golang-packaging
+Requires(post): %fillup_prereq
 Provides:       ha_cluster_exporter = %{version}-%{release}
 Provides:       prometheus(ha_cluster_exporter) = %{version}-%{release}
 ExclusiveArch:  aarch64 x86_64 ppc64le s390x
 %{go_nostrip}
+#Compat macro for new _fillupdir macro introduced in Nov 2017
+%if ! %{defined _fillupdir}
+  %define _fillupdir /var/adm/fillup-templates
+%endif
 
 %description
 Prometheus exporter for Pacemaker HA clusters metrics
@@ -57,6 +62,9 @@ install -D -m 0755 %{shortname} "%{buildroot}%{_bindir}/%{shortname}"
 # Install the systemd unit
 install -D -m 0644 %{shortname}.service %{buildroot}%{_unitdir}/%{name}.service
 
+# Install the environment file
+install -D -m 0644 %{shortname}.sysconfig %{buildroot}%{_fillupdir}/sysconfig.%{name}
+
 # Install compat wrapper for legacy init systems
 install -Dd -m 0755 %{buildroot}%{_sbindir}
 ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rc%{name}
@@ -66,6 +74,7 @@ ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rc%{name}
 
 %post
 %service_add_post %{name}.service
+%fillup_only -n %{name}
 
 %preun
 %service_del_preun %{name}.service
@@ -83,6 +92,7 @@ ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rc%{name}
 %endif
 %{_bindir}/%{shortname}
 %{_unitdir}/%{name}.service
+%{_fillupdir}/sysconfig.%{name}
 %{_sbindir}/rc%{name}
 
 %changelog
