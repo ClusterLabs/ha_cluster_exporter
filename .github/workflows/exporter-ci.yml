@@ -69,6 +69,7 @@ jobs:
         /scripts/init_osc_creds.sh
         mkdir -p $HOME/.config/osc
         cp /root/.config/osc/oscrc $HOME/.config/osc
+    - run: git config --global --add safe.directory $(pwd)
     - run: make exporter-obs-commit
 
   obs-submit-request:
@@ -94,6 +95,7 @@ jobs:
         /scripts/init_osc_creds.sh
         mkdir -p $HOME/.config/osc
         cp /root/.config/osc/oscrc $HOME/.config/osc
+    - run: git config --global --add safe.directory $(pwd)
     - run: make exporter-obs-workdir
     - run: make exporter-obs-changelog
     - run: make exporter-obs-commit
