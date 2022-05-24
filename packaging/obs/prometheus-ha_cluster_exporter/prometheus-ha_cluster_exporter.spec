@@ -51,7 +51,7 @@ Prometheus exporter for Pacemaker HA clusters metrics
 export CGO_ENABLED=0
 go build -mod=vendor \
          -buildmode=pie \
-         -ldflags="-s -w -X main.version=%{version}" \
+         -ldflags="-s -w -X github.com/prometheus/common/version.Version=%{version}" \
          -o %{shortname}
 
 %install
