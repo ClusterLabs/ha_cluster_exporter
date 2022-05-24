@@ -52,7 +52,7 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
-    container: shap/continuous_deliver
+    container: ghcr.io/trento-project/continuous-delivery:master
     env:
       OBS_USER: ${{ secrets.OBS_USER }}
       OBS_PASS: ${{ secrets.OBS_PASS }}
@@ -75,7 +75,7 @@ jobs:
     needs: build
     if: github.event.release
     runs-on: ubuntu-latest
-    container: shap/continuous_deliver
+    container: ghcr.io/trento-project/continuous-delivery:master
     env:
       OBS_USER: ${{ secrets.OBS_USER }}
       OBS_PASS: ${{ secrets.OBS_PASS }}
