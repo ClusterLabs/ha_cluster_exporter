@@ -1,0 +1,11 @@
+## Path:        Network/Monitors/Prometheus/ha_cluster_exporter
+## Description: Prometheus ha_cluster_exporter startup parameters
+## Type:        string
+## Default:     ''
+#
+# Additional arguments for the ha_cluster_exporter.
+# Please call: /usr/bin/ha_cluster_exporter --help
+# for a full list of possible options. 
+# Note: Please keep the list on one line, of possible.
+#
+ARGS=''

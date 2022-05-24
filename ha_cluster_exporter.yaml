@@ -1,7 +1,12 @@
 # sample config
-port: "9664"
-address: "0.0.0.0"
-log-level: "info"
+web:
+  listen-address: "0.0.0.0:9664"
+  telemetry-path: "/metrics"
+  config:
+    file: "/etc/ha_cluster_exporter.web.yaml"
+log:
+  level: "info"
+  format: "logfmt"
 crm-mon-path: "/usr/sbin/crm_mon"
 cibadmin-path: "/usr/sbin/cibadmin"
 corosync-cfgtoolpath-path: "/usr/sbin/corosync-cfgtool"
@@ -9,4 +14,3 @@ corosync-quorumtool-path: "/usr/sbin/corosync-quorumtool"
 sbd-path: "/usr/sbin/sbd"
 sbd-config-path: "/etc/sysconfig/sbd"
 drbdsetup-path: "/sbin/drbdsetup"
-enable-timestamps: false

@@ -5,47 +5,48 @@
 package mock_collector
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	prometheus "github.com/prometheus/client_golang/prometheus"
-	reflect "reflect"
 )
 
-// MockInstrumentableCollector is a mock of InstrumentableCollector interface
+// MockInstrumentableCollector is a mock of InstrumentableCollector interface.
 type MockInstrumentableCollector struct {
 	ctrl     *gomock.Controller
 	recorder *MockInstrumentableCollectorMockRecorder
 }
 
-// MockInstrumentableCollectorMockRecorder is the mock recorder for MockInstrumentableCollector
+// MockInstrumentableCollectorMockRecorder is the mock recorder for MockInstrumentableCollector.
 type MockInstrumentableCollectorMockRecorder struct {
 	mock *MockInstrumentableCollector
 }
 
-// NewMockInstrumentableCollector creates a new mock instance
+// NewMockInstrumentableCollector creates a new mock instance.
 func NewMockInstrumentableCollector(ctrl *gomock.Controller) *MockInstrumentableCollector {
 	mock := &MockInstrumentableCollector{ctrl: ctrl}
 	mock.recorder = &MockInstrumentableCollectorMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockInstrumentableCollector) EXPECT() *MockInstrumentableCollectorMockRecorder {
 	return m.recorder
 }
 
-// Collect mocks base method
+// Collect mocks base method.
 func (m *MockInstrumentableCollector) Collect(arg0 chan<- prometheus.Metric) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Collect", arg0)
 }
 
-// Collect indicates an expected call of Collect
+// Collect indicates an expected call of Collect.
 func (mr *MockInstrumentableCollectorMockRecorder) Collect(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Collect", reflect.TypeOf((*MockInstrumentableCollector)(nil).Collect), arg0)
 }
 
-// CollectWithError mocks base method
+// CollectWithError mocks base method.
 func (m *MockInstrumentableCollector) CollectWithError(arg0 chan<- prometheus.Metric) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CollectWithError", arg0)
@@ -53,25 +54,25 @@ func (m *MockInstrumentableCollector) CollectWithError(arg0 chan<- prometheus.Me
 	return ret0
 }
 
-// CollectWithError indicates an expected call of CollectWithError
+// CollectWithError indicates an expected call of CollectWithError.
 func (mr *MockInstrumentableCollectorMockRecorder) CollectWithError(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CollectWithError", reflect.TypeOf((*MockInstrumentableCollector)(nil).CollectWithError), arg0)
 }
 
-// Describe mocks base method
+// Describe mocks base method.
 func (m *MockInstrumentableCollector) Describe(arg0 chan<- *prometheus.Desc) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Describe", arg0)
 }
 
-// Describe indicates an expected call of Describe
+// Describe indicates an expected call of Describe.
 func (mr *MockInstrumentableCollectorMockRecorder) Describe(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Describe", reflect.TypeOf((*MockInstrumentableCollector)(nil).Describe), arg0)
 }
 
-// GetSubsystem mocks base method
+// GetSubsystem mocks base method.
 func (m *MockInstrumentableCollector) GetSubsystem() string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSubsystem")
@@ -79,7 +80,7 @@ func (m *MockInstrumentableCollector) GetSubsystem() string {
 	return ret0
 }
 
-// GetSubsystem indicates an expected call of GetSubsystem
+// GetSubsystem indicates an expected call of GetSubsystem.
 func (mr *MockInstrumentableCollectorMockRecorder) GetSubsystem() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubsystem", reflect.TypeOf((*MockInstrumentableCollector)(nil).GetSubsystem))

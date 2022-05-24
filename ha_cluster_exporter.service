@@ -5,7 +5,8 @@ After=network.target
 [Service]
 Type=simple
 Restart=always
-ExecStart=/usr/bin/ha_cluster_exporter
+EnvironmentFile=-/etc/sysconfig/prometheus-ha_cluster_exporter
+ExecStart=/usr/bin/ha_cluster_exporter $ARGS
 ExecReload=/bin/kill -HUP $MAINPID
 
 [Install]

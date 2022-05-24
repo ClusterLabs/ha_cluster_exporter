@@ -1,13 +1,13 @@
 package collector
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
-
 	"github.com/ClusterLabs/ha_cluster_exporter/internal/clock"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
-//go:generate mockgen -destination ../test/mock_collector/instrumented_collector.go github.com/ClusterLabs/ha_cluster_exporter/collector InstrumentableCollector
+//go:generate go run -mod=mod github.com/golang/mock/mockgen --build_flags=-mod=mod -package mock_collector -destination ../test/mock_collector/instrumented_collector.go github.com/ClusterLabs/ha_cluster_exporter/collector InstrumentableCollector
 
 // describes a collector that can return errors from collection cycles,
 // instead of the default Prometheus one, which has void Collect returns
@@ -22,9 +22,10 @@ type InstrumentedCollector struct {
 	Clock              clock.Clock
 	scrapeDurationDesc *prometheus.Desc
 	scrapeSuccessDesc  *prometheus.Desc
+	logger             log.Logger
 }
 
-func NewInstrumentedCollector(collector InstrumentableCollector) *InstrumentedCollector {
+func NewInstrumentedCollector(collector InstrumentableCollector, logger log.Logger) *InstrumentedCollector {
 	return &InstrumentedCollector{
 		collector,
 		&clock.SystemClock{},
@@ -44,6 +45,7 @@ func NewInstrumentedCollector(collector InstrumentableCollector) *InstrumentedCo
 				"collector": collector.GetSubsystem(),
 			},
 		),
+		logger,
 	}
 }
 
@@ -55,7 +57,7 @@ func (ic *InstrumentedCollector) Collect(ch chan<- prometheus.Metric) {
 	if err == nil {
 		success = 1
 	} else {
-		log.Warnf("'%s' collector scrape failed: %s", ic.collector.GetSubsystem(), err)
+		level.Warn(ic.logger).Log("msg", ic.collector.GetSubsystem()+" collector scrape failed", "err", err)
 	}
 	ch <- prometheus.MustNewConstMetric(ic.scrapeDurationDesc, prometheus.GaugeValue, duration.Seconds())
 	ch <- prometheus.MustNewConstMetric(ic.scrapeSuccessDesc, prometheus.GaugeValue, success)

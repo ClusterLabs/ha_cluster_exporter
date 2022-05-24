@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-kit/log"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 
@@ -143,32 +144,32 @@ func TestDrbdParsing(t *testing.T) {
 }
 
 func TestNewDrbdCollector(t *testing.T) {
-	_, err := NewCollector("../../test/fake_drbdsetup.sh", "splitbrainpath")
+	_, err := NewCollector("../../test/fake_drbdsetup.sh", "splitbrainpath", false, log.NewNopLogger())
 
 	assert.Nil(t, err)
 }
 
 func TestNewDrbdCollectorChecksDrbdsetupExistence(t *testing.T) {
-	_, err := NewCollector("../../test/nonexistent", "splitbrainfake")
+	_, err := NewCollector("../../test/nonexistent", "splitbrainfake", false, log.NewNopLogger())
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "'../../test/nonexistent' does not exist")
 }
 
 func TestNewDrbdCollectorChecksDrbdsetupExecutableBits(t *testing.T) {
-	_, err := NewCollector("../../test/dummy", "splibrainfake")
+	_, err := NewCollector("../../test/dummy", "splibrainfake", false, log.NewNopLogger())
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "'../../test/dummy' is not executable")
 }
 
 func TestDRBDCollector(t *testing.T) {
-	collector, _ := NewCollector("../../test/fake_drbdsetup.sh", "fake")
+	collector, _ := NewCollector("../../test/fake_drbdsetup.sh", "fake", false, log.NewNopLogger())
 	assertcustom.Metrics(t, collector, "drbd.metrics")
 }
 
 func TestDRBDSplitbrainCollector(t *testing.T) {
-	collector, _ := NewCollector("../../test/fake_drbdsetup.sh", "../../test/drbd-splitbrain")
+	collector, _ := NewCollector("../../test/fake_drbdsetup.sh", "../../test/drbd-splitbrain", false, log.NewNopLogger())
 
 	expect := `
 	# HELP ha_cluster_drbd_split_brain Whether a split brain has been detected; 1 line per resource, per volume.

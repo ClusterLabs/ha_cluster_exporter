@@ -1,6 +1,6 @@
 <services>
     <service name="tar_scm" mode="disabled">
-        <param name="url">git://github.com/%%REPOSITORY%%.git</param>
+        <param name="url">https://github.com/%%REPOSITORY%%.git</param>
         <param name="scm">git</param>
         <param name="revision">%%REVISION%%</param>
         <param name="exclude">.git</param>
