@@ -2,7 +2,7 @@ name: Dashboards CI
 
 # this workflow will
 # - check for JSON syntax errors on every pull request
-# - commit to the OBS development upstream whenever master the master branch is updated
+# - commit to the OBS development upstream whenever the main branch is updated
 
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: actions/setup-node@v1
     - run: npm -g install jsonlint
     - name: validate JSON
@@ -30,7 +30,7 @@ jobs:
 
   obs-commit:
     needs: build
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     container: shap/continuous_deliver
     env:
@@ -41,7 +41,7 @@ jobs:
       REPOSITORY: ${{ github.repository }}
       GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - name: configure OSC
@@ -50,4 +50,3 @@ jobs:
         mkdir -p $HOME/.config/osc
         cp /root/.config/osc/oscrc $HOME/.config/osc
     - run: make dashboards-obs-commit
-

@@ -2,7 +2,7 @@ name: Exporter CI
 
 # this workflow will
 # - check build and test the go codebase on every pull request
-# - commit to the OBS development upstream whenever master the master branch is updated
+# - commit to the OBS development upstream whenever the main branch is updated
 # - perform an OBS Submit Request to downstream whenever a GitHub release is published
 # - attach build artifacts to GitHub releases
 
@@ -61,7 +61,7 @@ jobs:
       REPOSITORY: ${{ github.repository }}
       GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - name: configure OSC
@@ -86,7 +86,7 @@ jobs:
       REPOSITORY: ${{ github.repository }}
       GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - name: configure OSC
