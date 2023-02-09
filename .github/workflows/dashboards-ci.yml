@@ -6,6 +6,7 @@ name: Dashboards CI
 
 on:
   push:
+    branches: [main]
     paths:
     - 'Makefile'
     - 'dashboards/**'

@@ -8,11 +8,17 @@ name: Exporter CI
 
 on:
   push:
+    branches: [main]
     paths-ignore:
     - 'dashboards/**'
     - 'packaging/obs/grafana-ha-cluster-dashboards/**'
     - '.github/workflows/dashboards*'
   pull_request:
+    paths-ignore:
+    - 'dashboards/**'
+    - 'packaging/obs/grafana-ha-cluster-dashboards/**'
+    - '.github/workflows/dashboards*'
+  workflow_dispatch:
     paths-ignore:
     - 'dashboards/**'
     - 'packaging/obs/grafana-ha-cluster-dashboards/**'
@@ -52,7 +58,8 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    container: ghcr.io/trento-project/continuous-delivery:master
+    container: ghcr.io/trento-project/continuous-delivery:main
+      options: -u 0:0
     env:
       OBS_USER: ${{ secrets.OBS_USER }}
       OBS_PASS: ${{ secrets.OBS_PASS }}
@@ -66,9 +73,9 @@ jobs:
         fetch-depth: 0
     - name: configure OSC
       run: |
-        /scripts/init_osc_creds.sh
         mkdir -p $HOME/.config/osc
-        cp /root/.config/osc/oscrc $HOME/.config/osc
+        cp /home/osc/.config/osc/oscrc $HOME/.config/osc
+        /scripts/init_osc_creds.sh
     - run: git config --global --add safe.directory $(pwd)
     - run: make exporter-obs-commit
 
@@ -76,7 +83,8 @@ jobs:
     needs: build
     if: github.event.release
     runs-on: ubuntu-latest
-    container: ghcr.io/trento-project/continuous-delivery:master
+    container: ghcr.io/trento-project/continuous-delivery:main
+      options: -u 0:0
     env:
       OBS_USER: ${{ secrets.OBS_USER }}
       OBS_PASS: ${{ secrets.OBS_PASS }}
@@ -92,9 +100,9 @@ jobs:
         fetch-depth: 0
     - name: configure OSC
       run: |
-        /scripts/init_osc_creds.sh
         mkdir -p $HOME/.config/osc
-        cp /root/.config/osc/oscrc $HOME/.config/osc
+        cp /home/osc/.config/osc/oscrc $HOME/.config/osc
+        /scripts/init_osc_creds.sh
     - run: git config --global --add safe.directory $(pwd)
     - run: make exporter-obs-workdir
     - run: make exporter-obs-changelog
