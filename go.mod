@@ -10,7 +10,7 @@ require (
 	github.com/prometheus/client_model v0.3.0
 	github.com/prometheus/common v0.37.0
 	github.com/prometheus/exporter-toolkit v0.7.3
-	github.com/spf13/viper v1.11.0
+	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )
