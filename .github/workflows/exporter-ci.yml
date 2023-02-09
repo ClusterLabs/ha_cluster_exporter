@@ -60,13 +60,13 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/trento-project/continuous-delivery:main
       options: -u 0:0
-    env:
-      OBS_USER: ${{ secrets.OBS_USER }}
-      OBS_PASS: ${{ secrets.OBS_PASS }}
-      OBS_PROJECT: ${{ secrets.OBS_PROJECT }}
-      REVISION: ${{ github.sha }}
-      REPOSITORY: ${{ github.repository }}
-      GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        OBS_USER: ${{ secrets.OBS_USER }}
+        OBS_PASS: ${{ secrets.OBS_PASS }}
+        OBS_PROJECT: ${{ secrets.OBS_PROJECT }}
+        REVISION: ${{ github.sha }}
+        REPOSITORY: ${{ github.repository }}
+        GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
     - uses: actions/checkout@v3
       with:
@@ -85,15 +85,15 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/trento-project/continuous-delivery:main
       options: -u 0:0
-    env:
-      OBS_USER: ${{ secrets.OBS_USER }}
-      OBS_PASS: ${{ secrets.OBS_PASS }}
-      OBS_PROJECT: ${{ secrets.OBS_PROJECT }}
-      PACKAGE_NAME: prometheus-ha_cluster_exporter
-      TARGET_PROJECT: ${{ secrets.OBS_DOWNSTREAM_PROJECT }}
-      REVISION: ${{ github.event.release.tag_name }}
-      REPOSITORY: ${{ github.repository }}
-      GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        OBS_USER: ${{ secrets.OBS_USER }}
+        OBS_PASS: ${{ secrets.OBS_PASS }}
+        OBS_PROJECT: ${{ secrets.OBS_PROJECT }}
+        PACKAGE_NAME: prometheus-ha_cluster_exporter
+        TARGET_PROJECT: ${{ secrets.OBS_DOWNSTREAM_PROJECT }}
+        REVISION: ${{ github.event.release.tag_name }}
+        REPOSITORY: ${{ github.repository }}
+        GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
     - uses: actions/checkout@v3
       with:
