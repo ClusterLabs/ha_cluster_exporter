@@ -100,7 +100,9 @@ build/obs/prometheus-ha_cluster_exporter:
 	sed -i 's~%%VERSION%%~$(VERSION)~' $@/_service
 	sed -i 's~%%REVISION%%~$(REVISION)~' $@/_service
 	sed -i 's~%%REPOSITORY%%~$(REPOSITORY)~' $@/_service
-	cd $@; osc service runall
+	go mod vendor
+	tar --sort=name --mtime='UTC 1970-01-01' -c vendor | gzip -n > $@/vendor.tar.gz
+	cd $@; osc service manualrun
 
 exporter-obs-changelog: exporter-obs-workdir
 	.ci/gh_release_to_obs_changeset.py $(REPOSITORY) -a $(AUTHOR) -t $(REVISION) -f build/obs/prometheus-ha_cluster_exporter/prometheus-ha_cluster_exporter.changes
@@ -118,7 +120,7 @@ build/obs/grafana-ha-cluster-dashboards:
 # we interpolate environment variables in OBS _service file so that we control what is downloaded by the tar_scm source service
 	sed -i 's~%%REVISION%%~$(REVISION)~' $@/_service
 	sed -i 's~%%REPOSITORY%%~$(REPOSITORY)~' $@/_service
-	cd $@; osc service runall
+	cd $@; osc service manualrun
 
 dashboards-obs-commit: dashboards-obs-workdir
 	cd build/obs/grafana-ha-cluster-dashboards; osc addremove
