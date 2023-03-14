@@ -13,11 +13,11 @@ func TestParse(t *testing.T) {
 	cfgToolOutput := []byte(`Printing link status.
 Local node ID 1084780051
 Link ID 0
-		addr      = 10.0.0.1
-		status    = OK
+		addr	= 10.0.0.1
+		status	= OK
 Link ID 1
-		addr      = 172.16.0.1
-		status    = OK`)
+        addr      = 172.16.0.1
+        status    = OK`)
 
 	quoromToolOutput := []byte(`Quorum information
 ------------------

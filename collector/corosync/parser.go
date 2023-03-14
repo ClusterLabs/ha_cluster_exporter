@@ -151,7 +151,7 @@ func parseRings(cfgToolOutput []byte) []Ring {
 	   	addr	= 192.168.125.15
 	   	status	= ring 0 active with no faults
 	*/
-	re := regexp.MustCompile(`(?m)(?P<prefix>RING|Link) ID (?P<number>\d+)\s+(?P<id>id|addr) \s*= (?P<address>.+)\s+status \s*= (?P<status>.+)`)
+	re := regexp.MustCompile(`(?m)(?P<prefix>RING|Link) ID (?P<number>\d+)\s+(?P<id>id|addr)\s+= (?P<address>.+)\s+status\s+= (?P<status>.+)`)
 	matches := re.FindAllSubmatch(cfgToolOutput, -1)
 	rings := make([]Ring, len(matches))
 	for i, match := range matches {
@@ -227,7 +227,7 @@ func parseMembers(quorumToolOutput []byte) (members []Member, err error) {
 	/*
 		1          1  A,V,NMW 192.168.125.24 (local)
 	*/
-	linesRE := regexp.MustCompile(`(?m)(?P<node_id>\w+)\s+(?P<votes>\d+)\s+(?P<qdevice>(\w,?)+)?\s+(?P<name>[\w-\.]+)(?:\s(?P<local>\(local\)))?\n?`)
+	linesRE := regexp.MustCompile(`(?m)(?P<node_id>\w+)\s+(?P<votes>\d+)\s+(?P<qdevice>(\w,?)+)?\s+(?P<name>[\w-.]+)(?:\s(?P<local>\(local\)))?\n?`)
 	linesMatches := linesRE.FindAllSubmatch(sectionMatch[1], -1)
 	for _, match := range linesMatches {
 		matches := extractRENamedCaptureGroups(linesRE, match)
