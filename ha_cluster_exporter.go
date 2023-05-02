@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/viper"
 	// we could use this but want to define our own defaults
 	// webflag "github.com/prometheus/exporter-toolkit/web/kingpinflag"
-	"gopkg.in/alecthomas/kingpin.v2"
+	"github.com/alecthomas/kingpin/v2"
 
 	"github.com/ClusterLabs/ha_cluster_exporter/collector"
 	"github.com/ClusterLabs/ha_cluster_exporter/collector/corosync"
@@ -327,15 +327,32 @@ func main() {
 
 	level.Info(logger).Log("msg", "Serving metrics on "+fullListenAddress+servePath)
 
+	toolkitFlags := &web.FlagConfig{
+		WebListenAddresses: func() *[]string {
+			r := []string{*webListenAddress}
+			return &r
+		}(),
+		WebSystemdSocket: func() *bool {
+			r := false
+			return &r
+		}(),
+		WebConfigFile: func() *string {
+			r := ""
+			return &r
+		}(),
+	}
+
 	var listen error
 	_, err = os.Stat(*webConfig)
+
 	if err != nil {
 		level.Warn(logger).Log("msg", "Reading web config file failed", "err", err)
 		level.Info(logger).Log("msg", "Default web config or commandline values will be used")
-		listen = web.ListenAndServe(serveAddress, "", logger)
+		listen = web.ListenAndServe(serveAddress, toolkitFlags, logger)
 	} else {
 		level.Info(logger).Log("msg", "Using web config file: "+*webConfig)
-		listen = web.ListenAndServe(serveAddress, *webConfig, logger)
+		toolkitFlags.WebConfigFile = webConfig
+		listen = web.ListenAndServe(serveAddress, toolkitFlags, logger)
 	}
 
 	if err := listen; err != nil {
