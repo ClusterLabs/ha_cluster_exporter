@@ -125,10 +125,10 @@ func getSbdDevices(sbdConfigRaw []byte) []string {
 	}
 
 	// split the first capture group, e.g. `/dev/foo;/dev/bar`; the 0th element is always the whole line
-    sbdDevices := strings.Split(strings.TrimRight(sbdDevicesLine[1], ";"), ";")
-    for i, _ := range sbdDevices {
-        sbdDevices[i] = strings.TrimSpace(sbdDevices[i])
-    }
+	sbdDevices := strings.Split(strings.TrimRight(sbdDevicesLine[1], ";"), ";")
+	for i, _ := range sbdDevices {
+		sbdDevices[i] = strings.TrimSpace(sbdDevices[i])
+	}
 
 	return sbdDevices
 }

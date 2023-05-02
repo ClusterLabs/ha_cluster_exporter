@@ -188,25 +188,23 @@ SBD_DEVICE=/dev/vdc;/dev/vdd`
 }
 
 func TestSbdDeviceParserWithSpaceAfterSemicolon(t *testing.T) {
-    sbdConfig := `
-SBD_DEVICE=/dev/vdc; /dev/vdd`
+	sbdConfig := `SBD_DEVICE=/dev/vdc; /dev/vdd`
 
-    sbdDevices := getSbdDevices([]byte(sbdConfig))
+	sbdDevices := getSbdDevices([]byte(sbdConfig))
 
-    assert.Len(t, sbdDevices, 2)
-    assert.Equal(t, "/dev/vdc", sbdDevices[0])
-    assert.Equal(t, "/dev/vdd", sbdDevices[1])
+	assert.Len(t, sbdDevices, 2)
+	assert.Equal(t, "/dev/vdc", sbdDevices[0])
+	assert.Equal(t, "/dev/vdd", sbdDevices[1])
 }
 
 func TestSbdDeviceParserWithSemicolon(t *testing.T) {
-    sbdConfig := `
-SBD_DEVICE=/dev/vdc;/dev/vdd;`
+	sbdConfig := `SBD_DEVICE=/dev/vdc;/dev/vdd;`
 
-    sbdDevices := getSbdDevices([]byte(sbdConfig))
+	sbdDevices := getSbdDevices([]byte(sbdConfig))
 
-    assert.Len(t, sbdDevices, 2)
-    assert.Equal(t, "/dev/vdc", sbdDevices[0])
-    assert.Equal(t, "/dev/vdd", sbdDevices[1])
+	assert.Len(t, sbdDevices, 2)
+	assert.Equal(t, "/dev/vdc", sbdDevices[0])
+	assert.Equal(t, "/dev/vdd", sbdDevices[1])
 }
 
 func TestNewSbdCollector(t *testing.T) {
