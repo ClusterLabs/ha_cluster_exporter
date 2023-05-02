@@ -116,7 +116,7 @@ func getSbdDevices(sbdConfigRaw []byte) []string {
 	// Unbalanced double quotes are not checked and they will still produce a match
 	// If multiple matching lines are present, only the first will be used
 	// The single device name pattern is `[\w-/]+`, which is pretty relaxed
-	regex := regexp.MustCompile(`(?m)^\s*SBD_DEVICE="?((?:[\w-/]+;?)+)"?\s*$`)
+	regex := regexp.MustCompile(`(?m)^\s*SBD_DEVICE="?((?:[\w-/]+;?\s?)+)"?\s*$`)
 	sbdDevicesLine := regex.FindStringSubmatch(string(sbdConfigRaw))
 
 	// if SBD_DEVICE line could not be found, return 0 devices
@@ -125,7 +125,10 @@ func getSbdDevices(sbdConfigRaw []byte) []string {
 	}
 
 	// split the first capture group, e.g. `/dev/foo;/dev/bar`; the 0th element is always the whole line
-	sbdDevices := strings.Split(sbdDevicesLine[1], ";")
+    sbdDevices := strings.Split(strings.TrimRight(sbdDevicesLine[1], ";"), ";")
+    for i, _ := range sbdDevices {
+        sbdDevices[i] = strings.TrimSpace(sbdDevices[i])
+    }
 
 	return sbdDevices
 }
