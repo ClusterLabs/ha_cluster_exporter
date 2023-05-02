@@ -187,6 +187,26 @@ SBD_DEVICE=/dev/vdc;/dev/vdd`
 	assert.Equal(t, "/dev/vdd", sbdDevices[1])
 }
 
+func TestSbdDeviceParserWithSpaceAfterSemicolon(t *testing.T) {
+	sbdConfig := `SBD_DEVICE=/dev/vdc; /dev/vdd`
+
+	sbdDevices := getSbdDevices([]byte(sbdConfig))
+
+	assert.Len(t, sbdDevices, 2)
+	assert.Equal(t, "/dev/vdc", sbdDevices[0])
+	assert.Equal(t, "/dev/vdd", sbdDevices[1])
+}
+
+func TestSbdDeviceParserWithSemicolon(t *testing.T) {
+	sbdConfig := `SBD_DEVICE=/dev/vdc;/dev/vdd;`
+
+	sbdDevices := getSbdDevices([]byte(sbdConfig))
+
+	assert.Len(t, sbdDevices, 2)
+	assert.Equal(t, "/dev/vdc", sbdDevices[0])
+	assert.Equal(t, "/dev/vdd", sbdDevices[1])
+}
+
 func TestNewSbdCollector(t *testing.T) {
 	_, err := NewCollector("../../test/fake_sbd.sh", "../../test/fake_sbdconfig", false, log.NewNopLogger())
 
