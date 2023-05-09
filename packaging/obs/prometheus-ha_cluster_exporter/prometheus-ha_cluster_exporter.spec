@@ -25,13 +25,12 @@ Group:          System/Monitoring
 URL:            https://github.com/ClusterLabs/ha_cluster_exporter
 Source:         %{name}-%{version}.tar.gz
 Source1:        vendor.tar.gz
-BuildRequires:  golang(API) >= 1.17
-BuildRequires:  golang-packaging
+BuildRequires:  golang(API) >= 1.20
 Requires(post): %fillup_prereq
 Provides:       ha_cluster_exporter = %{version}-%{release}
 Provides:       prometheus(ha_cluster_exporter) = %{version}-%{release}
 ExclusiveArch:  aarch64 x86_64 ppc64le s390x
-%{go_nostrip}
+
 #Compat macro for new _fillupdir macro introduced in Nov 2017
 %if ! %{defined _fillupdir}
   %define _fillupdir /var/adm/fillup-templates
