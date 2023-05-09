@@ -1,6 +1,6 @@
 module github.com/ClusterLabs/ha_cluster_exporter
 
-go 1.17
+go 1.20
 
 require (
 	github.com/alecthomas/kingpin/v2 v2.3.2
