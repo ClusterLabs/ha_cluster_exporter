@@ -19,10 +19,6 @@ on:
     - 'packaging/obs/grafana-ha-cluster-dashboards/**'
     - '.github/workflows/dashboards*'
   workflow_dispatch:
-    paths-ignore:
-    - 'dashboards/**'
-    - 'packaging/obs/grafana-ha-cluster-dashboards/**'
-    - '.github/workflows/dashboards*'
   release:
     types: [ published ]
 
