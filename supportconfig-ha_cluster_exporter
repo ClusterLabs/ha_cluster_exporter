@@ -1,0 +1,87 @@
+#!/bin/bash
+set -u
+
+# supportconfig plugin for ha_cluster_exporter
+#
+# v1.0
+#
+# February 2024    v1.0    first release
+
+SVER='1.0.0'
+TITLE="SUSE supportconfig plugin for ha_cluster_exporter"
+
+function display_package_info() {
+    echo -e "\n#==[ Command ]======================================#"
+    echo -e "# rpm -qi ${1}"
+    rpm -qi "${1}"
+
+    echo -e "\n#==[ Command ]======================================#"
+    echo -e "# rpm -V ${1}"
+    rpm -V "${1}"
+}
+
+function display_file_stat() {
+    echo -e "\n#==[ File ]===========================#"
+    echo -e "# ls -ld ${1} ; stat ${1} \n"
+
+    if [ -e "${1}" ] ; then
+        ls -ld "${1}"
+        echo
+        stat "${1}"
+    else
+        echo "${1} does not exist!"
+    fi
+}
+
+function display_file() {
+    echo -e "\n#==[ File Content ]===========================#"
+    echo -e "# cat ${1}"
+
+    if [ -e "${1}" ] ; then
+        cat "${1}"
+    else
+        echo "${1} does not exist!"
+    fi
+}
+
+function display_systemd_status() {
+    echo -e "\n#==[ Command ]======================================#"
+    echo -e "# systemctl status ${1}"
+
+    systemctl status "${1}" 2>&1
+}
+
+function display_cmd() {
+    ORG_CMDLINE="${@}"
+    CMDBIN=${ORG_CMDLINE%% *}
+    FULLCMD=$(\which $CMDBIN 2>/dev/null | awk '{print $1}')
+    echo -e "\n#==[ Command ]======================================#"
+    if [ -x "$FULLCMD" ]; then
+        CMDLINE=$(echo $ORG_CMDLINE | sed -e "s!${CMDBIN}!${FULLCMD}!")
+        echo -e "# $CMDLINE"
+        echo "$CMDLINE" | bash
+    else
+        echo -e "# $ORG_CMDLINE"
+        echo "Command not found or not executable"
+    fi
+}
+
+# ---- Main ----
+echo -e "Supportconfig Plugin for $TITLE, v${SVER}"
+
+display_package_info prometheus-ha_cluster_exporter
+display_systemd_status prometheus-ha_cluster_exporter
+
+for file in /usr/etc/ha_cluster_exporter.{yaml,json,toml} /etc/ha_cluster_exporter.{yaml,json,toml} /usr/etc/ha_cluster_exporter.web.yaml /etc/ha_cluster_exporter.web.yaml; do
+    [ -e "${file}" ] && { display_file_stat "${file}" ; display_file "${file}" ; echo ; }
+done
+
+display_file_stat /etc/sysconfig/prometheus-ha_cluster_exporter
+display_file /etc/sysconfig/prometheus-ha_cluster_exporter
+
+#log infos from system log
+display_cmd "grep -E -i 'ha_cluster_exporter\[.*\]:' /var/log/messages"
+display_cmd "ss -tulpan | grep exporter"
+
+# Bye.
+exit 0
