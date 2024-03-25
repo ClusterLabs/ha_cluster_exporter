@@ -1,5 +1,5 @@
 #
-# Copyright 2019-2022 SUSE LLC
+# Copyright 2019-2024 SUSE LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -68,6 +68,9 @@ install -D -m 0644 %{shortname}.sysconfig %{buildroot}%{_fillupdir}/sysconfig.%{
 install -Dd -m 0755 %{buildroot}%{_sbindir}
 ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rc%{name}
 
+# Install supportconfig plugin
+install -D -m 755 supportconfig-ha_cluster_exporter %{buildroot}%{_prefix}/lib/supportconfig/plugins/%{shortname}
+
 %pre
 %service_add_pre %{name}.service
 
@@ -93,5 +96,8 @@ ln -s /usr/sbin/service %{buildroot}%{_sbindir}/rc%{name}
 %{_unitdir}/%{name}.service
 %{_fillupdir}/sysconfig.%{name}
 %{_sbindir}/rc%{name}
+%dir %{_prefix}/lib/supportconfig
+%dir %{_prefix}/lib/supportconfig/plugins
+%{_prefix}/lib/supportconfig/plugins/%{shortname}
 
 %changelog
