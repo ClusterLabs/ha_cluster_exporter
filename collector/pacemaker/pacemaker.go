@@ -33,6 +33,7 @@ func NewCollector(crmMonPath string, cibAdminPath string, timestamps bool, logge
 	c.SetDescriptor("node_attributes", "Metadata attributes of each node; value is always 1", []string{"node", "name", "value"})
 	c.SetDescriptor("resources", "The status of each resource in the cluster; 1 means the resource is in that status, 0 otherwise", []string{"node", "resource", "role", "managed", "status", "agent", "group", "clone"})
 	c.SetDescriptor("stonith_enabled", "Whether or not stonith is enabled", nil)
+	c.SetDescriptor("maintenance_mode_enabled", "Whether or not cluster wide maintenance-mode is enabled", nil)
 	c.SetDescriptor("fail_count", "The Fail count number per node and resource id", []string{"node", "resource"})
 	c.SetDescriptor("migration_threshold", "The migration_threshold number per node and resource id", []string{"node", "resource"})
 	c.SetDescriptor("config_last_change", "The timestamp of the last change of the cluster configuration", nil)
@@ -61,6 +62,7 @@ func (c *pacemakerCollector) CollectWithError(ch chan<- prometheus.Metric) error
 	}
 
 	c.recordStonithStatus(crmMon, ch)
+	c.recordMaintenanceModeStatus(crmMon, ch)
 	c.recordNodes(crmMon, ch)
 	c.recordNodeAttributes(crmMon, ch)
 	c.recordResources(crmMon, ch)
@@ -83,6 +85,15 @@ func (c *pacemakerCollector) Collect(ch chan<- prometheus.Metric) {
 	if err != nil {
 		level.Warn(c.Logger).Log("msg", c.GetSubsystem()+" collector scrape failed", "err", err)
 	}
+}
+
+func (c *pacemakerCollector) recordMaintenanceModeStatus(crmMon crmmon.Root, ch chan<- prometheus.Metric) {
+	var maintenanceModeEnabled float64
+	if crmMon.Summary.ClusterOptions.MaintenanceMode {
+		maintenanceModeEnabled = 1
+	}
+
+	ch <- c.MakeGaugeMetric("maintenance_mode_enabled", maintenanceModeEnabled)
 }
 
 func (c *pacemakerCollector) recordStonithStatus(crmMon crmmon.Root, ch chan<- prometheus.Metric) {

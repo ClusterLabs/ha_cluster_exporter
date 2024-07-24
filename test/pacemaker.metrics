@@ -161,3 +161,6 @@ ha_cluster_pacemaker_resources{agent="stonith:external/sbd",clone="",group="",ma
 # HELP ha_cluster_pacemaker_stonith_enabled Whether or not stonith is enabled
 # TYPE ha_cluster_pacemaker_stonith_enabled gauge
 ha_cluster_pacemaker_stonith_enabled 1
+# HELP ha_cluster_pacemaker_maintenance_mode_enabled Whether or not cluster wide maintenance-mode is enabled
+# TYPE ha_cluster_pacemaker_maintenance_mode_enabled gauge
+ha_cluster_pacemaker_maintenance_mode_enabled 0
