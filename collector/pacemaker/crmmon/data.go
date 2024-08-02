@@ -17,7 +17,8 @@ type Root struct {
 			Blocked  int `xml:"blocked,attr"`
 		} `xml:"resources_configured"`
 		ClusterOptions struct {
-			StonithEnabled bool `xml:"stonith-enabled,attr"`
+			StonithEnabled  bool `xml:"stonith-enabled,attr"`
+			MaintenanceMode bool `xml:"maintenance-mode,attr"`
 		} `xml:"cluster_options"`
 	} `xml:"summary"`
 	Nodes          []Node `xml:"nodes>node"`
