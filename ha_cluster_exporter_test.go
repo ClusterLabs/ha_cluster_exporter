@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -18,25 +18,10 @@ import (
 
 	"github.com/go-kit/log"
 	"github.com/prometheus/client_golang/prometheus"
-	// We could also mock this but test files alrady exist in test dir
-	//"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRegisterCollectors(t *testing.T) {
-	// We could also mock this but test files alrady exist in test dir
-	// filesystem as os.Stat() is run in default_collector.go
-	// fs := afero.NewMemMapFs() # does not work
-	//fs := afero.NewOsFs()
-	//fs.MkdirAll("test/bin", 0755)
-	//afero.WriteFile(fs, "test/bin/crm-mon-path", []byte(""), 0755)
-	//afero.WriteFile(fs, "test/bin/cibadmin-path", []byte(""), 0755)
-	//afero.WriteFile(fs, "test/bin/corosync-cfgtoolpath-path", []byte(""), 0755)
-	//afero.WriteFile(fs, "test/bin/corosync-quorumtool-path", []byte(""), 0755)
-	//afero.WriteFile(fs, "test/bin/sbd-path", []byte(""), 0755)
-	//afero.WriteFile(fs, "test/bin/sbd-config-path", []byte(""), 0755)
-	//afero.WriteFile(fs, "test/bin/drbdsetup-path", []byte(""), 0755)
-	//afero.WriteFile(fs, "test/bin/drbdsplitbrain-path", []byte(""), 0755)
 	*haClusterCrmMonPath = "test/fake_crm_mon.sh"
 	*haClusterCibadminPath = "test/fake_cibadmin.sh"
 	*haClusterCorosyncCfgtoolpathPath = "test/fake_corosync-cfgtool.sh"
@@ -99,7 +84,6 @@ func TestRegisterCollectors(t *testing.T) {
 		assert.Len(t, collectors, wantCollectors)
 		assert.Len(t, errors, wantErrors)
 	})
-	//fs.RemoveAll("test/bin")
 }
 
 //// Kudos for the build/run tests to https://github.com/prometheus/mysqld_exporter
@@ -115,7 +99,7 @@ func TestBin(t *testing.T) {
 	var err error
 	binName := "ha"
 
-	binDir, err := ioutil.TempDir("/tmp", binName+"-test-bindir-")
+	binDir, err := io.TempDir("/tmp", binName+"-test-bindir-")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -261,7 +245,7 @@ func getBody(urlToGet string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
