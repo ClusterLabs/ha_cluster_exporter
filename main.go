@@ -11,6 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/promlog"
+
 	// cannot use as setConfigDefault function will not work here
 	// log.level and log.format flags are set in vars/init
 	// "github.com/prometheus/common/promlog/flag"
@@ -66,7 +67,6 @@ var (
 )
 
 func init() {
-
 	config = viper.New()
 	config.SetConfigName("ha_cluster_exporter")
 	config.AddConfigPath("./")
@@ -247,7 +247,7 @@ func registerCollectors(logger log.Logger) (collectors []prometheus.Collector, e
 	}
 
 	for i, c := range collectors {
-		if c, ok := c.(collector.InstrumentableCollector); ok == true {
+		if c, ok := c.(collector.InstrumentableCollector); ok {
 			collectors[i] = collector.NewInstrumentedCollector(c, logger)
 		}
 	}
@@ -280,11 +280,11 @@ func main() {
 		level.Warn(logger).Log("msg", "Registration failure", "err", err)
 	}
 	if len(collectors) == 0 {
-		level.Error(logger).Log("msg", "No collector could be registered.", "err", err)
+		level.Error(logger).Log("msg", "No collector could be registered.")
 		os.Exit(1)
 	}
 	for _, c := range collectors {
-		if c, ok := c.(collector.SubsystemCollector); ok == true {
+		if c, ok := c.(collector.SubsystemCollector); ok {
 			level.Info(logger).Log("msg", c.GetSubsystem()+" collector registered.")
 		}
 	}
@@ -305,7 +305,7 @@ func main() {
 	serveAddress := &http.Server{Addr: fullListenAddress}
 	servePath := *webTelemetryPath
 
-	var landingPage = []byte(`<html>
+	landingPage := []byte(`<html>
 <head>
 	<title>ClusterLabs Linux HA Cluster Exporter</title>
 </head>
