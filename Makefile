@@ -22,7 +22,7 @@ REVISION ?= $(shell git rev-parse --abbrev-ref HEAD)
 AUTHOR ?= shap-staff@suse.de
 
 # you can customize any of the following to build forks
-OBS_PROJECT ?= network:ha-clustering:sap-deployments:devel
+OBS_PROJECT ?= devel:sap:monitoring:factory
 REPOSITORY ?= clusterlabs/ha_cluster_exporter
 
 # the Go archs we crosscompile to
