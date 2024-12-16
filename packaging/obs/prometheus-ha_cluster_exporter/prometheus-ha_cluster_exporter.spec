@@ -25,7 +25,7 @@ Group:          System/Monitoring
 URL:            https://github.com/ClusterLabs/ha_cluster_exporter
 Source:         %{name}-%{version}.tar.gz
 Source1:        vendor.tar.gz
-BuildRequires:  golang(API) >= 1.20
+BuildRequires:  golang(API) >= 1.23
 Requires(post): %fillup_prereq
 Provides:       ha_cluster_exporter = %{version}-%{release}
 Provides:       prometheus(ha_cluster_exporter) = %{version}-%{release}
