@@ -227,7 +227,7 @@ func parseMembers(quorumToolOutput []byte) (members []Member, err error) {
 	/*
 		1          1  A,V,NMW 192.168.125.24 (local)
 	*/
-	linesRE := regexp.MustCompile(`(?m)(?P<node_id>\w+)\s+(?P<votes>\d+)\s+(?P<qdevice>(\w,?)+)?\s+(?P<name>[\w-.]+)(?:\s(?P<local>\(local\)))?\n?`)
+	linesRE := regexp.MustCompile(`(?m)(?P<node_id>\w+)\s+(?P<votes>\d+)\s+(?P<qdevice>(\w,?)+)?\s+(?P<name>[^\s]+)(?:\s(?P<local>\(local\)))?\n?`)
 	linesMatches := linesRE.FindAllSubmatch(sectionMatch[1], -1)
 	for _, match := range linesMatches {
 		matches := extractRENamedCaptureGroups(linesRE, match)

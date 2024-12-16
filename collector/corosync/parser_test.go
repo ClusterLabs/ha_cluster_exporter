@@ -300,3 +300,26 @@ Membership information
 	assert.True(t, members[1].Local)
 	assert.EqualValues(t, 1, members[1].Votes)
 }
+
+func TestParseMembersWithIpv6Hostnames(t *testing.T) {
+	quorumToolOutput := []byte(`Quorum information
+Membership information
+----------------------
+    Nodeid      Votes Qdevice Name
+         1          1      NR  fe80:00:000:0000:1234:5678:ABCD:EF
+         2          1      NR  FE80:0:00:000:0000::1 (local)`)
+
+	members, err := parseMembers(quorumToolOutput)
+
+	assert.NoError(t, err)
+
+	assert.Len(t, members, 2)
+	assert.Exactly(t, "1", members[0].Id)
+	assert.Exactly(t, "fe80:00:000:0000:1234:5678:ABCD:EF", members[0].Name)
+	assert.False(t, members[0].Local)
+	assert.EqualValues(t, 1, members[0].Votes)
+	assert.Exactly(t, "2", members[1].Id)
+	assert.Exactly(t, "FE80:0:00:000:0000::1", members[1].Name)
+	assert.True(t, members[1].Local)
+	assert.EqualValues(t, 1, members[1].Votes)
+}
