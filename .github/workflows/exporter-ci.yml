@@ -55,7 +55,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/trento-project/continuous-delivery:0.1.0
+      image: ghcr.io/trento-project/continuous-delivery:0.1.x
       options: -u 0:0
       env:
         OBS_USER: ${{ secrets.OBS_USER }}
@@ -77,7 +77,7 @@ jobs:
     if: github.event.release
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/trento-project/continuous-delivery:0.1.0
+      image: ghcr.io/trento-project/continuous-delivery:0.1.x
       options: -u 0:0
       env:
         OBS_USER: ${{ secrets.OBS_USER }}
