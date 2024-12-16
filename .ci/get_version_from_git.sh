@@ -1,14 +1,15 @@
 #!/bin/sh
-TAG=$(git describe --tags --abbrev=0 2>/dev/null)
-SUFFIX=$(git show -s --format=%ct.%h HEAD)
+TAG=$(git tag | grep -E "[0-9]\.[0-9]\.[0-9]" | sort -rn | head -n1)
 
-if [ -n "${TAG}" ]; then
-  COMMITS_SINCE_TAG=$(git rev-list ${TAG}.. --count)
-  if [ "${COMMITS_SINCE_TAG}" -gt 0 ]; then
-    SUFFIX="dev${COMMITS_SINCE_TAG}.${SUFFIX}"
-  fi
+if [ -z "${TAG}" ]; then
+	echo "Could not find any tag" 1>&2
+	exit 1
 else
-  TAG="0"
+	COMMITS_SINCE_TAG=$(git rev-list "${TAG}".. --count)
+	if [ "${COMMITS_SINCE_TAG}" -gt 0 ]; then
+		COMMIT_INFO=$(git show -s --format=%ct.%h HEAD)
+		SUFFIX="+git.${COMMITS_SINCE_TAG}.${COMMIT_INFO}"
+	fi
 fi
 
-echo "${TAG}+git.${SUFFIX}"
+echo "${TAG}${SUFFIX}"
