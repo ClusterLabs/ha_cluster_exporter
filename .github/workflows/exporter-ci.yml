@@ -60,7 +60,7 @@ jobs:
       env:
         OBS_USER: ${{ secrets.OBS_USER }}
         OBS_PASS: ${{ secrets.OBS_PASS }}
-        OBS_PROJECT: ${{ secrets.OBS_PROJECT }}
+        OBS_PROJECT: ${{ vars.OBS_PROJECT }}
         REVISION: ${{ github.sha }}
         REPOSITORY: ${{ github.repository }}
         GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -82,9 +82,9 @@ jobs:
       env:
         OBS_USER: ${{ secrets.OBS_USER }}
         OBS_PASS: ${{ secrets.OBS_PASS }}
-        OBS_PROJECT: ${{ secrets.OBS_PROJECT }}
+        OBS_PROJECT: ${{ vars.OBS_PROJECT }}
         PACKAGE_NAME: prometheus-ha_cluster_exporter
-        TARGET_PROJECT: ${{ secrets.OBS_DOWNSTREAM_PROJECT }}
+        TARGET_PROJECT: ${{ vars.OBS_DOWNSTREAM_PROJECT }}
         REVISION: ${{ github.event.release.tag_name }}
         REPOSITORY: ${{ github.repository }}
         GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
