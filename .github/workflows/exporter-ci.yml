@@ -68,8 +68,8 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: configure OSC
-        run: /scripts/init_osc_creds.sh
+      - run: /scripts/init_osc_creds.sh
+      - run: git config --global --add safe.directory $(pwd)
       - run: make exporter-obs-commit
 
   obs-submit-request:
@@ -92,8 +92,8 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: configure OSC
-        run: /scripts/init_osc_creds.sh
+      - run: /scripts/init_osc_creds.sh
+      - run: git config --global --add safe.directory $(pwd)
       - run: make exporter-obs-workdir
       - run: make exporter-obs-changelog
       - run: make exporter-obs-commit
