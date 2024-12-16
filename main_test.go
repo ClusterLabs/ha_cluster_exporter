@@ -99,7 +99,7 @@ func TestBin(t *testing.T) {
 	var err error
 	binName := "ha"
 
-	binDir, err := io.TempDir("/tmp", binName+"-test-bindir-")
+	binDir, err := os.MkdirTemp("/tmp", binName+"-test-bindir-")
 	if err != nil {
 		t.Fatal(err)
 	}

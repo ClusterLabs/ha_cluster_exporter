@@ -1,21 +1,20 @@
 go:
-    version: 1.17
-    cgo: false
+  cgo: false
 repository:
-    path: github.com/ClusterLabs/ha_cluster_exporter
+  path: github.com/ClusterLabs/ha_cluster_exporter
 build:
-    flags: -a -tags netgo
-    ldflags: |
-        -X github.com/prometheus/common/version.Version={{.Version}}
-        -X github.com/prometheus/common/version.Revision={{.Revision}}
-        -X github.com/prometheus/common/version.Branch={{.Branch}}
-        -X github.com/prometheus/common/version.BuildUser={{user}}@{{host}}
-        -X github.com/prometheus/common/version.BuildDate={{date "20060102-15:04:05"}}
-    binaries:
-        - name: ha_cluster_exporter-amd64
-        - name: ha_cluster_exporter-arm64
-        - name: ha_cluster_exporter-ppc64le
-        - name: ha_cluster_exporter-s390x
+  flags: -a -tags netgo
+  ldflags: |
+    -X github.com/prometheus/common/version.Version={{.Version}}
+    -X github.com/prometheus/common/version.Revision={{.Revision}}
+    -X github.com/prometheus/common/version.Branch={{.Branch}}
+    -X github.com/prometheus/common/version.BuildUser={{user}}@{{host}}
+    -X github.com/prometheus/common/version.BuildDate={{date "20060102-15:04:05"}}
+  binaries:
+    - name: ha_cluster_exporter-amd64
+    - name: ha_cluster_exporter-arm64
+    - name: ha_cluster_exporter-ppc64le
+    - name: ha_cluster_exporter-s390x
 tarball:
-    files:
-        - LICENSE
+  files:
+    - LICENSE
