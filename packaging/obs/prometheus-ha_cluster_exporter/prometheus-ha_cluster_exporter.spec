@@ -46,8 +46,11 @@ Prometheus exporter for Pacemaker HA clusters metrics
 %define shortname ha_cluster_exporter
 
 %build
-
-export CGO_ENABLED=0
+%ifarch s390x
+  export CGO_ENABLED=1
+%else
+  export CGO_ENABLED=0
+%endif
 go build -mod=vendor \
          -buildmode=pie \
          -ldflags="-s -w -X github.com/prometheus/common/version.Version=%{version}" \
