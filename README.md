@@ -36,6 +36,7 @@ The project can be installed in many ways, including but not limited to:
 1. [Manual clone & build](#manual-clone-&-build)
 2. [Go](#go)
 3. [RPM](#rpm)
+4. [Docker](#docker)
 
 ### Manual clone & build
 
@@ -49,7 +50,7 @@ make install
 ### Go
 
 ```
-go get github.com/ClusterLabs/ha_cluster_exporter
+go install github.com/ClusterLabs/ha_cluster_exporter/cmd/ha_cluster_exporter@latest
 ```
 
 ### RPM
@@ -60,6 +61,17 @@ zypper install prometheus-ha_cluster_exporter
 ```
 
 You can find the latest development repositories at [SUSE's Open Build Service](https://build.opensuse.org/package/show/network:ha-clustering:sap-deployments:devel/prometheus-ha_cluster_exporter).
+
+### Docker
+
+You can build and run the exporter as a Docker container:
+
+```shell
+make docker
+docker run -p 9664:9664 ha_cluster_exporter
+```
+
+Note: To collect metrics from the host cluster, the container may need access to the host's network and tools.
 
 ## Usage
 
@@ -110,18 +122,15 @@ web.config.file                            | Path to a [web configuration file](
 log.level                                  | Logging verbosity (default `info`).
 version                                    | Print the version information.
 
-##### Deprecated Flags
-Name                                       | Description
-----                                       | -----------
-address                                    | deprecated: please use --web.listen-address or --web.config.file to use Prometheus Exporter Toolkit
-port                                       | deprecated: please use --web.listen-address or --web.config.file to use Prometheus Exporter Toolkit
-log-level                                  | deprecated: please use log.level
-enable-timestamps                          | deprecated: server-side metric timestamping is discouraged by Prometheus best-practices and should be avoided
-
 #### Collector Flags
 
 Name                                       | Description
 ----                                       | -----------
+collector.pacemaker                        | Enable the Pacemaker collector (default: enabled).
+collector.corosync                         | Enable the Corosync collector (default: enabled).
+collector.sbd                              | Enable the SBD collector (default: enabled).
+collector.drbd                             | Enable the DRBD collector (default: enabled).
+collector.timeout                          | Timeout for system commands execution (default `10s`).
 crm-mon-path                               | Path to crm_mon executable (default `/usr/sbin/crm_mon`).
 cibadmin-path                              | Path to cibadmin executable (default `/usr/sbin/cibadmin`).
 corosync-cfgtoolpath-path                  | Path to corosync-cfgtool executable (default `/usr/sbin/corosync-cfgtool`).

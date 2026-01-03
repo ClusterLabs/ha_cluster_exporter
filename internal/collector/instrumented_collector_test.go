@@ -5,10 +5,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-kit/log"
 	"github.com/golang/mock/gomock"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
+	"log/slog"
+	"os"
 
 	"github.com/ClusterLabs/ha_cluster_exporter/internal/clock"
 	"github.com/ClusterLabs/ha_cluster_exporter/test/mock_collector"
@@ -23,7 +24,7 @@ func TestInstrumentedCollector(t *testing.T) {
 	mockCollector.EXPECT().Describe(gomock.Any())
 	mockCollector.EXPECT().CollectWithError(gomock.Any())
 
-	SUT := NewInstrumentedCollector(mockCollector, log.NewNopLogger())
+	SUT := NewInstrumentedCollector(mockCollector, slog.New(slog.NewTextHandler(os.Stdout, nil)))
 	SUT.Clock = &clock.StoppedClock{}
 
 	metrics := `# HELP ha_cluster_scrape_duration_seconds Duration of a collector scrape.
@@ -48,7 +49,7 @@ func TestInstrumentedCollectorScrapeFailure(t *testing.T) {
 	collectWithError := mockCollector.EXPECT().CollectWithError(gomock.Any())
 	collectWithError.Return(errors.New("test error"))
 
-	SUT := NewInstrumentedCollector(mockCollector, log.NewNopLogger())
+	SUT := NewInstrumentedCollector(mockCollector, slog.New(slog.NewTextHandler(os.Stdout, nil)))
 
 	metrics := `# HELP ha_cluster_scrape_success Whether a collector succeeded.
 # TYPE ha_cluster_scrape_success gauge

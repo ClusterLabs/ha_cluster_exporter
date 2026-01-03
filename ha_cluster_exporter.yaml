@@ -7,6 +7,12 @@ web:
 log:
   level: "info"
   format: "logfmt"
+collector:
+  timeout: "10s"
+  pacemaker: true
+  corosync: true
+  sbd: true
+  drbd: true
 crm-mon-path: "/usr/sbin/crm_mon"
 cibadmin-path: "/usr/sbin/cibadmin"
 corosync-cfgtoolpath-path: "/usr/sbin/corosync-cfgtool"

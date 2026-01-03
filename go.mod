@@ -1,14 +1,13 @@
 module github.com/ClusterLabs/ha_cluster_exporter
 
-go 1.23
+go 1.24
 
-toolchain go1.23.0
+toolchain go1.24.11
 
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/go-kit/log v0.2.1
 	github.com/golang/mock v1.6.0
-	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/client_model v0.6.1
 	github.com/prometheus/common v0.61.0

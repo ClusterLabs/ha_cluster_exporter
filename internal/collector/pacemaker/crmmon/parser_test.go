@@ -2,17 +2,18 @@ package crmmon
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestConstructor(t *testing.T) {
-	p := NewCrmMonParser("foo")
+	p := NewCrmMonParser("foo", 10*time.Second)
 	assert.Equal(t, "foo", p.crmMonPath)
 }
 
 func TestParse(t *testing.T) {
-	p := NewCrmMonParser("../../../test/fake_crm_mon.sh")
+	p := NewCrmMonParser("../../../../test/fake_crm_mon.sh", 10*time.Second)
 	data, err := p.Parse()
 	assert.NoError(t, err)
 	assert.Equal(t, "2.0.0", data.Version)
@@ -54,7 +55,7 @@ func TestParse(t *testing.T) {
 }
 
 func TestParseClones(t *testing.T) {
-	p := NewCrmMonParser("../../../test/fake_crm_mon.sh")
+	p := NewCrmMonParser("../../../../test/fake_crm_mon.sh", 10*time.Second)
 	data, err := p.Parse()
 	assert.NoError(t, err)
 	assert.Equal(t, 3, len(data.Clones))
@@ -70,7 +71,7 @@ func TestParseClones(t *testing.T) {
 }
 
 func TestParseGroups(t *testing.T) {
-	p := NewCrmMonParser("../../../test/fake_crm_mon.sh")
+	p := NewCrmMonParser("../../../../test/fake_crm_mon.sh", 10*time.Second)
 	data, err := p.Parse()
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(data.Groups))
@@ -89,7 +90,7 @@ func TestParseGroups(t *testing.T) {
 }
 
 func TestParseNodeAttributes(t *testing.T) {
-	p := NewCrmMonParser("../../../test/fake_crm_mon.sh")
+	p := NewCrmMonParser("../../../../test/fake_crm_mon.sh", 10*time.Second)
 	data, err := p.Parse()
 	assert.NoError(t, err)
 	assert.Len(t, data.NodeAttributes.Nodes, 2)

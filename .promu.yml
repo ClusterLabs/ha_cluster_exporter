@@ -12,9 +12,13 @@ build:
     -X github.com/prometheus/common/version.BuildDate={{date "20060102-15:04:05"}}
   binaries:
     - name: ha_cluster_exporter-amd64
+      path: ./cmd/ha_cluster_exporter
     - name: ha_cluster_exporter-arm64
+      path: ./cmd/ha_cluster_exporter
     - name: ha_cluster_exporter-ppc64le
+      path: ./cmd/ha_cluster_exporter
     - name: ha_cluster_exporter-s390x
+      path: ./cmd/ha_cluster_exporter
 tarball:
   files:
     - LICENSE

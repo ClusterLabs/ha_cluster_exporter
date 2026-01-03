@@ -1,28 +1,30 @@
 package corosync
 
 import (
+	"context"
+	"fmt"
+	"log/slog"
 	"os/exec"
+	"time"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/ClusterLabs/ha_cluster_exporter/collector"
+	"github.com/ClusterLabs/ha_cluster_exporter/internal/collector"
 )
 
 const subsystem = "corosync"
 
-func NewCollector(cfgToolPath string, quorumToolPath string, timestamps bool, logger log.Logger) (*corosyncCollector, error) {
+func NewCollector(cfgToolPath string, quorumToolPath string, timeout time.Duration, logger *slog.Logger) (*corosyncCollector, error) {
 	err := collector.CheckExecutables(cfgToolPath, quorumToolPath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not initialize '%s' collector", subsystem)
+		logger.Warn("could not initialize 'corosync' collector (missing executables), but continuing", "err", err)
 	}
 
 	c := &corosyncCollector{
-		collector.NewDefaultCollector(subsystem, timestamps, logger),
+		collector.NewDefaultCollector(subsystem, logger),
 		cfgToolPath,
 		quorumToolPath,
+		timeout,
 		NewParser(),
 	}
 	c.SetDescriptor("quorate", "Whether or not the cluster is quorate", nil)
@@ -38,19 +40,23 @@ type corosyncCollector struct {
 	collector.DefaultCollector
 	cfgToolPath    string
 	quorumToolPath string
+	timeout        time.Duration
 	parser         Parser
 }
 
 func (c *corosyncCollector) CollectWithError(ch chan<- prometheus.Metric) error {
-	level.Debug(c.Logger).Log("msg", "Collecting corosync metrics...")
+	c.Logger.Debug("Collecting corosync metrics...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
 
 	// We suppress the exec errors because if any interface is faulty the tools will exit with code 1, but we still want to parse the output.
-	cfgToolOutput, _ := exec.Command(c.cfgToolPath, "-s").Output()
-	quorumToolOutput, _ := exec.Command(c.quorumToolPath, "-p").Output()
+	cfgToolOutput, _ := exec.CommandContext(ctx, c.cfgToolPath, "-s").Output()
+	quorumToolOutput, _ := exec.CommandContext(ctx, c.quorumToolPath, "-p").Output()
 
 	status, err := c.parser.Parse(cfgToolOutput, quorumToolOutput)
 	if err != nil {
-		return errors.Wrap(err, "corosync parser error")
+		return fmt.Errorf("corosync parser error: %w", err)
 	}
 
 	c.collectRings(status, ch)
@@ -63,11 +69,11 @@ func (c *corosyncCollector) CollectWithError(ch chan<- prometheus.Metric) error 
 }
 
 func (c *corosyncCollector) Collect(ch chan<- prometheus.Metric) {
-	level.Debug(c.Logger).Log("msg", "Collecting corosync metrics...")
+	c.Logger.Debug("Collecting corosync metrics...")
 
 	err := c.CollectWithError(ch)
 	if err != nil {
-		level.Warn(c.Logger).Log("msg", c.GetSubsystem()+" collector scrape failed", "err", err)
+		c.Logger.Warn(c.GetSubsystem()+" collector scrape failed", "err", err)
 	}
 }
 

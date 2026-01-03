@@ -1,11 +1,11 @@
 package corosync
 
 import (
+	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 type Parser interface {
@@ -54,27 +54,27 @@ func (p *defaultParser) Parse(cfgToolOutput []byte, quorumToolOutput []byte) (*S
 
 	status.NodeId, err = parseNodeId(quorumToolOutput)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not parse node id in corosync-quorumtool output")
+		return nil, fmt.Errorf("could not parse node id in corosync-quorumtool output: %w", err)
 	}
 
 	status.RingId, err = parseRingId(quorumToolOutput)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not parse ring id and seq number in corosync-quorumtool output")
+		return nil, fmt.Errorf("could not parse ring id and seq number in corosync-quorumtool output: %w", err)
 	}
 
 	status.Quorate, err = parseQuorate(quorumToolOutput)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not parse quorate in corosync-quorumtool output")
+		return nil, fmt.Errorf("could not parse quorate in corosync-quorumtool output: %w", err)
 	}
 
 	status.QuorumVotes, err = parseQuoromVotes(quorumToolOutput)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not parse quorum votes in corosync-quorumtool output")
+		return nil, fmt.Errorf("could not parse quorum votes in corosync-quorumtool output: %w", err)
 	}
 
 	status.Members, err = parseMembers(quorumToolOutput)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not parse members in corosync-quorumtool output")
+		return nil, fmt.Errorf("could not parse members in corosync-quorumtool output: %w", err)
 	}
 
 	status.Rings = parseRings(cfgToolOutput)
@@ -186,22 +186,22 @@ func parseQuoromVotes(quorumToolOutput []byte) (quorumVotes QuorumVotes, err err
 
 	quorumVotes.ExpectedVotes, err = strconv.ParseUint(string(matches[1]), 10, 64)
 	if err != nil {
-		return quorumVotes, errors.Wrap(err, "could not parse vote number to uint64")
+		return quorumVotes, fmt.Errorf("could not parse vote number to uint64: %w", err)
 	}
 
 	quorumVotes.HighestExpected, err = strconv.ParseUint(string(matches[2]), 10, 64)
 	if err != nil {
-		return quorumVotes, errors.Wrap(err, "could not parse vote number to uint64")
+		return quorumVotes, fmt.Errorf("could not parse vote number to uint64: %w", err)
 	}
 
 	quorumVotes.TotalVotes, err = strconv.ParseUint(string(matches[3]), 10, 64)
 	if err != nil {
-		return quorumVotes, errors.Wrap(err, "could not parse vote number to uint64")
+		return quorumVotes, fmt.Errorf("could not parse vote number to uint64: %w", err)
 	}
 
 	quorumVotes.Quorum, err = strconv.ParseUint(string(matches[4]), 10, 64)
 	if err != nil {
-		return quorumVotes, errors.Wrap(err, "could not parse vote number to uint64")
+		return quorumVotes, fmt.Errorf("could not parse vote number to uint64: %w", err)
 	}
 
 	return quorumVotes, nil
@@ -234,7 +234,7 @@ func parseMembers(quorumToolOutput []byte) (members []Member, err error) {
 
 		votes, err := strconv.ParseUint(matches["votes"], 10, 64)
 		if err != nil {
-			return nil, errors.Wrap(err, "could not parse vote number to uint64")
+			return nil, fmt.Errorf("could not parse vote number to uint64: %w", err)
 		}
 
 		var local bool

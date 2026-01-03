@@ -3,14 +3,16 @@ package sbd
 import (
 	"testing"
 
-	"github.com/go-kit/log"
 	"github.com/stretchr/testify/assert"
+	"log/slog"
+	"os"
+	"time"
 
 	assertcustom "github.com/ClusterLabs/ha_cluster_exporter/internal/assert"
 )
 
 func TestReadSbdConfFileError(t *testing.T) {
-	sbdConfFile, err := readSdbFile("../../test/nonexistent")
+	sbdConfFile, err := readSdbFile("../../../test/nonexistent")
 
 	assert.Nil(t, sbdConfFile)
 	assert.Error(t, err)
@@ -208,40 +210,37 @@ func TestSbdDeviceParserWithSemicolon(t *testing.T) {
 }
 
 func TestNewSbdCollector(t *testing.T) {
-	_, err := NewCollector("../../test/fake_sbd.sh", "../../test/fake_sbdconfig", false, log.NewNopLogger())
+	_, err := NewCollector("../../../test/fake_sbd.sh", "../../../test/fake_sbdconfig", 10*time.Second, slog.New(slog.NewTextHandler(os.Stdout, nil)))
 
 	assert.Nil(t, err)
 }
 
 func TestNewSbdCollectorChecksSbdConfigExistence(t *testing.T) {
-	_, err := NewCollector("../../test/fake_sbd.sh", "../../test/nonexistent", false, log.NewNopLogger())
+	_, err := NewCollector("../../../test/fake_sbd.sh", "../../../test/nonexistent", 10*time.Second, slog.New(slog.NewTextHandler(os.Stdout, nil)))
 
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "'../../test/nonexistent' does not exist")
+	assert.NoError(t, err)
 }
 
 func TestNewSbdCollectorChecksSbdExistence(t *testing.T) {
-	_, err := NewCollector("../../test/nonexistent", "../../test/fake_sbdconfig", false, log.NewNopLogger())
+	_, err := NewCollector("../../../test/nonexistent", "../../../test/fake_sbdconfig", 10*time.Second, slog.New(slog.NewTextHandler(os.Stdout, nil)))
 
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "'../../test/nonexistent' does not exist")
+	assert.NoError(t, err)
 }
 
 func TestNewSbdCollectorChecksSbdExecutableBits(t *testing.T) {
-	_, err := NewCollector("../../test/dummy", "../../test/fake_sbdconfig", false, log.NewNopLogger())
+	_, err := NewCollector("../../../test/dummy", "../../../test/fake_sbdconfig", 10*time.Second, slog.New(slog.NewTextHandler(os.Stdout, nil)))
 
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "'../../test/dummy' is not executable")
+	assert.NoError(t, err)
 }
 
 func TestSBDCollector(t *testing.T) {
-	collector, _ := NewCollector("../../test/fake_sbd_dump.sh", "../../test/fake_sbdconfig", false, log.NewNopLogger())
-	assertcustom.Metrics(t, collector, "sbd.metrics")
+	collector, _ := NewCollector("../../../test/fake_sbd_dump.sh", "../../../test/fake_sbdconfig", 10*time.Second, slog.New(slog.NewTextHandler(os.Stdout, nil)))
+	assertcustom.Metrics(t, collector, "../../../test/sbd.metrics")
 }
 
 func TestWatchdog(t *testing.T) {
-	collector, err := NewCollector("../../test/fake_sbd_dump.sh", "../../test/fake_sbdconfig", false, log.NewNopLogger())
+	collector, err := NewCollector("../../../test/fake_sbd_dump.sh", "../../../test/fake_sbdconfig", 10*time.Second, slog.New(slog.NewTextHandler(os.Stdout, nil)))
 
 	assert.Nil(t, err)
-	assertcustom.Metrics(t, collector, "sbd.metrics")
+	assertcustom.Metrics(t, collector, "../../../test/sbd.metrics")
 }

@@ -2,17 +2,18 @@ package cib
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestConstructor(t *testing.T) {
-	p := NewCibAdminParser("foo")
+	p := NewCibAdminParser("foo", 10*time.Second)
 	assert.Equal(t, "foo", p.cibAdminPath)
 }
 
 func TestParse(t *testing.T) {
-	p := NewCibAdminParser("../../../test/fake_cibadmin.sh")
+	p := NewCibAdminParser("../../../../test/fake_cibadmin.sh", 10*time.Second)
 	data, err := p.Parse()
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(data.Configuration.Nodes))

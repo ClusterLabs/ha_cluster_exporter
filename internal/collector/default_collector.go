@@ -1,11 +1,12 @@
 package collector
 
 import (
-	"github.com/ClusterLabs/ha_cluster_exporter/internal/clock"
-	"github.com/go-kit/log"
-	"github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus"
+	"fmt"
+	"log/slog"
 	"os"
+
+	"github.com/ClusterLabs/ha_cluster_exporter/internal/clock"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const NAMESPACE = "ha_cluster"
@@ -18,16 +19,14 @@ type DefaultCollector struct {
 	subsystem   string
 	descriptors map[string]*prometheus.Desc
 	Clock       clock.Clock
-	timestamps  bool
-	Logger      log.Logger
+	Logger      *slog.Logger
 }
 
-func NewDefaultCollector(subsystem string, timestamps bool, logger log.Logger) DefaultCollector {
+func NewDefaultCollector(subsystem string, logger *slog.Logger) DefaultCollector {
 	return DefaultCollector{
 		subsystem,
 		make(map[string]*prometheus.Desc),
 		&clock.SystemClock{},
-		timestamps,
 		logger,
 	}
 }
@@ -36,7 +35,7 @@ func (c *DefaultCollector) GetDescriptor(name string) *prometheus.Desc {
 	desc, ok := c.descriptors[name]
 	if !ok {
 		// we hard panic on this because it's most certainly a coding error
-		panic(errors.Errorf("undeclared metric '%s'", name))
+		panic(fmt.Errorf("undeclared metric '%s'", name))
 	}
 	return desc
 }
@@ -70,11 +69,7 @@ func (c *DefaultCollector) MakeCounterMetric(name string, value float64, labelVa
 
 func (c *DefaultCollector) makeMetric(name string, value float64, valueType prometheus.ValueType, labelValues ...string) prometheus.Metric {
 	desc := c.GetDescriptor(name)
-	metric := prometheus.MustNewConstMetric(desc, valueType, value, labelValues...)
-	if c.timestamps == true {
-		metric = prometheus.NewMetricWithTimestamp(c.Clock.Now(), metric)
-	}
-	return metric
+	return prometheus.MustNewConstMetric(desc, valueType, value, labelValues...)
 }
 
 // check that all the given paths exist and are executable files
@@ -82,13 +77,13 @@ func CheckExecutables(paths ...string) error {
 	for _, path := range paths {
 		fileInfo, err := os.Stat(path)
 		if err != nil || os.IsNotExist(err) {
-			return errors.Errorf("'%s' does not exist", path)
+			return fmt.Errorf("'%s' does not exist", path)
 		}
 		if fileInfo.IsDir() {
-			return errors.Errorf("'%s' is a directory", path)
+			return fmt.Errorf("'%s' is a directory", path)
 		}
 		if (fileInfo.Mode() & 0111) == 0 {
-			return errors.Errorf("'%s' is not executable", path)
+			return fmt.Errorf("'%s' is not executable", path)
 		}
 	}
 	return nil
