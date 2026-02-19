@@ -51,6 +51,26 @@ ha_cluster_pacemaker_node_attributes{name="lpa_prd_lpt",node="node01",value="157
 ha_cluster_pacemaker_node_attributes{name="lpa_prd_lpt",node="node02",value="30"} 1
 ha_cluster_pacemaker_node_attributes{name="master-rsc_SAPHana_PRD_HDB00",node="node01",value="150"} 1
 ha_cluster_pacemaker_node_attributes{name="master-rsc_SAPHana_PRD_HDB00",node="node02",value="100"} 1
+
+# HELP ha_cluster_pacemaker_node_transient_attributes TransientAttributes attributes of each node; value is always 1
+# TYPE ha_cluster_pacemaker_node_transient_attributes gauge
+ha_cluster_pacemaker_node_transient_attributes{name="hana_prd_clone_state",node="node02",value="DEMOTED"} 1
+ha_cluster_pacemaker_node_transient_attributes{name="master-rsc_SAPHana_PRD_HDB00",node="node02",value="100"} 1
+ha_cluster_pacemaker_node_transient_attributes{name="hana_prd_version",node="node02",value="2.00.040.00.1553674765"} 1
+ha_cluster_pacemaker_node_transient_attributes{name="hana_prd_roles",node="node02",value="4:S:master1:master:worker:master"} 1
+ha_cluster_pacemaker_node_transient_attributes{name="hana_prd_sync_state",node="node02",value="SOK"} 1
+
+ha_cluster_pacemaker_node_transient_attributes{name="master-rsc_SAPHana_PRD_HDB00",node="node01",value="150"} 1
+ha_cluster_pacemaker_node_transient_attributes{name="hana_prd_version",node="node01",value="2.00.040.00.1553674765"} 1
+ha_cluster_pacemaker_node_transient_attributes{name="hana_prd_clone_state",node="node01",value="PROMOTED"} 1
+ha_cluster_pacemaker_node_transient_attributes{name="hana_prd_sync_state",node="node01",value="PRIM"} 1
+ha_cluster_pacemaker_node_transient_attributes{name="hana_prd_roles",node="node01",value="4:P:master1:master:worker:master"} 1
+
+# HELP ha_cluster_pacemaker_node_states The state of each node; value is always 1
+# TYPE ha_cluster_pacemaker_node_states gauge
+ha_cluster_pacemaker_node_states{crm_debug_origin="do_update_resource",crmd="online",expected="member",id="1084783375",in_ccm="true",join="member",node="node01"} 1
+ha_cluster_pacemaker_node_states{crm_debug_origin="do_update_resource",crmd="online",expected="member",id="1084783376",in_ccm="true",join="member",node="node02"} 1
+
 # HELP ha_cluster_pacemaker_nodes The status of each node in the cluster; 1 means the node is in that status, 0 otherwise
 # TYPE ha_cluster_pacemaker_nodes gauge
 ha_cluster_pacemaker_nodes{node="node01",status="dc",type="member"} 1
