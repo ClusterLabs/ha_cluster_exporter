@@ -33,6 +33,18 @@ type Root struct {
 			} `xml:"rsc_location"`
 		} `xml:"constraints"`
 	} `xml:"configuration"`
+	Status struct {
+		NodeState []struct {
+			Id				string	`xml:"id,attr"`
+			Uname 			string	`xml:"uname,attr"`
+			InCCM			string	`xml:"in_ccm,attr"`
+			Crmd			string	`xml:"crmd,attr"`
+			CrmDebugOrigin 	string 	`xml:"crm-debug-origin,attr"`
+			Join			string	`xml:"join,attr"`
+			Expected		string	`xml:"expected,attr"`
+			TransientAttributes []Attribute `xml:"transient_attributes>instance_attributes>nvpair"`
+		} `xml:"node_state"`
+	} `xml:"status"`
 }
 
 type Attribute struct {
