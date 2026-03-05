@@ -68,8 +68,8 @@ ha_cluster_pacemaker_node_transient_attributes{name="hana_prd_roles",node="node0
 
 # HELP ha_cluster_pacemaker_node_states The state of each node; value is always 1
 # TYPE ha_cluster_pacemaker_node_states gauge
-ha_cluster_pacemaker_node_states{crm_debug_origin="do_update_resource",crmd="online",expected="member",id="1084783375",in_ccm="true",join="member",node="node01"} 1
-ha_cluster_pacemaker_node_states{crm_debug_origin="do_update_resource",crmd="online",expected="member",id="1084783376",in_ccm="true",join="member",node="node02"} 1
+ha_cluster_pacemaker_node_states{crmd="online",expected="member",id="1084783375",in_ccm="true",join="member",node="node01"} 1
+ha_cluster_pacemaker_node_states{crmd="online",expected="member",id="1084783376",in_ccm="true",join="member",node="node02"} 1
 
 # HELP ha_cluster_pacemaker_nodes The status of each node in the cluster; 1 means the node is in that status, 0 otherwise
 # TYPE ha_cluster_pacemaker_nodes gauge
