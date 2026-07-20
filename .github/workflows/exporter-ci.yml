@@ -53,9 +53,9 @@ jobs:
   obs-commit:
     needs: build
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/trento-project/continuous-delivery:0.1.x
+      image: ghcr.io/trento-project/continuous-delivery@sha256:27b18643b1d39af6551cc165e79fc147835cbb7a5dcef37e6a889f94cea1fef5 # v1.4.0
       options: -u 0:0
       env:
         OBS_USER: ${{ secrets.OBS_USER }}
@@ -75,9 +75,9 @@ jobs:
   obs-submit-request:
     needs: build
     if: github.event.release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/trento-project/continuous-delivery:0.1.x
+      image: ghcr.io/trento-project/continuous-delivery@sha256:27b18643b1d39af6551cc165e79fc147835cbb7a5dcef37e6a889f94cea1fef5 # v1.4.0
       options: -u 0:0
       env:
         OBS_USER: ${{ secrets.OBS_USER }}
