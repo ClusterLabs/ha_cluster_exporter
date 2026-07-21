@@ -50,7 +50,7 @@ releaseDate = datetime.strptime(release['published_at'], "%Y-%m-%dT%H:%M:%SZ").r
 with tempfile.TemporaryFile("r+") as temp:
     print("-------------------------------------------------------------------", file=temp)
 
-    print(f"{releaseDate.strftime('%c')} {releaseDate.strftime('%Z')}", end="", file=temp)
+    print(f"{releaseDate.strftime('%a %b %d %H:%M:%S %Z %Y')}", end="", file=temp)
     if args.author:
         print(f" - {args.author}", end="", file=temp)
     print("\n", file=temp)
