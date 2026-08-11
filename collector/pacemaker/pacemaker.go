@@ -39,6 +39,9 @@ func NewCollector(crmMonPath string, cibAdminPath string, timestamps bool, logge
 	c.SetDescriptor("config_last_change", "The timestamp of the last change of the cluster configuration", nil)
 	c.SetDescriptor("location_constraints", "Resource location constraints. The value indicates the score.", []string{"constraint", "node", "resource", "role"})
 
+	c.SetDescriptor("node_states", "The state of each node; value is always 1", []string{"node", "id", "in_ccm", "crmd", "join", "expected"})
+	c.SetDescriptor("node_transient_attributes", "TransientAttributes attributes of each node; value is always 1", []string{"node", "name", "value"})
+
 	return c, nil
 }
 
@@ -69,6 +72,8 @@ func (c *pacemakerCollector) CollectWithError(ch chan<- prometheus.Metric) error
 	c.recordFailCounts(crmMon, ch)
 	c.recordMigrationThresholds(crmMon, ch)
 	c.recordConstraints(CIB, ch)
+	c.recordTransientAttributes(CIB, ch)
+	c.recordNodeStates(CIB, ch)
 
 	err = c.recordCibLastChange(crmMon, ch)
 	if err != nil {
@@ -245,6 +250,20 @@ func (c *pacemakerCollector) recordConstraints(CIB cib.Root, ch chan<- prometheu
 		}
 
 		ch <- c.MakeGaugeMetric("location_constraints", constraintScore, constraint.Id, constraint.Node, constraint.Resource, strings.ToLower(constraint.Role))
+	}
+}
+
+func (c *pacemakerCollector) recordNodeStates(CIB cib.Root, ch chan<- prometheus.Metric) {
+	for _, node := range CIB.Status.NodeState {
+			ch <- c.MakeGaugeMetric("node_states", 1, node.Uname, node.Id, node.InCCM, node.Crmd, node.Join, node.Expected)
+	}
+}
+
+func (c *pacemakerCollector) recordTransientAttributes(CIB cib.Root, ch chan<- prometheus.Metric) {
+	for _, node := range CIB.Status.NodeState {
+		for _, tr_attr := range node.TransientAttributes {
+			ch <- c.MakeGaugeMetric("node_transient_attributes", 1, node.Uname, tr_attr.Name, tr_attr.Value)
+		}
 	}
 }
 
