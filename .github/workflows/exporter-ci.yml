@@ -45,7 +45,7 @@ jobs:
           for FILE in build/bin/*; do
             gzip $FILE
           done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ha_cluster_exporter
           path: build/bin
