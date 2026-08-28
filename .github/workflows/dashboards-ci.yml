@@ -23,7 +23,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v1
       - run: npm -g install jsonlint
       - name: validate JSON
@@ -44,7 +44,7 @@ jobs:
         REPOSITORY: ${{ github.repository }}
         GITHUB_OAUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: configure OSC
