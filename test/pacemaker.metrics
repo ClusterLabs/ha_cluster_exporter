@@ -1,6 +1,6 @@
 # HELP ha_cluster_pacemaker_config_last_change The timestamp of the last change of the cluster configuration
 # TYPE ha_cluster_pacemaker_config_last_change counter
-ha_cluster_pacemaker_config_last_change 1.571399302e+09
+ha_cluster_pacemaker_config_last_change 1.571392102e+09
 # HELP ha_cluster_pacemaker_fail_count The Fail count number per node and resource id
 # TYPE ha_cluster_pacemaker_fail_count gauge
 ha_cluster_pacemaker_fail_count{node="node01",resource="rsc_SAPHanaTopology_PRD_HDB00"} 0
